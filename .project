@@ -1,5 +1,5 @@
 <projectDescription>
-  <name>scala</name>
+  <name>iterate-config</name>
   <buildSpec>
     <buildCommand>
       <name>org.scala-ide.sdt.core.scalabuilder</name>
