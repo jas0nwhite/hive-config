@@ -2,3 +2,4 @@ target
 .cache-main
 bin
 project/target
+commit.sh
