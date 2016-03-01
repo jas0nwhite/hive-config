@@ -6,6 +6,7 @@
   <classpathentry sourcepath="/Users/jwhite/.ivy2/cache/org.clapper/grizzled-scala_2.11/srcs/grizzled-scala_2.11-1.4.0-sources.jar" kind="lib" path="/Users/jwhite/.ivy2/cache/org.clapper/grizzled-scala_2.11/jars/grizzled-scala_2.11-1.4.0.jar"/>
   <classpathentry sourcepath="/Users/jwhite/.ivy2/cache/org.scala-lang.modules/scala-async_2.11/srcs/scala-async_2.11-0.9.1-sources.jar" kind="lib" path="/Users/jwhite/.ivy2/cache/org.scala-lang.modules/scala-async_2.11/bundles/scala-async_2.11-0.9.1.jar"/>
   <classpathentry sourcepath="/Users/jwhite/.ivy2/cache/jline/jline/srcs/jline-2.6-sources.jar" kind="lib" path="/Users/jwhite/.ivy2/cache/jline/jline/jars/jline-2.6.jar"/>
+  <classpathentry sourcepath="/Users/jwhite/.ivy2/cache/com.typesafe/config/srcs/config-1.3.0-sources.jar" kind="lib" path="/Users/jwhite/.ivy2/cache/com.typesafe/config/bundles/config-1.3.0.jar"/>
   <classpathentry sourcepath="/Users/jwhite/.ivy2/cache/org.clapper/grizzled-slf4j_2.11/srcs/grizzled-slf4j_2.11-1.0.2-sources.jar" kind="lib" path="/Users/jwhite/.ivy2/cache/org.clapper/grizzled-slf4j_2.11/jars/grizzled-slf4j_2.11-1.0.2.jar"/>
   <classpathentry sourcepath="/Users/jwhite/.ivy2/cache/ch.qos.logback/logback-classic/srcs/logback-classic-1.1.5-sources.jar" kind="lib" path="/Users/jwhite/.ivy2/cache/ch.qos.logback/logback-classic/jars/logback-classic-1.1.5.jar"/>
   <classpathentry sourcepath="/Users/jwhite/.ivy2/cache/ch.qos.logback/logback-core/srcs/logback-core-1.1.5-sources.jar" kind="lib" path="/Users/jwhite/.ivy2/cache/ch.qos.logback/logback-core/jars/logback-core-1.1.5.jar"/>
