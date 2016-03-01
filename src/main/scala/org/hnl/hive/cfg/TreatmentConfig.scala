@@ -16,16 +16,17 @@ import grizzled.slf4j.Logging
  *
  * @author Jason White
  */
-class TreatmentConfig(config: Config) extends Logging {
+class TreatmentConfig protected (config: Config) extends Logging {
 
   /*
    * treatment settings
    */
   val trainingSetId = getRequiredString("treatment.training-set")
-  val modelStyleId = getRequiredString("treatment.model-style")
+  val trainingStyleId = getRequiredString("treatment.training-style")
   val clusterStyleId = getRequiredString("treatment.cluster-style")
   val alphaSelectId = getRequiredString("treatment.alpha-select")
   val muSelectId = getRequiredString("treatment.mu-select")
+  val name = getRequiredString("treatment.name")
 
   /*
    * project settings
@@ -56,14 +57,9 @@ class TreatmentConfig(config: Config) extends Logging {
   val targetResultPaths = getAbsolutePathList("target.result-path")
 
   /*
-   * computed fields
-   */
-  val hiveId = s"$trainingSetId-$modelStyleId-$clusterStyleId-$alphaSelectId-$muSelectId"
-
-  /*
    * PUBLIC API
    */
-  override def toString() = s"$hiveId @ $projectRoot"
+  override def toString() = s"$name @ $projectRoot"
 
   /*
    * INTERNAL API
@@ -112,5 +108,7 @@ class TreatmentConfig(config: Config) extends Logging {
 }
 
 object TreatmentConfig {
+
+  def fromConfig(config: Config): TreatmentConfig = new TreatmentConfig(config)
 
 }
