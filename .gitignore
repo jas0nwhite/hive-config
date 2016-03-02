@@ -5,3 +5,4 @@ project/target
 commit.sh
 .worksheet
 .*.swp
+.cache-tests
