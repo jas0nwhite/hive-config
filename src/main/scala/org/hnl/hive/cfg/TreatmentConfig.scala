@@ -8,6 +8,8 @@ import com.typesafe.config.{ Config, ConfigList, ConfigValueType }
 
 import grizzled.slf4j.Logging
 
+// scalastyle:off multiple.string.literals
+
 /**
  * TreatmentConfig
  * <p>
@@ -59,7 +61,7 @@ class TreatmentConfig protected (config: Config) extends Logging {
   /*
    * PUBLIC API
    */
-  override def toString() = s"$name @ $projectRoot"
+  override def toString: String = s"$name @ $projectRoot"
 
   /*
    * INTERNAL API

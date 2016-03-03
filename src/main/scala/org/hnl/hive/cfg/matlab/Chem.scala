@@ -10,7 +10,8 @@ package org.hnl.hive.cfg.matlab
  */
 case class Chem(chems: List[ChemClass], treatment: String) extends MatlabChunk with MatlabFormatting {
 
-  def toMatlab: String = s"""
+  def toMatlab: String = // scalastyle:ignore method.length
+    s"""
 classdef Chem < uint32
     % Chemicals for use in HIVE treatment $treatment
     %

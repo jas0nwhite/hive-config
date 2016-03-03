@@ -3,6 +3,8 @@ package org.hnl.matlab
 import scala.collection.mutable.ListBuffer
 import scala.language.implicitConversions
 
+// scalastyle:off multiple.string.literals
+
 /**
  * Base trait for objects that can be rendered as Matlab code
  * <p>
@@ -13,6 +15,14 @@ import scala.language.implicitConversions
  */
 trait MatRender {
   def toMatlab: String
+
+  protected[matlab] def mkString(s: String): String =
+    "'" + s.replaceAll("'", "''") + "'"
+
+  protected[matlab] def mkIdent(n: String): String =
+    n.trim
+      .replaceAll("^([^A-Za-z])", "x$1")
+      .replaceAll("[^0-9A-Za-z_]", "_")
 }
 
 /**
@@ -28,7 +38,7 @@ trait MatRenderIndent extends MatRender {
   protected def tab(indent: Int): String =
     List.fill(indent * 4)(' ').mkString
 
-  def toMatlab: String = toMatlab(0)
+  override def toMatlab: String = toMatlab(0)
 
   protected[matlab] def toMatlab(indent: Int): String
 }
@@ -46,20 +56,20 @@ trait MExp extends MatRender {
   override def toString: String =
     "Mexp(" + toMatlab + ")"
 
-  def %=%(right: MExp): MExp = new MExp {
-    def toMatlab: String = MExp.this.toMatlab + " = " + right.toMatlab
+  def %=%(right: MExp): MExp = new MExp { // scalastyle:ignore method.name
+    override def toMatlab: String = MExp.this.toMatlab + " = " + right.toMatlab
   }
 
   def paren(ix: MExp): MExp = new MExp {
-    def toMatlab: String = MExp.this.toMatlab + "(" + ix.toMatlab + ")"
+    override def toMatlab: String = MExp.this.toMatlab + "(" + ix.toMatlab + ")"
   }
 
   def curly(ix: MExp): MExp = new MExp {
-    def toMatlab: String = MExp.this.toMatlab + "{" + ix.toMatlab + "}"
+    override def toMatlab: String = MExp.this.toMatlab + "{" + ix.toMatlab + "}"
   }
 
-  def %:%(right: MExp): MExp = new MExp {
-    def toMatlab: String = MExp.this.toMatlab + ":" + right.toMatlab
+  def %:%(right: MExp): MExp = new MExp { // scalastyle:ignore method.name
+    override def toMatlab: String = MExp.this.toMatlab + ":" + right.toMatlab
   }
 
   def toMatCmd: String =
@@ -101,39 +111,37 @@ object M {
    * RAW
    */
   case class Raw(s: String) extends MExp {
-    def toMatlab: String = s
+    override def toMatlab: String = s
   }
 
   /*
    * STRING
    */
   case class Str(s: String) extends MExp {
-    def toMatlab: String = "'" + s.replaceAll("'", "''") + "'"
+    override def toMatlab: String = mkString(s)
   }
 
   /*
    * NUMBERS
    */
-  trait NumVal extends MExp {
-
-  }
+  trait NumVal extends MExp
 
   /* convenient constructors for Num */
   object Num {
-    def apply(b: Boolean) = b match {
+    def apply(b: Boolean): NumVal = b match {
       case true  => True()
       case false => False()
     }
-    def apply(n: Int) = new NumI(n)
-    def apply(n: Long) = new NumI(n)
-    def apply(n: Float) = new NumD(n)
-    def apply(n: Double) = n match {
+    def apply(n: Int): NumI = new NumI(n)
+    def apply(n: Long): NumI = new NumI(n)
+    def apply(n: Float): NumD = new NumD(n)
+    def apply(n: Double): NumVal = n match {
       case Double.NegativeInfinity => NegInf()
       case Double.PositiveInfinity => Inf()
       case Double.NaN              => NaN()
       case _                       => new NumD(n)
     }
-    def apply(s: String) = s match {
+    def apply(s: String): NumVal = s match {
       case "true"                                 => True()
       case "false"                                => False()
       case "-Inf"                                 => NegInf()
@@ -145,70 +153,65 @@ object M {
   }
 
   case class NumI(num: Long) extends NumVal {
-    def toMatlab: String = num.toString
+    override def toMatlab: String = num.toString
   }
 
   case class NumD(num: Double) extends NumVal {
-    def toMatlab: String = num.toString
+    override def toMatlab: String = num.toString
   }
 
   case class NegInf() extends NumVal {
-    def toMatlab: String = "-Inf"
+    override def toMatlab: String = "-Inf"
   }
 
   case class Inf() extends NumVal {
-    def toMatlab: String = "Inf"
+    override def toMatlab: String = "Inf"
   }
 
   case class NaN() extends NumVal {
-    def toMatlab: String = "NaN"
+    override def toMatlab: String = "NaN"
   }
 
   case class True() extends NumVal {
-    def toMatlab: String = "true"
+    override def toMatlab: String = "true"
   }
 
   case class False() extends NumVal {
-    def toMatlab: String = "false"
+    override def toMatlab: String = "false"
   }
 
   /*
    * IDENTIFIERS
    */
   case class Var(name: String) extends MExp {
-    // fixes up names like matlab.lang.makeValidName
-    def toMatlab: String =
-      name
-        .trim
-        .replaceAll("^([^A-Za-z])", "x$1")
-        .replaceAll("[^0-9A-Za-z_]", "_")
+    override def toMatlab: String = mkIdent(name)
   }
 
   /*
    * ARRAYS
    */
   case class RVec(vals: MExp*) extends MExp {
-    def toMatlab: String =
+    override def toMatlab: String =
       "[" + vals.map { _.toMatlab }.mkString(", ") + "]"
   }
 
   case class CVec(vals: MExp*) extends MExp {
-    def toMatlab: String =
+    override def toMatlab: String =
       "[" + vals.map { _.toMatlab }.mkString("; ") + "]"
   }
 
   case class RCell(vals: MExp*) extends MExp {
-    def toMatlab: String =
+    override def toMatlab: String =
       "{" + vals.map { _.toMatlab }.mkString(", ") + "}"
   }
 
   case class CCell(vals: MExp*) extends MExp {
-    def toMatlab: String =
+    override def toMatlab: String =
       "{" + vals.map { _.toMatlab }.mkString("; ") + "}"
   }
 
-  case object %:% extends MExp {
-    def toMatlab: String = ":"
+  case object %:% extends MExp { // scalastyle:ignore object.name
+    override def toMatlab: String = ":"
   }
 
   /**
@@ -222,38 +225,48 @@ object M {
   trait Block[+T, M] extends MatRenderIndent {
     self: T =>
 
-    val comments = ListBuffer.empty[String]
-    val attributes = ListBuffer.empty[String]
-    val members = ListBuffer.empty[M]
+    protected val comments = ListBuffer.empty[String]
+    protected val attributes = ListBuffer.empty[String]
+    protected val members = ListBuffer.empty[M]
 
-    def ?>(attr: String): T = {
+    def attrib(attrString: String): T = {
       attributes.clear
-      attributes += attr
+      attributes += attrString
       self
     }
 
-    def %>(comment: String): T = {
-      comments += "% " + comment
+    def comment(commentString: String): T = {
+      comments += "% " + commentString
       self
     }
 
-    def #>(member: M): T = {
-      members += member
+    def member(m: M): T = {
+      members += m
       self
     }
+
+    // scalastyle:off method.name
+
+    def +?(attrString: String): T = attrib(attrString)
+    def +%(commentString: String): T = comment(commentString)
+    def +#(m: M): T = member(m)
+
+    // scalastyle:on method.name
   }
 
   /*
    * CLASS DEF
    */
   case class ClassDef(name: String) extends Block[ClassDef, MatRenderIndent] {
-    val superclass = ListBuffer.empty[String]
+    protected val superclass = ListBuffer.empty[String]
 
     def from(parent: String): ClassDef = {
       superclass.clear
       superclass += parent
       this
     }
+
+    def +<(parent: String): ClassDef = from(parent) // scalastyle:ignore method.name
 
     protected[matlab] def toMatlab(indent: Int): String = {
       val supc = superclass.map { " < " + _ }.mkString
@@ -263,7 +276,7 @@ object M {
       val code = ListBuffer.empty[String]
 
       // classdef
-      code += "classdef " + name + supc + attr
+      code += "classdef " + mkIdent(name) + supc + attr
 
       // optional comments
       comments.foreach { code += tab(indent + 1) + _ }

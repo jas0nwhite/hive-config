@@ -3,6 +3,8 @@ import com.typesafe.config._
 import org.hnl.hive.cfg.TreatmentConfig
 import org.hnl.hive.cfg.matlab._
 
+// scalastyle:off
+
 object Hi extends Logging {
   def main(args: Array[String]) = {
 
