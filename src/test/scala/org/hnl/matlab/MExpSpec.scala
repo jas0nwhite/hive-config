@@ -6,6 +6,10 @@ import org.scalatest.Inspectors
 
 import org.hnl.matlab.MExp._
 
+// scalastyle:off magic.number
+// scalastyle:off null
+// scalastyle:off multiple.string.literals
+
 /**
  * MExpSpec
  * <p>
@@ -196,7 +200,7 @@ class MExpSpec extends WordSpec with Matchers with Inspectors with Helpers {
 
     "render class attributes" in {
       val mclass =
-        M.ClassDef("Test") ?> "Abstract"
+        M.ClassDef("Test") +? "Abstract"
 
       val expected =
         List[String](
@@ -226,8 +230,8 @@ class MExpSpec extends WordSpec with Matchers with Inspectors with Helpers {
 
     "render class comments" in {
       val mclass =
-        M.ClassDef("Test") %>
-          "Test is a testing class" %>
+        M.ClassDef("Test") +%
+          "Test is a testing class" +%
           "which we are trying to test"
 
       val expected =
@@ -245,8 +249,8 @@ class MExpSpec extends WordSpec with Matchers with Inspectors with Helpers {
 
     "render fully-decorated class" in {
       val mclass =
-        M.ClassDef("Test").from("uint32") ?> "Abstract" %>
-          "Test is a testing class" %>
+        M.ClassDef("Test").from("uint32") +? "Abstract" +%
+          "Test is a testing class" +%
           "which we are trying to test"
 
       val expected =
@@ -264,12 +268,12 @@ class MExpSpec extends WordSpec with Matchers with Inspectors with Helpers {
 
     "render class properties" in {
       val mclass =
-        M.ClassDef("Test") #>
-          (
-            M.ClassProps() %>
-            "" %>
-            "A very nice set of properties" %>
-            ""
+        M.ClassDef("Test")
+          .member(
+            M.ClassProps() +%
+              "" +%
+              "A very nice set of properties" +%
+              ""
           )
 
       val expected =
