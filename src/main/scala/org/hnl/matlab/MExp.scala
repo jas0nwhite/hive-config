@@ -1,6 +1,37 @@
 package org.hnl.matlab
 
+import scala.collection.mutable.ListBuffer
 import scala.language.implicitConversions
+
+/**
+ * Base trait for objects that can be rendered as Matlab code
+ * <p>
+ * Created on Mar 2, 2016.
+ * <p>
+ *
+ * @author Jason White
+ */
+trait MatRender {
+  def toMatlab: String
+}
+
+/**
+ * Base trait for objects MatRender objects that need to
+ * keep track of indentation during rendering
+ * <p>
+ * Created on Mar 2, 2016.
+ * <p>
+ *
+ * @author Jason White
+ */
+trait MatRenderIndent extends MatRender {
+  protected def tab(indent: Int): String =
+    List.fill(indent * 4)(' ').mkString
+
+  def toMatlab: String = toMatlab(0)
+
+  protected[matlab] def toMatlab(indent: Int): String
+}
 
 /**
  * Base trait for Matlab Expression
@@ -10,9 +41,7 @@ import scala.language.implicitConversions
  *
  * @author Jason White
  */
-trait MExp {
-
-  def toMatlab: String
+trait MExp extends MatRender {
 
   override def toString: String =
     "Mexp(" + toMatlab + ")"
@@ -180,6 +209,103 @@ object M {
 
   case object %:% extends MExp {
     def toMatlab: String = ":"
+  }
+
+  /**
+   * Trait for common code blocks
+   * <p>
+   * Created on Mar 2, 2016.
+   * <p>
+   *
+   * @author Jason White
+   */
+  trait Block[+T, M] extends MatRenderIndent {
+    self: T =>
+
+    val comments = ListBuffer.empty[String]
+    val attributes = ListBuffer.empty[String]
+    val members = ListBuffer.empty[M]
+
+    def ?>(attr: String): T = {
+      attributes.clear
+      attributes += attr
+      self
+    }
+
+    def %>(comment: String): T = {
+      comments += "% " + comment
+      self
+    }
+
+    def #>(member: M): T = {
+      members += member
+      self
+    }
+  }
+
+  /*
+   * CLASS DEF
+   */
+  case class ClassDef(name: String) extends Block[ClassDef, MatRenderIndent] {
+    val superclass = ListBuffer.empty[String]
+
+    def from(parent: String): ClassDef = {
+      superclass.clear
+      superclass += parent
+      this
+    }
+
+    protected[matlab] def toMatlab(indent: Int): String = {
+      val supc = superclass.map { " < " + _ }.mkString
+      val attr = if (attributes.isEmpty) "" else attributes.mkString(" (", ", ", ")")
+
+      // build code
+      val code = ListBuffer.empty[String]
+
+      // classdef
+      code += "classdef " + name + supc + attr
+
+      // optional comments
+      comments.foreach { code += tab(indent + 1) + _ }
+      code += tab(indent + 1)
+
+      // optional members
+      members.foreach { code += _.toMatlab(indent + 1) }
+
+      // end
+      code += "end"
+      code += ""
+
+      // output
+      code.map { tab(indent) + _ }.mkString("\n")
+    }
+  }
+
+  /*
+   * CLASS PROPERTIES
+   */
+  case class ClassProps() extends Block[ClassProps, MExp] {
+    protected[matlab] def toMatlab(indent: Int): String = {
+      val attr = attributes.map { " (" + _ + ")" }.mkString
+
+      // build code
+      val code = ListBuffer.empty[String]
+
+      // comments
+      comments.foreach { code += _ }
+
+      // properties def
+      code += "properties" + attr
+
+      // members
+      members.foreach { code += tab(indent + 1) + _.toMatlab(indent + 1) }
+
+      // end
+      code += "end"
+      code += ""
+
+      code.map { tab(indent) + _ }.mkString("\n")
+    }
   }
 
 }
