@@ -179,6 +179,118 @@ class MExpSpec extends WordSpec with Matchers with Inspectors with Helpers {
   }
 
   /*
+   * CLASSES
+   */
+  "M.Class" should {
+
+    "render empty class" in {
+      test(
+        M.ClassDef("Test"),
+        List[String](
+          "classdef Test",
+          "    ",
+          "end",
+          "").mkString("\n")
+      )
+    }
+
+    "render class attributes" in {
+      val mclass =
+        M.ClassDef("Test") ?> "Abstract"
+
+      val expected =
+        List[String](
+          "classdef Test (Abstract)",
+          "    ",
+          "end",
+          ""
+        ).mkString("\n")
+
+      test(mclass, expected)
+    }
+
+    "render class inheritance" in {
+      val mclass =
+        M.ClassDef("Test") from "handle"
+
+      val expected =
+        List[String](
+          "classdef Test < handle",
+          "    ",
+          "end",
+          ""
+        ).mkString("\n")
+
+      test(mclass, expected)
+    }
+
+    "render class comments" in {
+      val mclass =
+        M.ClassDef("Test") %>
+          "Test is a testing class" %>
+          "which we are trying to test"
+
+      val expected =
+        List[String](
+          "classdef Test",
+          "    % Test is a testing class",
+          "    % which we are trying to test",
+          "    ",
+          "end",
+          ""
+        ).mkString("\n")
+
+      test(mclass, expected)
+    }
+
+    "render fully-decorated class" in {
+      val mclass =
+        M.ClassDef("Test").from("uint32") ?> "Abstract" %>
+          "Test is a testing class" %>
+          "which we are trying to test"
+
+      val expected =
+        List[String](
+          "classdef Test < uint32 (Abstract)",
+          "    % Test is a testing class",
+          "    % which we are trying to test",
+          "    ",
+          "end",
+          ""
+        ).mkString("\n")
+
+      test(mclass, expected)
+    }
+
+    "render class properties" in {
+      val mclass =
+        M.ClassDef("Test") #>
+          (
+            M.ClassProps() %>
+            "" %>
+            "A very nice set of properties" %>
+            ""
+          )
+
+      val expected =
+        List[String](
+          "classdef Test",
+          "    ",
+          "    % ",
+          "    % A very nice set of properties",
+          "    % ",
+          "    properties",
+          "    end",
+          "    ",
+          "end",
+          ""
+        ).mkString("\n")
+
+      test(mclass, expected)
+    }
+  }
+
+  /*
    * EXPRESSIONS
    */
   "M.Exp" should {
@@ -220,7 +332,7 @@ class MExpSpec extends WordSpec with Matchers with Inspectors with Helpers {
 trait Helpers {
   this: WordSpec with Matchers with Inspectors =>
 
-  protected def test(test: MExp, expected: String): Unit = {
+  protected def test(test: MatRender, expected: String): Unit = {
     val actual = test.toMatlab
 
     actual should not be (null)
