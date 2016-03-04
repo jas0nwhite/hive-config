@@ -27,7 +27,7 @@
  </check>
  <check class="org.scalastyle.scalariform.SpacesAfterPlusChecker" level="warning" enabled="true"></check>
  <check class="org.scalastyle.file.WhitespaceEndOfLineChecker" level="warning" enabled="true"></check>
- <check class="org.scalastyle.scalariform.SpacesBeforePlusChecker" level="warning" enabled="true"></check>
+ <check class="org.scalastyle.scalariform.SpacesBeforePlusChecker" level="warning" enabled="false"></check>
  <check class="org.scalastyle.file.FileLineLengthChecker" level="warning" enabled="true">
   <parameters>
    <parameter name="maxLineLength"><![CDATA[160]]></parameter>

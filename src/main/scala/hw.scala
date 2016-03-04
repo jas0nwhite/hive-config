@@ -30,14 +30,14 @@ object Hi extends Logging {
     //    println
     //    println
 
-    val da = ChemClass(1, "DA", "Dopamine", "DA", "nM", 0.0)
-    val se = ChemClass(2, "5HT", "Serotonin", "5-HT", "nM", 0.0)
-    val ph = ChemClass(3, "pH", "pH", "pH", "", 7.4)
-    val chems = Chem(List(ph, da, se), "testing")
+    val da = Chem(1, "DA", "Dopamine", "DA", "nM", 0.0)
+    val se = Chem(2, "5HT", "Serotonin", "5-HT", "nM", 0.0)
+    val ph = Chem(3, "pH", "pH", "pH", "", 7.4)
+    val chems = ChemClass(List(ph, da, se), config.name)
 
     println(chems.toMatlab)
 
-    println(ConfigClass(config).toMatlab)
+    // println(TreatementCfgClass(config).toMatlab)
 
   }
 }

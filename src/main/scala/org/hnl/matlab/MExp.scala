@@ -1,4 +1,4 @@
-package org.hnl.matlab
+package org.hnl.matlab // scalastyle:ignore number.of.types
 
 import scala.collection.mutable.ListBuffer
 import scala.language.implicitConversions
@@ -14,33 +14,24 @@ import scala.language.implicitConversions
  * @author Jason White
  */
 trait MatRender {
-  def toMatlab: String
+  protected def tab(indent: Int): String =
+    List.fill(indent * 4)(' ').mkString
 
   protected[matlab] def mkString(s: String): String =
     "'" + s.replaceAll("'", "''") + "'"
 
+  def toMatlab: String
+  def toCommand: String = toMatlab + ";"
+
+  protected[matlab] def toIndentedMatlab(indent: Int): List[String] = toMatlab.split("\n").map { tab(indent) + _ }.toList
+  protected[matlab] def toIndentedCommand(indent: Int): List[String] = toCommand.split("\n").map { tab(indent) + _ }.toList
+}
+
+object MatRender {
   protected[matlab] def mkIdent(n: String): String =
     n.trim
       .replaceAll("^([^A-Za-z])", "x$1")
       .replaceAll("[^0-9A-Za-z_]", "_")
-}
-
-/**
- * Base trait for objects MatRender objects that need to
- * keep track of indentation during rendering
- * <p>
- * Created on Mar 2, 2016.
- * <p>
- *
- * @author Jason White
- */
-trait MatRenderIndent extends MatRender {
-  protected def tab(indent: Int): String =
-    List.fill(indent * 4)(' ').mkString
-
-  override def toMatlab: String = toMatlab(0)
-
-  protected[matlab] def toMatlab(indent: Int): String
 }
 
 /**
@@ -56,7 +47,7 @@ trait MExp extends MatRender {
   override def toString: String =
     "Mexp(" + toMatlab + ")"
 
-  def %=%(right: MExp): MExp = new MExp { // scalastyle:ignore method.name
+  def assign(right: MExp): MExp = new MExp {
     override def toMatlab: String = MExp.this.toMatlab + " = " + right.toMatlab
   }
 
@@ -68,12 +59,22 @@ trait MExp extends MatRender {
     override def toMatlab: String = MExp.this.toMatlab + "{" + ix.toMatlab + "}"
   }
 
-  def %:%(right: MExp): MExp = new MExp { // scalastyle:ignore method.name
+  def colon(right: MExp): MExp = new MExp {
     override def toMatlab: String = MExp.this.toMatlab + ":" + right.toMatlab
   }
 
-  def toMatCmd: String =
-    toMatlab + ";"
+  def dot(right: MExp): MExp = new MExp {
+    override def toMatlab: String = MExp.this.toMatlab + "." + right.toMatlab
+  }
+
+  // scalastyle:off method.name
+
+  // DSL infix operators
+  def %=%(right: MExp): MExp = assign(right)
+  def %:%(right: MExp): MExp = colon(right)
+  def ~>(right: MExp): MExp = dot(right)
+
+  // scalastyle:on method.name
 }
 
 /**
@@ -107,11 +108,22 @@ object MExp {
  * @author Jason White
  */
 object M {
+  // string interpolation for variables
+  implicit class MatlabHelper(val sc: StringContext) extends AnyVal {
+    def v(args: Any*): M.Var = M.Var(sc.parts.mkString)
+  }
+
   /*
    * RAW
    */
   case class Raw(s: String) extends MExp {
     override def toMatlab: String = s
+    override def toCommand: String = s
+  }
+
+  case object %---% extends MExp { // scalastyle:ignore object.name
+    override def toMatlab: String = ""
+    override def toCommand: String = ""
   }
 
   /*
@@ -181,10 +193,20 @@ object M {
   }
 
   /*
-   * IDENTIFIERS
+   * VARIABLES
    */
   case class Var(name: String) extends MExp {
-    override def toMatlab: String = mkIdent(name)
+    override def toMatlab: String = MatRender.mkIdent(name)
+  }
+
+  object Global {
+    def apply(name: String): Raw = Raw("global " + MatRender.mkIdent(name))
+    def apply(v: Var): Raw = Raw("global " + v.toMatlab)
+  }
+
+  object Persistent {
+    def apply(name: String): Raw = Raw("persistent " + MatRender.mkIdent(name))
+    def apply(v: Var): Raw = Raw("persistent " + v.toMatlab)
   }
 
   /*
@@ -214,6 +236,14 @@ object M {
     override def toMatlab: String = ":"
   }
 
+  /*
+   * FUNCTION CALL
+   */
+  case class Fn(fn: String, args: MExp*) extends MExp {
+    override def toMatlab: String =
+      fn + "(" + args.map { _.toMatlab }.mkString(",") + ")"
+  }
+
   /**
    * Trait for common code blocks
    * <p>
@@ -222,75 +252,163 @@ object M {
    *
    * @author Jason White
    */
-  trait Block[+T, M] extends MatRenderIndent {
+  trait Block[+T, M] extends MExp {
     self: T =>
 
-    protected val comments = ListBuffer.empty[String]
-    protected val attributes = ListBuffer.empty[String]
-    protected val members = ListBuffer.empty[M]
+    protected val commentBuffer = ListBuffer.empty[String]
+    protected val attributeBuffer = ListBuffer.empty[String]
+    protected val memberBuffer = ListBuffer.empty[M]
 
-    def attrib(attrString: String): T = {
-      attributes.clear
-      attributes += attrString
+    def attribs(av: String*): T = {
+      av.foreach { attributeBuffer += _ }
       self
     }
 
-    def comment(commentString: String): T = {
-      comments += "% " + commentString
+    def attribs(as: List[String]): T = attribs(as: _*)
+
+    def comments(sv: String*): T = {
+      sv.foreach { commentBuffer += "% " + _ }
       self
     }
 
-    def member(m: M): T = {
-      members += m
+    def comments(ss: List[String]): T = comments(ss: _*)
+
+    def members(mv: M*): T = {
+      mv.foreach { memberBuffer += _ }
       self
     }
+
+    def members(ms: List[M]): T = members(ms: _*)
 
     // scalastyle:off method.name
-
-    def +?(attrString: String): T = attrib(attrString)
-    def +%(commentString: String): T = comment(commentString)
-    def +#(m: M): T = member(m)
-
+    def %(sv: String*): T = comments(sv: _*)
+    def +(mv: M*): T = members(mv: _*)
     // scalastyle:on method.name
+  }
+
+  /*
+   * FUNCTION DEF
+   */
+  case class FnDef(name: String, args: MExp*) extends Block[FnDef, MExp] {
+    protected val returnBuffer = ListBuffer.empty[String]
+    protected val docBuffer = ListBuffer.empty[String]
+
+    def returns(vars: String*): FnDef = {
+      vars.foreach { returnBuffer += MatRender.mkIdent(_) }
+      this
+    }
+    def returns(vars: List[String]): FnDef = returns(vars: _*)
+    def returns(first: Var, others: Var*): FnDef = returns({ first :: others.toList }.map { _.toMatlab })
+
+    def doc(ss: String*): FnDef = {
+      ss.foreach { docBuffer += "% " + _ }
+      this
+    }
+
+    override def toMatlab: String = toIndentedMatlab(0).mkString("\n")
+
+    override protected[matlab] def toIndentedMatlab(indent: Int): List[String] = {
+      val rtnVars = returnBuffer.length match {
+        case 0 => ""
+        case 1 => returnBuffer.mkString(" ", "", " = ")
+        case _ => returnBuffer.mkString(" [", ",", "] = ")
+      }
+
+      val argVars = args.map { _.toMatlab }.mkString("(", ", ", ")")
+
+      if (!docBuffer.isEmpty) {
+        docBuffer += ""
+      }
+
+      // build code
+      val code = ListBuffer.empty[String]
+
+      // comments
+      commentBuffer.foreach { code += _ }
+
+      // function def
+      code += "function" + rtnVars + name + argVars
+
+      // function doc
+      docBuffer.foreach { code += tab(1) + _ }
+
+      // members
+      memberBuffer.foreach { code ++= _.toIndentedCommand(1) }
+
+      // end
+      code += "end"
+      code += ""
+
+      code.map { tab(indent) + _ }.toList
+    }
   }
 
   /*
    * CLASS DEF
    */
-  case class ClassDef(name: String) extends Block[ClassDef, MatRenderIndent] {
-    protected val superclass = ListBuffer.empty[String]
+  case class ClassDef(name: String) extends Block[ClassDef, MExp] {
+    protected val superclasses = ListBuffer.empty[String]
 
-    def from(parent: String): ClassDef = {
-      superclass.clear
-      superclass += parent
+    def from(parents: String*): ClassDef = {
+      parents.foreach(superclasses += _)
       this
     }
 
-    def +<(parent: String): ClassDef = from(parent) // scalastyle:ignore method.name
+    def from(parents: List[String]): ClassDef = from(parents: _*)
 
-    protected[matlab] def toMatlab(indent: Int): String = {
-      val supc = superclass.map { " < " + _ }.mkString
-      val attr = if (attributes.isEmpty) "" else attributes.mkString(" (", ", ", ")")
+    override def toMatlab: String = toIndentedMatlab(0).mkString("\n")
+
+    override protected[matlab] def toIndentedMatlab(indent: Int): List[String] = {
+      val supc = if (superclasses.isEmpty) "" else superclasses.mkString(" < ", " & ", "")
+      val attr = if (attributeBuffer.isEmpty) "" else attributeBuffer.mkString("(", ", ", ") ")
 
       // build code
       val code = ListBuffer.empty[String]
 
       // classdef
-      code += "classdef " + mkIdent(name) + supc + attr
+      code += "classdef " + attr + MatRender.mkIdent(name) + supc
 
       // optional comments
-      comments.foreach { code += tab(indent + 1) + _ }
+      commentBuffer.foreach { code += tab(indent + 1) + _ }
       code += tab(indent + 1)
 
       // optional members
-      members.foreach { code += _.toMatlab(indent + 1) }
+      memberBuffer.foreach { (code ++= _.toIndentedMatlab(1)) }
 
       // end
       code += "end"
       code += ""
 
       // output
-      code.map { tab(indent) + _ }.mkString("\n")
+      code.map { tab(indent) + _ }.toList
+    }
+  }
+
+  /*
+   * CLASS ENUMERATION
+   */
+  case class ClassEnum() extends Block[ClassEnum, MExp] {
+
+    override def toMatlab: String = toIndentedMatlab(0).mkString("\n")
+
+    override protected[matlab] def toIndentedMatlab(indent: Int): List[String] = {
+      // build code
+      val code = ListBuffer.empty[String]
+
+      // comments
+      commentBuffer.foreach { code += _ }
+
+      // enum def
+      code += "enumeration"
+
+      // members
+      memberBuffer.foreach { code ++= _.toIndentedMatlab(1) }
+
+      // end
+      code += "end"
+      code += ""
+
+      code.map { tab(indent) + _ }.toList
     }
   }
 
@@ -298,26 +416,57 @@ object M {
    * CLASS PROPERTIES
    */
   case class ClassProps() extends Block[ClassProps, MExp] {
-    protected[matlab] def toMatlab(indent: Int): String = {
-      val attr = attributes.map { " (" + _ + ")" }.mkString
+    override def toMatlab: String = toIndentedMatlab(0).mkString("\n")
+
+    override protected[matlab] def toIndentedMatlab(indent: Int): List[String] = {
+      val attr = if (attributeBuffer.isEmpty) "" else attributeBuffer.mkString(" (", ", ", ")")
 
       // build code
       val code = ListBuffer.empty[String]
 
       // comments
-      comments.foreach { code += _ }
+      commentBuffer.foreach { code += _ }
 
       // properties def
       code += "properties" + attr
 
       // members
-      members.foreach { code += tab(indent + 1) + _.toMatlab(indent + 1) }
+      memberBuffer.foreach { code ++= _.toIndentedMatlab(1) }
 
       // end
       code += "end"
       code += ""
 
-      code.map { tab(indent) + _ }.mkString("\n")
+      code.map { tab(indent) + _ }.toList
+    }
+  }
+
+  /*
+   * CLASS METHODS
+   */
+  case class ClassMethods() extends Block[ClassMethods, MExp] {
+    override def toMatlab: String = toIndentedMatlab(0).mkString("\n")
+
+    override protected[matlab] def toIndentedMatlab(indent: Int): List[String] = {
+      val attr = if (attributeBuffer.isEmpty) "" else attributeBuffer.mkString(" (", ", ", ")")
+
+      // build code
+      val code = ListBuffer.empty[String]
+
+      // comments
+      commentBuffer.foreach { code += _ }
+
+      // properties def
+      code += "methods" + attr
+
+      // members
+      memberBuffer.foreach { code ++= _.toIndentedMatlab(1) }
+
+      // end
+      code += "end"
+      code += ""
+
+      code.map { tab(indent) + _ }.toList
     }
   }
 
