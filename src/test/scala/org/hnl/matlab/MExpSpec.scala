@@ -88,7 +88,7 @@ class MExpSpec extends WordSpec with Matchers with Inspectors with Helpers {
   "M.Var" should {
 
     "render valid identifier unchanged" in {
-      test(M.Var("test"), "test")
+      test('test, "test")
     }
 
     "strip spaces from identifier" in {
@@ -276,7 +276,7 @@ class MExpSpec extends WordSpec with Matchers with Inspectors with Helpers {
           )
 
       val expected = List(
-        "classdef (Abstract, Sealed) Test < uint32, TestSuper",
+        "classdef (Abstract, Sealed) Test < uint32 & TestSuper",
         "    % Test is a testing class",
         "    % which we are trying to test",
         "    ",
@@ -290,7 +290,7 @@ class MExpSpec extends WordSpec with Matchers with Inspectors with Helpers {
     "render class properties" in {
       val mclass =
         M.ClassDef("Test")
-          .members(
+          .+(
             M.ClassProps()
               .%(
                 "",
@@ -352,11 +352,11 @@ class MExpSpec extends WordSpec with Matchers with Inspectors with Helpers {
       val mprops =
         M.ClassProps()
           .%("comment")
-          .members(
-            M.Var("prop1") %=% 3.14,
-            M.Var("prop2") %=% "Test",
-            M.Var("prop3") %=% 32,
-            M.Var("prop4")
+          .+(
+            'prop1 %=% 3.14,
+            'prop2 %=% "Test",
+            'prop3 %=% 32,
+            'prop4
           )
 
       val expected = List(
@@ -379,13 +379,28 @@ class MExpSpec extends WordSpec with Matchers with Inspectors with Helpers {
   "M.Exp" should {
 
     "render assignments" in {
-      val mexp = M.Var("testVar") %=% M.Str("testValue")
+      test(
+        'testVar %=% "testValue",
+        "testVar = 'testValue'"
+      )
+    }
 
-      test(mexp, "testVar = 'testValue'")
+    "render global variables" in {
+      test(
+        M.Global('test),
+        "global test"
+      )
+    }
+
+    "render persistent variables" in {
+      test(
+        M.Persistent('test),
+        "persistent test"
+      )
     }
 
     "append ; at end of commands" in {
-      val mexp = M.Var("testVar") %=% M.Str("testValue")
+      val mexp = 'testVar %=% "testValue"
       val expected = "testVar = 'testValue';"
 
       val actual = mexp.toCommand
@@ -396,18 +411,39 @@ class MExpSpec extends WordSpec with Matchers with Inspectors with Helpers {
     }
 
     "render paren indexing" in {
-      test(M.Var("x").paren(3), "x(3)")
+      test(
+        'x.paren(3),
+        "x(3)"
+      )
     }
 
     "render curly indexing" in {
-      test(M.Var("c").curly(3), "c{3}")
+      test(
+        'c.curly(3),
+        "c{3}"
+      )
     }
 
     "render slice ranges" in {
-      test(M.Var("v").paren(M.%:%), "v(:)")
-      test(M.Var("v").paren(3 %:% 4), "v(3:4)")
-      test(M.Var("v").paren(3 %:% 4 %:% 5), "v(3:4:5)")
-      test(M.Var("v").paren(3.%:%(4).%:%(5)), "v(3:4:5)")
+      test(
+        'v.paren(M.%:%),
+        "v(:)"
+      )
+
+      test(
+        'v.paren(3 %:% 4),
+        "v(3:4)"
+      )
+
+      test(
+        'v.paren(3 %:% 4 %:% 5),
+        "v(3:4:5)"
+      )
+
+      test(
+        'v.paren(3.%:%(4).%:%(5)),
+        "v(3:4:5)"
+      )
     }
   }
 }

@@ -86,7 +86,7 @@ trait MExp extends MatRender {
  * @author Jason White
  */
 object MExp {
-  implicit def strToMExp(v: String): MExp = M.Str(v)
+  implicit def strToMExp(v: String): M.Str = M.Str(v)
 
   implicit def intToMExp(v: Int): MExp = M.Num(v)
 
@@ -97,6 +97,8 @@ object MExp {
   implicit def doubleToMExp(v: Double): MExp = M.Num(v)
 
   implicit def booleanToMExp(v: Boolean): MExp = M.Num(v)
+
+  implicit def symbolToMExp(v: Symbol): M.Var = M.Var(v.name)
 }
 
 /**
@@ -108,11 +110,6 @@ object MExp {
  * @author Jason White
  */
 object M {
-  // string interpolation for variables
-  implicit class MatlabHelper(val sc: StringContext) extends AnyVal {
-    def v(args: Any*): M.Var = M.Var(sc.parts.mkString)
-  }
-
   /*
    * RAW
    */
@@ -199,14 +196,12 @@ object M {
     override def toMatlab: String = MatRender.mkIdent(name)
   }
 
-  object Global {
-    def apply(name: String): Raw = Raw("global " + MatRender.mkIdent(name))
-    def apply(v: Var): Raw = Raw("global " + v.toMatlab)
+  case class Global(v: Var) extends MExp {
+    override def toMatlab: String = "global " + v.toMatlab
   }
 
-  object Persistent {
-    def apply(name: String): Raw = Raw("persistent " + MatRender.mkIdent(name))
-    def apply(v: Var): Raw = Raw("persistent " + v.toMatlab)
+  case class Persistent(v: Var) extends MExp {
+    override def toMatlab: String = "persistent " + v.toMatlab
   }
 
   /*
@@ -293,12 +288,17 @@ object M {
     protected val returnBuffer = ListBuffer.empty[String]
     protected val docBuffer = ListBuffer.empty[String]
 
-    def returns(vars: String*): FnDef = {
-      vars.foreach { returnBuffer += MatRender.mkIdent(_) }
+    //    def returns(vars: String*): FnDef = {
+    //      vars.foreach { returnBuffer += MatRender.mkIdent(_) }
+    //      this
+    //    }
+    //    def returns(vars: List[String]): FnDef = returns(vars: _*)
+    //    def returns(first: Var, others: Var*): FnDef = returns({ first :: others.toList }.map { _.toMatlab })
+
+    def returns(first: Var, others: Var*): FnDef = {
+      (first :: others.toList).foreach { v => returnBuffer += v.toMatlab }
       this
     }
-    def returns(vars: List[String]): FnDef = returns(vars: _*)
-    def returns(first: Var, others: Var*): FnDef = returns({ first :: others.toList }.map { _.toMatlab })
 
     def doc(ss: String*): FnDef = {
       ss.foreach { docBuffer += "% " + _ }
