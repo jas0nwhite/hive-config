@@ -1,6 +1,7 @@
 package org.hnl.hive.cfg.matlab
 
 import org.hnl.matlab._
+import org.hnl.matlab.MExp._
 import org.hnl.matlab.M._
 
 /**
@@ -33,7 +34,7 @@ case class ChemClass(chems: List[Chem], treatment: String) extends MatlabChunk w
    * enumeration
    */
   protected val enum =
-    ClassEnum()
+    M.ClassEnum()
       .%(
         "",
         "Valid chemicals for this treatment",
@@ -45,53 +46,45 @@ case class ChemClass(chems: List[Chem], treatment: String) extends MatlabChunk w
    * methods
    */
   protected val methods = {
-    // variables used below, for convenience
-    val self = v"self"
-    val s = v"s"
-    val ix = v"ix"
-    val a = v"a"
-    val n = v"n"
-    val d = v"d"
-
     ClassMethods()
       .+(
-        FnDef("ix", self).returns(n)
+        FnDef("ix", 'this).returns('n)
           .doc("IX returns the index of this Chem")
           .+(
-            n =: Fn("uint32", self)
+            'n %=% Fn("uint32", 'this)
           ),
-        FnDef("colName", self).returns(s)
+        FnDef("colName", 'this).returns('s)
           .doc("COLNAME returns the column name of this Chem")
           .+(
-            Persistent(a),
-            a %=% RCell(chems.sorted.map { c => Str(c.colName) }: _*),
-            s %=% a.curly(self ~> ix)
+            Persistent('a),
+            'a %=% RCell(chems.sorted.map { c => Str(c.colName) }: _*),
+            's %=% 'a.curly('this ~> 'ix)
           ),
-        FnDef("name", self).returns(s)
+        FnDef("name", 'this).returns('s)
           .doc("NAME returns the name of this Chem")
           .+(
-            s %=% Fn("char", self)
+            's %=% Fn("char", 'this)
           ),
-        FnDef("label", self).returns(s)
+        FnDef("label", 'this).returns('s)
           .doc("LABEL returns the label of this Chem")
           .+(
-            Persistent(a),
-            a %=% RCell(chems.sorted.map { c => Str(c.label) }: _*),
-            s %=% a.curly(self ~> ix)
+            Persistent('a),
+            'a %=% RCell(chems.sorted.map { c => Str(c.label) }: _*),
+            's %=% 'a.curly('this ~> 'ix)
           ),
-        FnDef("units", self).returns(s)
+        FnDef("units", 'this).returns('s)
           .doc("UNITS returns the units of this Chem")
           .+(
-            Persistent(a),
-            a %=% RCell(chems.sorted.map { c => Str(c.units) }: _*),
-            s %=% a.curly(self ~> ix)
+            Persistent('a),
+            'a %=% RCell(chems.sorted.map { c => Str(c.units) }: _*),
+            's %=% 'a.curly('this ~> 'ix)
           ),
-        FnDef("neutral", self).returns(n)
+        FnDef("neutral", 'this).returns('n)
           .doc("NEUTRAL returns the neutral concentration of this Chem")
           .+(
-            Persistent(a),
-            a %=% RVec(chems.sorted.map { c => Num(c.neutral) }: _*),
-            n %=% a.paren(self ~> ix)
+            //Persistent('a),
+            'a %=% RVec(chems.sorted.map { c => Num(c.neutral) }: _*),
+            'n %=% 'a.paren('this ~> 'ix)
           )
       )
   }
