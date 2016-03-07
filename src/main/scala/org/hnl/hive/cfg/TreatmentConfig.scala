@@ -59,6 +59,11 @@ class TreatmentConfig protected (config: Config) extends Logging {
   val targetResultPaths = getAbsolutePathList("target.result-path")
 
   /*
+   * chemicals
+   */
+  val chemicals = config.getObjectList("chemicals").toList
+
+  /*
    * PUBLIC API
    */
   override def toString: String = s"$name @ $projectRoot"
