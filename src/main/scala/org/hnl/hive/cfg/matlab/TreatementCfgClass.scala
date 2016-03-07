@@ -1,8 +1,9 @@
 package org.hnl.hive.cfg.matlab
 
 import org.hnl.hive.cfg.TreatmentConfig
-import org.hnl.matlab._
-import org.hnl.matlab.M._
+import org.hnl.matlab.M.{ ClassDef, ClassProps }
+import org.hnl.matlab.MExp
+import org.hnl.matlab.MExp._
 
 /**
  * TreatementCfgClass
@@ -12,7 +13,7 @@ import org.hnl.matlab.M._
  *
  * @author Jason White
  */
-case class TreatementCfgClass(cfg: TreatmentConfig) extends MatlabChunk with MatlabFormatting {
+case class TreatementCfgClass(cfg: TreatmentConfig) extends MExp {
 
   protected val treatmentDef =
     ClassProps().attribs("Constant")
@@ -22,12 +23,12 @@ case class TreatementCfgClass(cfg: TreatmentConfig) extends MatlabChunk with Mat
         ""
       )
       .+(
-        Var("name") %=% cfg.name,
-        Var("trainingSetId") %=% cfg.trainingSetId.toInt,
-        Var("trainingStyleId") %=% cfg.trainingStyleId.toInt,
-        Var("clusterStyleId") %=% cfg.clusterStyleId.toInt,
-        Var("alphaSelectId") %=% cfg.alphaSelectId.toInt,
-        Var("muSelectId") %=% cfg.muSelectId.toInt
+        'name %=% cfg.name,
+        'trainingSetId %=% cfg.trainingSetId.toInt,
+        'trainingStyleId %=% cfg.trainingStyleId.toInt,
+        'clusterStyleId %=% cfg.clusterStyleId.toInt,
+        'alphaSelectId %=% cfg.alphaSelectId.toInt,
+        'muSelectId %=% cfg.muSelectId.toInt
       )
 
   protected val treatmentDirs =
@@ -38,12 +39,12 @@ case class TreatementCfgClass(cfg: TreatmentConfig) extends MatlabChunk with Mat
         ""
       )
       .+(
-        Var("projectRoot") %=% cfg.projectRoot,
-        Var("trainingPath") %=% cfg.trainingPath,
-        Var("modelPath") %=% cfg.modelPath,
-        Var("clusterPath") %=% cfg.clusterPath,
-        Var("alphaPath") %=% cfg.alphaPath,
-        Var("muPath") %=% cfg.muPath
+        'projectRoot %=% cfg.projectRoot,
+        'trainingPath %=% cfg.trainingPath,
+        'modelPath %=% cfg.modelPath,
+        'clusterPath %=% cfg.clusterPath,
+        'alphaPath %=% cfg.alphaPath,
+        'muPath %=% cfg.muPath
       )
 
   protected val mClass =
@@ -58,6 +59,6 @@ case class TreatementCfgClass(cfg: TreatmentConfig) extends MatlabChunk with Mat
         treatmentDirs
       )
 
-  def toMatlab: String = mClass.toMatlab
+  override def toMatlab: String = mClass.toMatlab
 
 }
