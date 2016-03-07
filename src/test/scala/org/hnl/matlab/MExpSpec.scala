@@ -119,11 +119,45 @@ class MExpSpec extends WordSpec with Matchers with Inspectors with Helpers {
     }
 
     "render multi-valued column array" in {
-      test(M.CVec(1, 2, 3, 4, 5), "[1; 2; 3; 4; 5]")
+      test(
+        M.CVec(1, 2, 3, 4, 5),
+        """|[
+           |    1;
+           |    2;
+           |    3;
+           |    4;
+           |    5
+           |]""".stripMargin)
     }
 
     "render nested arrays" in {
-      test(M.CVec(M.CVec(1, 2), M.CVec(3, 4)), "[[1; 2]; [3; 4]]")
+      test(
+        M.CVec(M.CVec(1, 2), M.CVec(3, 4)),
+        """|[
+           |    [
+           |        1;
+           |        2
+           |    ];
+           |    [
+           |        3;
+           |        4
+           |    ]
+           |]""".stripMargin)
+    }
+
+    "render 2-D arrays" in {
+      test(
+        M.CVec(
+          M.Row(1, 2, 3),
+          M.Row(4, 5, 6),
+          M.Row(7, 8, 9)
+        ),
+        """|[
+           |    1, 2, 3;
+           |    4, 5, 6;
+           |    7, 8, 9
+           |]""".stripMargin
+      )
     }
   }
 
@@ -156,12 +190,46 @@ class MExpSpec extends WordSpec with Matchers with Inspectors with Helpers {
     }
 
     "render multi-valued column array" in {
-      test(M.CCell(1, 2, 3, 4, 5), "{1; 2; 3; 4; 5}")
+      test(M.CCell(1, 2, 3, 4, 5),
+        """|{
+           |    1;
+           |    2;
+           |    3;
+           |    4;
+           |    5
+           |}""".stripMargin)
+
     }
 
     "render nested arrays" in {
-      test(M.CCell(M.CCell(1, 2), M.CCell(3, 4)), "{{1; 2}; {3; 4}}")
+      test(
+        M.CCell(M.CCell(1, 2), M.CCell(3, 4)),
+        """|{
+           |    {
+           |        1;
+           |        2
+           |    };
+           |    {
+           |        3;
+           |        4
+           |    }
+           |}""".stripMargin)
     }
+  }
+
+  "render multidimensional arrays" in {
+    test(
+      M.CCell(
+        M.Row("test", 1.2, 1.3),
+        M.Row("val", 3, 17),
+        M.Row("mike", 21, 8.8)
+      ),
+      """|{
+         |    'test', 1.2, 1.3;
+         |    'val', 3, 17;
+         |    'mike', 21, 8.8
+         |}""".stripMargin
+    )
   }
 
   "M.RCell" should {

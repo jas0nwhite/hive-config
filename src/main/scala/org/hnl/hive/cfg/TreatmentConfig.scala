@@ -6,6 +6,7 @@ import scala.collection.JavaConversions.asScalaBuffer
 
 import com.typesafe.config.{ Config, ConfigList, ConfigValueType }
 
+import grizzled.file.util
 import grizzled.slf4j.Logging
 
 // scalastyle:off multiple.string.literals
@@ -28,7 +29,7 @@ class TreatmentConfig protected (config: Config) extends Logging {
   val clusterStyleId = getRequiredString("treatment.cluster-style")
   val alphaSelectId = getRequiredString("treatment.alpha-select")
   val muSelectId = getRequiredString("treatment.mu-select")
-  val name = getRequiredString("treatment.name")
+  val name = getRequiredString("treatment.name", s"$trainingSetId-$trainingStyleId-$clusterStyleId-$alphaSelectId-$muSelectId")
 
   /*
    * project settings
@@ -58,6 +59,8 @@ class TreatmentConfig protected (config: Config) extends Logging {
   val targetSourcePaths = getAbsolutePathList("target.source-path")
   val targetResultPaths = getAbsolutePathList("target.result-path")
 
+  val targetSourceList = targetSourcePaths.map(util.glob(_))
+
   /*
    * chemicals
    */
@@ -77,6 +80,14 @@ class TreatmentConfig protected (config: Config) extends Logging {
     }
     catch {
       case e: Throwable => { error(s"error reading string value at $key", e); "" }
+    }
+
+  protected def getRequiredString(key: String, fallback: String): String =
+    try {
+      config.getString(key)
+    }
+    catch {
+      case e: Throwable => fallback
     }
 
   protected def getAbsolutePath(key: String): String =
