@@ -1,7 +1,7 @@
 package org.hnl.hive.cfg.matlab
 
 import org.hnl.hive.cfg.TreatmentConfig
-import org.hnl.matlab.M.{ ClassDef, ClassProps }
+import org.hnl.matlab.M._
 import org.hnl.matlab.MExp
 import org.hnl.matlab.MExp._
 
@@ -47,8 +47,21 @@ case class TreatementCfgClass(cfg: TreatmentConfig) extends MExp {
         'muPath %=% cfg.muPath
       )
 
+  protected val targetDirs =
+    ClassProps().attribs("Constant")
+      .%(
+        "",
+        "target directories",
+        ""
+      )
+      .+(
+        'targetSourcePathList %=% CCell(cfg.targetSourcePaths: _*),
+        'targetResultPathList %=% CCell(cfg.targetResultPaths: _*),
+        'targetSourceList %=% CCell(cfg.targetSourceList.map { l => CCell(l: _*) }: _*)
+      )
+
   protected val mClass =
-    ClassDef("Config").from("handle")
+    ClassDef("Config")
       .%(
         s"configruation information for HIVE treatment '${cfg.name}'",
         "",
@@ -56,7 +69,8 @@ case class TreatementCfgClass(cfg: TreatmentConfig) extends MExp {
       )
       .+(
         treatmentDef,
-        treatmentDirs
+        treatmentDirs,
+        targetDirs
       )
 
   override def toMatlab: String = mClass.toMatlab

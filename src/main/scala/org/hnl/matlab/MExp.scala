@@ -99,6 +99,9 @@ object MExp {
   implicit def booleanToMExp(v: Boolean): MExp = M.Num(v)
 
   implicit def symbolToMExp(v: Symbol): M.Var = M.Var(v.name)
+
+  implicit def stringListToMExp(l: List[String]): List[M.Str] = l.map { v => M.Str(v) }.toList
+
 }
 
 /**
@@ -207,6 +210,11 @@ object M {
   /*
    * ARRAYS
    */
+  case class Row(vals: MExp*) extends MExp {
+    override def toMatlab: String =
+      vals.map { _.toMatlab }.mkString(", ")
+  }
+
   case class RVec(vals: MExp*) extends MExp {
     override def toMatlab: String =
       "[" + vals.map { _.toMatlab }.mkString(", ") + "]"
@@ -214,7 +222,12 @@ object M {
 
   case class CVec(vals: MExp*) extends MExp {
     override def toMatlab: String =
-      "[" + vals.map { _.toMatlab }.mkString("; ") + "]"
+      if (vals.length < 2) {
+        vals.map { _.toMatlab }.mkString("[", ";", "]")
+      }
+      else {
+        vals.map { _.toIndentedMatlab(1).mkString("\n") }.mkString("[\n", ";\n", "\n]")
+      }
   }
 
   case class RCell(vals: MExp*) extends MExp {
@@ -224,7 +237,12 @@ object M {
 
   case class CCell(vals: MExp*) extends MExp {
     override def toMatlab: String =
-      "{" + vals.map { _.toMatlab }.mkString("; ") + "}"
+      if (vals.length < 2) {
+        vals.map { _.toMatlab }.mkString("{", ";", "}")
+      }
+      else {
+        vals.map { _.toIndentedMatlab(1).mkString("\n") }.mkString("{\n", ";\n", "\n}")
+      }
   }
 
   case object %:% extends MExp { // scalastyle:ignore object.name

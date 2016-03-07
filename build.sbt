@@ -6,6 +6,12 @@ organization := "org.hnl"
 
 scalaVersion := "2.11.7"
 
+/*
+ * assembly options
+ */
+assemblyJarName in assembly := "hiveConfig.jar"
+mainClass in assembly := Some("org.hnl.hive.cfg.GenerateHiveConfig")
+
 libraryDependencies ++= {
   Seq(
   	"org.clapper"                      %% "grizzled-scala"         % "1.4.0",
