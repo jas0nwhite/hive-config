@@ -1,8 +1,9 @@
 package org.hnl.hive.cfg.matlab
 
-import org.hnl.matlab._
-import org.hnl.matlab.MExp._
 import org.hnl.matlab.M._
+import org.hnl.matlab.MExp
+import org.hnl.matlab.MExp._
+import org.hnl.hive.cfg.TreatmentConfig
 
 /**
  * Chem
@@ -28,13 +29,13 @@ case class Chem(ix: Int, colName: String, name: String, label: String, units: St
  *
  * @author Jason White
  */
-case class ChemClass(chems: List[Chem], treatment: String) extends MatlabChunk with MatlabFormatting {
+case class ChemClass(chems: List[Chem], treatment: String) extends MExp {
 
   /*
    * enumeration
    */
   protected val enum =
-    M.ClassEnum()
+    ClassEnum()
       .%(
         "",
         "Valid chemicals for this treatment",
@@ -57,7 +58,9 @@ case class ChemClass(chems: List[Chem], treatment: String) extends MatlabChunk w
           .doc("COLNAME returns the column name of this Chem")
           .+(
             Persistent('a),
-            'a %=% RCell(chems.sorted.map { c => Str(c.colName) }: _*),
+            'a %=% RCell(
+              chems.sorted.map { c => Str(c.colName) }: _*
+            ),
             's %=% 'a.curly('this ~> 'ix)
           ),
         FnDef("name", 'this).returns('s)
@@ -69,21 +72,27 @@ case class ChemClass(chems: List[Chem], treatment: String) extends MatlabChunk w
           .doc("LABEL returns the label of this Chem")
           .+(
             Persistent('a),
-            'a %=% RCell(chems.sorted.map { c => Str(c.label) }: _*),
+            'a %=% RCell(
+              chems.sorted.map { c => Str(c.label) }: _*
+            ),
             's %=% 'a.curly('this ~> 'ix)
           ),
         FnDef("units", 'this).returns('s)
           .doc("UNITS returns the units of this Chem")
           .+(
             Persistent('a),
-            'a %=% RCell(chems.sorted.map { c => Str(c.units) }: _*),
+            'a %=% RCell(
+              chems.sorted.map { c => Str(c.units) }: _*
+            ),
             's %=% 'a.curly('this ~> 'ix)
           ),
         FnDef("neutral", 'this).returns('n)
           .doc("NEUTRAL returns the neutral concentration of this Chem")
           .+(
-            //Persistent('a),
-            'a %=% RVec(chems.sorted.map { c => Num(c.neutral) }: _*),
+            Persistent('a),
+            'a %=% RVec(
+              chems.sorted.map { c => Num(c.neutral) }: _*
+            ),
             'n %=% 'a.paren('this ~> 'ix)
           )
       )
@@ -110,5 +119,31 @@ case class ChemClass(chems: List[Chem], treatment: String) extends MatlabChunk w
         methods
       )
 
-  def toMatlab: String = mClass.toMatlab
+  override def toMatlab: String = mClass.toMatlab
+}
+
+/**
+ * Methods to extract the ChemClass object from the config object
+ * <p>
+ * Created on Mar 7, 2016.
+ * <p>
+ *
+ * @author Jason White
+ */
+object ChemClass {
+
+  def getChemList(config: TreatmentConfig): List[Chem] = config.chemicals.map { c =>
+    Chem(
+      c.get("ix").unwrapped().toString.toInt,
+      c.get("colName").unwrapped().toString,
+      c.get("name").unwrapped().toString,
+      c.get("label").unwrapped().toString,
+      c.get("units").unwrapped().toString,
+      c.get("neutral").unwrapped().toString.toDouble
+    )
+  }
+
+  def fromConfig(config: TreatmentConfig): ChemClass =
+    ChemClass(getChemList(config), config.name)
+
 }
