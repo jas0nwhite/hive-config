@@ -3,10 +3,10 @@ package org.hnl.hive.cfg
 import java.io.File
 import java.nio.charset.StandardCharsets
 import java.nio.file.{ Files, Paths }
+
 import org.hnl.hive.cfg.matlab._
+
 import com.typesafe.config.ConfigFactory
-import com.typesafe.config.ConfigResolveOptions
-import org.hnl.matlab.MExp
 
 object GenerateHiveConfig extends App {
 
@@ -28,8 +28,8 @@ object GenerateHiveConfig extends App {
    */
   val treatmentConfig = TreatmentConfig.fromConfig(config)
 
-  val chemConfig = ChemClass.fromConfig("Chem", treatmentConfig)
-  val hiveConfig = TreatementCfgClass("Config", treatmentConfig)
+  val chemConfig = Chem.fromConfig("Chem", treatmentConfig)
+  val hiveConfig = Config("Config", treatmentConfig)
   val testingCat = TestingCatalog("TestingCatalog", treatmentConfig)
   val trainingCat = TrainingCatalog("TrainingCatalog", treatmentConfig)
   val targetCat = TargetCatalog("TargetCatalog", treatmentConfig)
