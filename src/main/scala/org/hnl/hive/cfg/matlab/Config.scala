@@ -6,14 +6,14 @@ import org.hnl.matlab.MExp
 import org.hnl.matlab.MExp._
 
 /**
- * TreatementCfgClass
+ * Config
  * <p>
  * Created on Mar 1, 2016.
  * <p>
  *
  * @author Jason White
  */
-case class TreatementCfgClass(name: String, cfg: TreatmentConfig) extends MatClassFile {
+case class Config(name: String, cfg: TreatmentConfig) extends MatClassFile {
 
   protected val treatmentDef =
     ClassProps().attribs("Constant")

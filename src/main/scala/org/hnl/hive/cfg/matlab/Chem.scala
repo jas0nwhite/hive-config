@@ -6,6 +6,22 @@ import org.hnl.matlab.MExp._
 import org.hnl.hive.cfg.TreatmentConfig
 
 /**
+ * Chemical
+ * <p>
+ * Created on Mar 1, 2016.
+ * <p>
+ *
+ * @author Jason White
+ */
+case class Chemical(ix: Int, colName: String, name: String, label: String, units: String, neutral: Double) extends Ordered[Chemical] {
+
+  def compare(that: Chemical): Int = this.ix compare that.ix
+
+}
+
+// scalastyle:off multiple.string.literals
+
+/**
  * Chem
  * <p>
  * Created on Mar 1, 2016.
@@ -13,23 +29,7 @@ import org.hnl.hive.cfg.TreatmentConfig
  *
  * @author Jason White
  */
-case class Chem(ix: Int, colName: String, name: String, label: String, units: String, neutral: Double) extends Ordered[Chem] {
-
-  def compare(that: Chem): Int = this.ix compare that.ix
-
-}
-
-// scalastyle:off multiple.string.literals
-
-/**
- * ChemClass
- * <p>
- * Created on Mar 1, 2016.
- * <p>
- *
- * @author Jason White
- */
-case class ChemClass(name: String, chems: List[Chem], treatment: String) extends MatClassFile {
+case class Chem(name: String, chems: List[Chemical], treatment: String) extends MatClassFile {
 
   /*
    * enumeration
@@ -130,10 +130,10 @@ case class ChemClass(name: String, chems: List[Chem], treatment: String) extends
  *
  * @author Jason White
  */
-object ChemClass {
+object Chem {
 
-  def getChemList(config: TreatmentConfig): List[Chem] = config.chemicals.map { c =>
-    Chem(
+  def getChemList(config: TreatmentConfig): List[Chemical] = config.chemicals.map { c =>
+    Chemical(
       c.get("ix").unwrapped().toString.toInt,
       c.get("colName").unwrapped().toString,
       c.get("name").unwrapped().toString,
@@ -143,7 +143,7 @@ object ChemClass {
     )
   }
 
-  def fromConfig(name: String, config: TreatmentConfig): ChemClass =
-    ChemClass(name, getChemList(config), config.name)
+  def fromConfig(name: String, config: TreatmentConfig): Chem =
+    Chem(name, getChemList(config), config.name)
 
 }
