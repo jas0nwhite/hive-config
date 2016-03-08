@@ -6,7 +6,6 @@ import scala.collection.JavaConversions.asScalaBuffer
 
 import com.typesafe.config.{ Config, ConfigList, ConfigValueType }
 
-import grizzled.file.util
 import grizzled.slf4j.Logging
 
 // scalastyle:off multiple.string.literals
@@ -58,8 +57,6 @@ class TreatmentConfig protected (config: Config) extends Logging {
    */
   val targetSourcePaths = getAbsolutePathList("target.source-path")
   val targetResultPaths = getAbsolutePathList("target.result-path")
-
-  val targetSourceList = targetSourcePaths.map(util.glob(_))
 
   /*
    * chemicals

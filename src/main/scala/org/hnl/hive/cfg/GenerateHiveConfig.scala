@@ -3,9 +3,10 @@ package org.hnl.hive.cfg
 import java.io.File
 import java.nio.charset.StandardCharsets
 import java.nio.file.{ Files, Paths }
-import org.hnl.hive.cfg.matlab.{ ChemClass, TreatementCfgClass }
+import org.hnl.hive.cfg.matlab._
 import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigResolveOptions
+import org.hnl.matlab.MExp
 
 object GenerateHiveConfig extends App {
 
@@ -27,16 +28,22 @@ object GenerateHiveConfig extends App {
    */
   val treatmentConfig = TreatmentConfig.fromConfig(config)
 
-  val chemConfig = ChemClass.fromConfig(treatmentConfig)
-  val hiveConfig = TreatementCfgClass(treatmentConfig)
+  val chemConfig = ChemClass.fromConfig("Chem", treatmentConfig)
+  val hiveConfig = TreatementCfgClass("Config", treatmentConfig)
+  val testingCat = TestingCatalog("TestingCatalog", treatmentConfig)
+  val trainingCat = TrainingCatalog("TrainingCatalog", treatmentConfig)
+  val targetCat = TargetCatalog("TargetCatalog", treatmentConfig)
 
   /*
    * output files
    */
-  val chemFile = "Chem.m"
-  val hiveFile = "Config.m"
+  createMatlabFile(chemConfig)
+  createMatlabFile(hiveConfig)
+  createMatlabFile(testingCat)
+  createMatlabFile(trainingCat)
+  createMatlabFile(targetCat)
 
-  Files.write(Paths.get(chemFile), chemConfig.toMatlab.getBytes(StandardCharsets.UTF_8))
-  Files.write(Paths.get(hiveFile), hiveConfig.toMatlab.getBytes(StandardCharsets.UTF_8))
+  protected def createMatlabFile(matClass: MatClassFile): Unit =
+    Files.write(Paths.get(matClass.name + ".m"), matClass.toMatlab.getBytes(StandardCharsets.UTF_8))
 
 }

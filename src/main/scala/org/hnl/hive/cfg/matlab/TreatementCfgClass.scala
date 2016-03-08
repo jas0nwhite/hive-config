@@ -13,7 +13,7 @@ import org.hnl.matlab.MExp._
  *
  * @author Jason White
  */
-case class TreatementCfgClass(cfg: TreatmentConfig) extends MExp {
+case class TreatementCfgClass(name: String, cfg: TreatmentConfig) extends MatClassFile {
 
   protected val treatmentDef =
     ClassProps().attribs("Constant")
@@ -47,6 +47,30 @@ case class TreatementCfgClass(cfg: TreatmentConfig) extends MExp {
         'muPath %=% cfg.muPath
       )
 
+  protected val trainingDirs =
+    ClassProps().attribs("Constant")
+      .%(
+        "",
+        "training directories",
+        ""
+      )
+      .+(
+        'trainingSourcePathList %=% CCell(cfg.trainingSourcePaths: _*),
+        'trainingResultPathList %=% CCell(cfg.trainingResultPaths: _*)
+      )
+
+  protected val testingDirs =
+    ClassProps().attribs("Constant")
+      .%(
+        "",
+        "testing directories",
+        ""
+      )
+      .+(
+        'testingSourcePathList %=% CCell(cfg.testingSourcePaths: _*),
+        'testingResultPathList %=% CCell(cfg.testingResultPaths: _*)
+      )
+
   protected val targetDirs =
     ClassProps().attribs("Constant")
       .%(
@@ -56,12 +80,24 @@ case class TreatementCfgClass(cfg: TreatmentConfig) extends MExp {
       )
       .+(
         'targetSourcePathList %=% CCell(cfg.targetSourcePaths: _*),
-        'targetResultPathList %=% CCell(cfg.targetResultPaths: _*),
-        'targetSourceList %=% makeIndexedCellArray(cfg.targetSourceList)((s: String) => Str(s))
+        'targetResultPathList %=% CCell(cfg.targetResultPaths: _*)
       )
 
-  protected val mClass =
-    ClassDef("Config")
+  protected val catalogs =
+    ClassProps().attribs("Constant")
+      .%(
+        "",
+        " catalogs",
+        ""
+      )
+      .+(
+        'training %=% Fn("TrainingCatalog"),
+        'testing %=% Fn("TestingCatalog"),
+        'target %=% Fn("TargetCatalog")
+      )
+
+  override val mClass =
+    ClassDef(name)
       .%(
         s"configruation information for HIVE treatment '${cfg.name}'",
         "",
@@ -70,32 +106,12 @@ case class TreatementCfgClass(cfg: TreatmentConfig) extends MExp {
       .+(
         treatmentDef,
         treatmentDirs,
-        targetDirs
+        trainingDirs,
+        testingDirs,
+        targetDirs,
+        catalogs
       )
 
   override def toMatlab: String = mClass.toMatlab
-
-  /*
-   * INTERNAL API
-   */
-  def deepZip[A](ls: List[List[A]], i: Int = 0): List[List[(A, Int)]] = ls match {
-    case Nil     => Nil
-    case x :: xs => x.zip(Stream.from(i)) :: deepZip(xs, i + x.size)
-  }
-
-  def makeCCell[A](l: List[A])(f: A => MExp): CCell =
-    CCell(l.map(f): _*)
-
-  def deepCCell[A](ls: List[List[A]])(f: A => MExp): CCell = {
-    def cellList(ll: List[List[A]]): List[CCell] = ll match {
-      case Nil     => Nil
-      case x :: xs => makeCCell(x)(f) :: cellList(xs)
-    }
-
-    CCell(cellList(ls): _*)
-  }
-
-  protected def makeIndexedCellArray[A](ls: List[List[A]])(f: A => MExp): CCell =
-    deepCCell(deepZip(ls, 1)) { case (a, ix) => Row(ix, f(a)) }
 
 }
