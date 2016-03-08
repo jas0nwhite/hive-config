@@ -57,7 +57,7 @@ case class TreatementCfgClass(cfg: TreatmentConfig) extends MExp {
       .+(
         'targetSourcePathList %=% CCell(cfg.targetSourcePaths: _*),
         'targetResultPathList %=% CCell(cfg.targetResultPaths: _*),
-        'targetSourceList %=% CCell(cfg.targetSourceList.map { l => CCell(l: _*) }: _*)
+        'targetSourceList %=% makeIndexedCellArray(cfg.targetSourceList)((s: String) => Str(s))
       )
 
   protected val mClass =
@@ -74,5 +74,28 @@ case class TreatementCfgClass(cfg: TreatmentConfig) extends MExp {
       )
 
   override def toMatlab: String = mClass.toMatlab
+
+  /*
+   * INTERNAL API
+   */
+  def deepZip[A](ls: List[List[A]], i: Int = 0): List[List[(A, Int)]] = ls match {
+    case Nil     => Nil
+    case x :: xs => x.zip(Stream.from(i)) :: deepZip(xs, i + x.size)
+  }
+
+  def makeCCell[A](l: List[A])(f: A => MExp): CCell =
+    CCell(l.map(f): _*)
+
+  def deepCCell[A](ls: List[List[A]])(f: A => MExp): CCell = {
+    def cellList(ll: List[List[A]]): List[CCell] = ll match {
+      case Nil     => Nil
+      case x :: xs => makeCCell(x)(f) :: cellList(xs)
+    }
+
+    CCell(cellList(ls): _*)
+  }
+
+  protected def makeIndexedCellArray[A](ls: List[List[A]])(f: A => MExp): CCell =
+    deepCCell(deepZip(ls, 1)) { case (a, ix) => Row(ix, f(a)) }
 
 }
