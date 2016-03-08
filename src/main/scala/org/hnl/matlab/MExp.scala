@@ -88,6 +88,8 @@ trait MExp extends MatRender {
 object MExp {
   implicit def strToMExp(v: String): M.Str = M.Str(v)
 
+  implicit def booleanToMExp(v: Boolean): MExp = M.Num(v)
+
   implicit def intToMExp(v: Int): MExp = M.Num(v)
 
   implicit def longToMExp(v: Long): MExp = M.Num(v)
@@ -96,12 +98,19 @@ object MExp {
 
   implicit def doubleToMExp(v: Double): MExp = M.Num(v)
 
-  implicit def booleanToMExp(v: Boolean): MExp = M.Num(v)
-
   implicit def symbolToMExp(v: Symbol): M.Var = M.Var(v.name)
 
-  implicit def stringListToMExp(l: List[String]): List[M.Str] = l.map { v => M.Str(v) }.toList
+  implicit def stringListToMExp(l: List[String]): List[MExp] = l.map { v => M.Str(v) }.toList
 
+  implicit def booleanListToMExp(l: List[Boolean]): List[MExp] = l.map { v => M.Num(v) }.toList
+
+  implicit def intListToMExp(l: List[Int]): List[MExp] = l.map { v => M.Num(v) }.toList
+
+  implicit def longListToMExp(l: List[Long]): List[MExp] = l.map { v => M.Num(v) }.toList
+
+  implicit def floatListToMExp(l: List[Float]): List[MExp] = l.map { v => M.Num(v) }.toList
+
+  implicit def doubleListToMExp(l: List[Double]): List[MExp] = l.map { v => M.Num(v) }.toList
 }
 
 /**
@@ -113,6 +122,54 @@ object MExp {
  * @author Jason White
  */
 object M {
+  /*
+   * API
+   */
+
+  /**
+   * zips a nested list structure with an index
+   * @param ls The nested list structure
+   * @param i The initial index value
+   * @return a nested list of tuples
+   */
+  def deepZip[A](ls: List[List[A]], i: Int = 0): List[List[(A, Int)]] = ls match {
+    case Nil     => Nil
+    case x :: xs => x.zip(Stream.from(i)) :: deepZip(xs, i + x.size)
+  }
+
+  /**
+   * creates a column cell array from a list
+   * @param l The list of values
+   * @param f A function to convert each value to an MExp
+   * @return a column cell array
+   */
+  def makeCCell[A](l: List[A])(f: A => MExp): CCell =
+    CCell(l.map(f): _*)
+
+  /**
+   * creates a nested column cell array from a nested list structure
+   * @param ls The nested list structure
+   * @param f A function to convert each value to an MExp
+   * @return a column cell array
+   */
+  def deepCCell[A](ls: List[List[A]])(f: A => MExp): CCell = {
+    def cellList(ll: List[List[A]]): List[CCell] = ll match {
+      case Nil     => Nil
+      case x :: xs => makeCCell(x)(f) :: cellList(xs)
+    }
+
+    CCell(cellList(ls): _*)
+  }
+
+  /**
+   * creates a nested column cell array from a nested list structure with indexes starting from 1
+   * @param ls The nested list structure
+   * @param f A function to convert each value to an MExp
+   * @return a column cell array of rows containing index followed by value
+   */
+  def makeIndexedCellArray[A](ls: List[List[A]])(f: A => MExp): CCell =
+    deepCCell(deepZip(ls, 1)) { case (a, ix) => Row(ix, f(a)) }
+
   /*
    * RAW
    */

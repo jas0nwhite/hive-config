@@ -29,7 +29,7 @@ case class Chem(ix: Int, colName: String, name: String, label: String, units: St
  *
  * @author Jason White
  */
-case class ChemClass(chems: List[Chem], treatment: String) extends MExp {
+case class ChemClass(name: String, chems: List[Chem], treatment: String) extends MatClassFile {
 
   /*
    * enumeration
@@ -101,8 +101,8 @@ case class ChemClass(chems: List[Chem], treatment: String) extends MExp {
   /*
    * class
    */
-  protected val mClass =
-    ClassDef("Chem").from("uint32", "ChemBase")
+  override val mClass =
+    ClassDef(name).from("uint32", "ChemBase")
       .%(
         s"Chemicals for use in HIVE treatment '$treatment'",
         "",
@@ -143,7 +143,7 @@ object ChemClass {
     )
   }
 
-  def fromConfig(config: TreatmentConfig): ChemClass =
-    ChemClass(getChemList(config), config.name)
+  def fromConfig(name: String, config: TreatmentConfig): ChemClass =
+    ChemClass(name, getChemList(config), config.name)
 
 }
