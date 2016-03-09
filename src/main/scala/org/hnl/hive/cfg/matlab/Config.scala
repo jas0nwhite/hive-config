@@ -13,7 +13,15 @@ import org.hnl.matlab.MExp._
  *
  * @author Jason White
  */
-case class Config(name: String, cfg: TreatmentConfig) extends MatClassFile {
+case class Config(
+  name: String,
+  cfg: TreatmentConfig,
+  training: TrainingCatalog,
+  testing: TestingCatalog,
+  target: TargetCatalog)
+    extends MatClassFile {
+
+  override val pkg: String = ""
 
   protected val treatmentDef =
     ClassProps().attribs("Constant")
@@ -39,61 +47,25 @@ case class Config(name: String, cfg: TreatmentConfig) extends MatClassFile {
         ""
       )
       .+(
-        'projectRoot %=% cfg.projectRoot,
-        'trainingPath %=% cfg.trainingPath,
-        'modelPath %=% cfg.modelPath,
-        'clusterPath %=% cfg.clusterPath,
-        'alphaPath %=% cfg.alphaPath,
-        'muPath %=% cfg.muPath
-      )
-
-  protected val trainingDirs =
-    ClassProps().attribs("Constant")
-      .%(
-        "",
-        "training directories",
-        ""
-      )
-      .+(
-        'trainingSourcePathList %=% CCell(cfg.trainingSourcePaths: _*),
-        'trainingResultPathList %=% CCell(cfg.trainingResultPaths: _*)
-      )
-
-  protected val testingDirs =
-    ClassProps().attribs("Constant")
-      .%(
-        "",
-        "testing directories",
-        ""
-      )
-      .+(
-        'testingSourcePathList %=% CCell(cfg.testingSourcePaths: _*),
-        'testingResultPathList %=% CCell(cfg.testingResultPaths: _*)
-      )
-
-  protected val targetDirs =
-    ClassProps().attribs("Constant")
-      .%(
-        "",
-        "target directories",
-        ""
-      )
-      .+(
-        'targetSourcePathList %=% CCell(cfg.targetSourcePaths: _*),
-        'targetResultPathList %=% CCell(cfg.targetResultPaths: _*)
+        'projectHome %=% cfg.projectHome,
+        'trainingHome %=% cfg.trainingHome,
+        'modelHome %=% cfg.modelHome,
+        'clusterHome %=% cfg.clusterHome,
+        'alphaHome %=% cfg.alphaHome,
+        'muHome %=% cfg.muHome
       )
 
   protected val catalogs =
     ClassProps().attribs("Constant")
       .%(
         "",
-        " catalogs",
+        "catalogs",
         ""
       )
       .+(
-        'training %=% Fn("TrainingCatalog"),
-        'testing %=% Fn("TestingCatalog"),
-        'target %=% Fn("TargetCatalog")
+        'training %=% training.classObj,
+        'testing %=% testing.classObj,
+        'target %=% target.classObj
       )
 
   override val mClass =
@@ -106,12 +78,7 @@ case class Config(name: String, cfg: TreatmentConfig) extends MatClassFile {
       .+(
         treatmentDef,
         treatmentDirs,
-        trainingDirs,
-        testingDirs,
-        targetDirs,
         catalogs
       )
-
-  override def toMatlab: String = mClass.toMatlab
 
 }

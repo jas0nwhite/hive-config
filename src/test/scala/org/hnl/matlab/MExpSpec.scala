@@ -1,10 +1,7 @@
 package org.hnl.matlab
 
-import org.scalatest.WordSpec
-import org.scalatest.Matchers
-import org.scalatest.Inspectors
-
 import org.hnl.matlab.MExp._
+import org.scalatest._
 
 // scalastyle:off magic.number
 // scalastyle:off null
