@@ -314,6 +314,14 @@ object M {
       fn + "(" + args.map { _.toMatlab }.mkString(",") + ")"
   }
 
+  /*
+   * CLASS OBJECT
+   */
+  case class ClassObj(pkg: String, name: String) extends MExp {
+    override def toMatlab: String =
+      if (pkg.isEmpty) name else pkg + "." + name
+  }
+
   /**
    * Trait for common code blocks
    * <p>

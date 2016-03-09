@@ -31,6 +31,8 @@ case class Chemical(ix: Int, colName: String, name: String, label: String, units
  */
 case class Chem(name: String, chems: List[Chemical], treatment: String) extends MatClassFile {
 
+  override val pkg: String = ""
+
   /*
    * enumeration
    */
@@ -102,7 +104,7 @@ case class Chem(name: String, chems: List[Chemical], treatment: String) extends 
    * class
    */
   override val mClass =
-    ClassDef(name).from("uint32", "ChemBase")
+    ClassDef(name).from("uint32", "hive.cfg.ChemBase")
       .%(
         s"Chemicals for use in HIVE treatment '$treatment'",
         "",
@@ -118,8 +120,6 @@ case class Chem(name: String, chems: List[Chemical], treatment: String) extends 
         enum,
         methods
       )
-
-  override def toMatlab: String = mClass.toMatlab
 }
 
 /**

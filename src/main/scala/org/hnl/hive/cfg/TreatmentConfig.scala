@@ -1,12 +1,12 @@
 package org.hnl.hive.cfg
 
 import java.nio.file.FileSystems
-
 import scala.collection.JavaConversions.asScalaBuffer
-
 import com.typesafe.config.{ Config, ConfigList, ConfigValueType }
-
 import grizzled.slf4j.Logging
+import com.typesafe.config.ConfigValue
+import com.typesafe.config.ConfigObject
+import java.util.ArrayList
 
 // scalastyle:off multiple.string.literals
 
@@ -20,42 +20,46 @@ import grizzled.slf4j.Logging
  */
 class TreatmentConfig protected (config: Config) extends Logging {
 
+  //
+  // USER-SPECIFIED PROPERTIES
+  //
+
   /*
    * treatment settings
    */
-  val trainingSetId = getRequiredString("treatment.training-set")
-  val trainingStyleId = getRequiredString("treatment.training-style")
-  val clusterStyleId = getRequiredString("treatment.cluster-style")
-  val alphaSelectId = getRequiredString("treatment.alpha-select")
-  val muSelectId = getRequiredString("treatment.mu-select")
-  val name = getRequiredString("treatment.name", s"$trainingSetId-$trainingStyleId-$clusterStyleId-$alphaSelectId-$muSelectId")
+  val trainingSetId = getString("treatment.training-set")
+  val trainingStyleId = getString("treatment.training-style")
+  val clusterStyleId = getString("treatment.cluster-style")
+  val alphaSelectId = getString("treatment.alpha-select")
+  val muSelectId = getString("treatment.mu-select")
+  val name = getString("treatment.name", s"$trainingSetId-$trainingStyleId-$clusterStyleId-$alphaSelectId-$muSelectId")
 
   /*
    * project settings
    */
-  val projectRoot = getAbsolutePath("project.root")
-  val trainingPath = getAbsolutePath("project.training-path")
-  val modelPath = getAbsolutePath("project.model-path")
-  val clusterPath = getAbsolutePath("project.cluster-path")
-  val alphaPath = getAbsolutePath("project.alpha-path")
-  val muPath = getAbsolutePath("project.mu-path")
+  val projectHome = getAbsolutePath("project.home")
+  val trainingHome = getAbsolutePath("project.training-home")
+  val modelHome = getAbsolutePath("project.model-home")
+  val clusterHome = getAbsolutePath("project.cluster-home")
+  val alphaHome = getAbsolutePath("project.alpha-home")
+  val muHome = getAbsolutePath("project.mu-home")
 
   /*
    * training settings (allow multiple paths)
    */
-  val trainingSourcePaths = getAbsolutePathList("training.source-path")
+  val trainingSourceSpecs = getAbsolutePathList("training.source-spec")
   val trainingResultPaths = getAbsolutePathList("training.result-path")
 
   /*
    * testing settings (allow multiple paths)
    */
-  val testingSourcePaths = getAbsolutePathList("testing.source-path")
+  val testingSourceSpecs = getAbsolutePathList("testing.source-spec")
   val testingResultPaths = getAbsolutePathList("testing.result-path")
 
   /*
    * target settings (allow multiple paths)
    */
-  val targetSourcePaths = getAbsolutePathList("target.source-path")
+  val targetSourceSpecs = getAbsolutePathList("target.source-spec")
   val targetResultPaths = getAbsolutePathList("target.result-path")
 
   /*
@@ -63,63 +67,70 @@ class TreatmentConfig protected (config: Config) extends Logging {
    */
   val chemicals = config.getObjectList("chemicals").toList
 
-  /*
-   * PUBLIC API
-   */
-  override def toString: String = s"$name @ $projectRoot"
+  //
+  // CALCULATED PROPERTIES
+  //
 
   /*
-   * INTERNAL API
+   * training catalog
    */
-  protected def getRequiredString(key: String): String =
-    try {
-      config.getString(key)
-    }
-    catch {
-      case e: Throwable => { error(s"error reading string value at $key", e); "" }
-    }
+  val trainingSourceCatalog = Util.findPaths(trainingSourceSpecs)
+  val trainingDatasetCatalog = trainingSourceCatalog.map(Util.basenames(_))
 
-  protected def getRequiredString(key: String, fallback: String): String =
-    try {
+  /*
+   * testing catalog
+   */
+  val testingSourceCatalog = Util.findPaths(testingSourceSpecs)
+  val testingDatasetCatalog = testingSourceCatalog.map(Util.basenames(_))
+
+  /*
+   * target catalog
+   */
+  val targetSourceCatalog = Util.findPaths(targetSourceSpecs)
+  val targetDatasetCatalog = targetSourceCatalog.map(Util.basenames(_))
+
+  //
+  // PUBLIC API
+  //
+
+  override def toString: String = s"$name @ $projectHome"
+
+  //
+  // INTERNAL API
+  //
+
+  protected def getString(key: String): String =
+    config.getString(key)
+
+  protected def getString(key: String, fallback: String): String =
+    if (config.hasPath(key)) {
       config.getString(key)
     }
-    catch {
-      case e: Throwable => fallback
+    else {
+      info(s"no value found for '${key}', using '${fallback}'")
+      fallback
     }
 
   protected def getAbsolutePath(key: String): String =
-    try {
-      val dirs: List[String] = config.getStringList(key).toList
-      toAbsolutePath(dirs)
-    }
-    catch {
-      case e: Throwable => { error(s"error interpreting path at $key", e); "" }
-    }
+    toAbsolutePath(config.getString(key))
 
-  protected def getAbsolutePathList(key: String): List[String] =
-    try {
-      val paths: ConfigList = config.getList(key)
-      val kind: ConfigValueType = paths.get(0).valueType
+  protected def getAbsolutePathList(key: String): List[String] = {
+    val value: ConfigValue = config.getValue(key)
+    val kind: ConfigValueType = value.valueType
 
-      toAbsolutePathList(paths.unwrapped.toList, kind)
+    kind match {
+      case ConfigValueType.LIST => value.unwrapped().asInstanceOf[ArrayList[_]].toList.map { v => toAbsolutePath(v.toString) }
+      case ConfigValueType.NULL => Nil
+      case _                    => List(toAbsolutePath(value.unwrapped().toString))
     }
-    catch {
-      case e: Throwable => { error(s"error interpreting path list at $key", e); Nil }
-    }
-
-  protected def toAbsolutePath(dirs: List[String]): String =
-    FileSystems
-      .getDefault
-      .getPath(dirs.head, dirs.tail: _*)
-      .toAbsolutePath
-      .toString
-
-  protected def toAbsolutePathList(list: List[Object], kind: ConfigValueType): List[String] = kind match {
-    case ConfigValueType.LIST   => list.map { a => toAbsolutePath(a.asInstanceOf[java.util.ArrayList[String]].toList) }
-    case ConfigValueType.STRING => List(toAbsolutePath(list.toList.asInstanceOf[List[String]]))
-    case _                      => List(toAbsolutePath(list.map { _.toString }))
   }
 
+  protected def toAbsolutePath(dir: String): String =
+    FileSystems
+      .getDefault
+      .getPath(dir)
+      .toAbsolutePath
+      .toString
 }
 
 object TreatmentConfig {
