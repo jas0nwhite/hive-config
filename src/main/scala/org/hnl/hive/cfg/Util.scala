@@ -1,6 +1,7 @@
 package org.hnl.hive.cfg
 
 import grizzled.slf4j.Logging
+import java.nio.file.Paths
 
 /**
  * Util
@@ -47,7 +48,7 @@ object Util extends Logging {
    * @param path the path
    * @return the basename (last element) of the path
    */
-  def basename(path: String): String = grizzled.file.util.basename(path, grizzled.file.util.fileSeparator)
+  def basename(path: String): String = Paths.get(path).getFileName.toString
 
   /**
    * returns list of basenames for the given path list
