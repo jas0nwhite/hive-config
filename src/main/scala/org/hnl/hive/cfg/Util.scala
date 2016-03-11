@@ -21,7 +21,7 @@ object Util extends Logging {
   def findPaths(spec: String): List[String] = try {
     val list = grizzled.file.util.eglob(spec)
 
-    info(s"found ${list.length} matches for '${spec}'")
+    debug(s"found ${list.length} matches for '${spec}'")
 
     list
   }
