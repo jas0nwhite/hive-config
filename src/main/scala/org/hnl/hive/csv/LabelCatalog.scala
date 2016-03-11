@@ -106,7 +106,7 @@ class LabelCatalog(config: TreatmentConfig) extends Logging {
     }
 
     result.either match {
-      case Right(_) => debug(s"successfully wrote ${outFile.getAbsolutePath}")
+      case Right(_) => info(s"created ${outFile.getAbsolutePath}")
       case Left(es) => es.foreach(e => error(s"writing ${outFile.getAbsolutePath}", e))
     }
   }
@@ -137,11 +137,11 @@ class LabelCatalog(config: TreatmentConfig) extends Logging {
     }
 
   /**
-   * process a CSV file into lines
+   * reads the given CSV file and writes the corresponding lines to the given output file
    * @param file the CSV file
-   * @param datasetId the datasetId
-   * @param rawGlob the filespec for raw files in glob syntax
-   * @return
+   * @param datasetId the dataset ID for the file
+   * @param rawGlob the raw filespec in glob syntax
+   * @param out the output file
    */
   protected def writeCsvLines(file: String, datasetId: Int, rawGlob: String, out: FileWriter): Unit = {
     val source = managed(io.Source.fromFile(file))
@@ -162,6 +162,8 @@ class LabelCatalog(config: TreatmentConfig) extends Logging {
         val lines = for {
           line <- csvLines
 
+          if (line.trim.length > 0)
+
           ix = ListBuffer(colIx: _*)
           vals = line.split(",", -1).map(_.trim) // retain empty strings
           fileId = vals(ix.remove(0)).toInt
@@ -169,7 +171,10 @@ class LabelCatalog(config: TreatmentConfig) extends Logging {
           onset = vals(ix.remove(0)).toDouble
           offset = vals(ix.remove(0)).toDouble
           exclude = vals(ix.remove(0)).toBoolean
-          notes = vals(ix.remove(0)).replaceAll("""["]""", "").replaceAll(",", ";")
+          notes = vals(ix.remove(0))
+            .replaceAllLiterally(""""""", "")
+            .replaceAllLiterally("''", "")
+            .replaceAllLiterally(",", ";")
           rawfile = rawFiles(fileId)
         } yield Line(datasetId, fileId, concentrations, onset, offset, exclude, notes, rawfile)
 
