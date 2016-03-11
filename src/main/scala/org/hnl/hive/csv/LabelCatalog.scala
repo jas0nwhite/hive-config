@@ -1,18 +1,16 @@
 package org.hnl.hive.csv
 
+import java.io.{ File, FileWriter }
+
 import scala.collection.mutable.ListBuffer
-import org.hnl.hive.cfg.TreatmentConfig
+import scala.math.Ordered
+import scala.util.{ Failure, Success, Try }
+
+import org.hnl.hive.cfg.{ TreatmentConfig, Util }
 import org.hnl.hive.cfg.matlab.Chem
+
 import grizzled.slf4j.Logging
 import resource.managed
-import java.nio.file.Path
-import org.hnl.hive.cfg.Util
-import java.io.PrintWriter
-import java.io.File
-import scala.util.Try
-import scala.util.Success
-import scala.util.Failure
-import java.io.FileWriter
 
 // scalastyle:off multiple.string.literals
 
@@ -143,7 +141,7 @@ class LabelCatalog(config: TreatmentConfig) extends Logging {
    * @param rawGlob the raw filespec in glob syntax
    * @param out the output file
    */
-  protected def writeCsvLines(file: String, datasetId: Int, rawGlob: String, out: FileWriter): Unit = {
+  protected def writeCsvLines(file: String, datasetId: Int, rawGlob: String, out: FileWriter): Unit = { // scalastyle:ignore method.length
     val source = managed(io.Source.fromFile(file))
 
     val result = source.map {
@@ -159,25 +157,39 @@ class LabelCatalog(config: TreatmentConfig) extends Logging {
         debug(s"CSV   : ${csvHdr}")
         debug(s"index : ${colIx.mkString(",")}")
 
+        // get the position (index) of each column
+        val ixs = ListBuffer(colIx: _*)
+        val fileIdIx = ixs.remove(0)
+        val concentrationIxs = chemicals.map(_ => ixs.remove(0))
+        val onsetIx = ixs.remove(0)
+        val offsetIx = ixs.remove(0)
+        val excludeIx = ixs.remove(0)
+        val notesIx = ixs.remove(0)
+
+        // gather the lines
         val lines = for {
           line <- csvLines
 
           if (line.trim.length > 0)
 
-          ix = ListBuffer(colIx: _*)
-          vals = line.split(",", -1).map(_.trim) // retain empty strings
-          fileId = vals(ix.remove(0)).toInt
-          concentrations = chemicals.map(_ => vals(ix.remove(0)).toDouble)
-          onset = vals(ix.remove(0)).toDouble
-          offset = vals(ix.remove(0)).toDouble
-          exclude = vals(ix.remove(0)).toBoolean
-          notes = vals(ix.remove(0))
-            .replaceAllLiterally(""""""", "")
+          // get column values, retaining empty strings (with "-1" argument)
+          vals = line.split(",", -1).map(_.trim)
+
+          // extract fields
+          fileId = vals(fileIdIx).toInt
+          concentrations = concentrationIxs.map(i => vals(i).toDouble)
+          onset = vals(onsetIx).toDouble
+          offset = vals(offsetIx).toDouble
+          exclude = vals(excludeIx).toBoolean
+          notes = vals(notesIx)
+            .replaceAllLiterally("\"", "")
             .replaceAllLiterally("''", "")
             .replaceAllLiterally(",", ";")
           rawfile = rawFiles(fileId)
+
         } yield Line(datasetId, fileId, concentrations, onset, offset, exclude, notes, rawfile)
 
+        // write the lines to the output stream
         lines.foreach { line => out.write(line.toCsvLine) }
     }
 
