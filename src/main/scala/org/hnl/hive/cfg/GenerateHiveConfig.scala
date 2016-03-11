@@ -7,6 +7,7 @@ import org.hnl.hive.cfg.matlab._
 import com.typesafe.config.ConfigFactory
 import grizzled.slf4j.Logging
 import com.typesafe.config.ConfigException
+import org.hnl.hive.csv.LabelCatalog
 
 object GenerateHiveConfig extends App with Logging {
 
@@ -36,6 +37,7 @@ object GenerateHiveConfig extends App with Logging {
     val trainingCat = TrainingCatalog("TrainingCatalog", treatmentConfig)
     val targetCat = TargetCatalog("TargetCatalog", treatmentConfig)
     val hiveConfig = Config("Config", treatmentConfig, trainingCat, testingCat, targetCat)
+    val labelCatalog = new LabelCatalog(treatmentConfig)
 
     /*
      * output files
@@ -45,6 +47,19 @@ object GenerateHiveConfig extends App with Logging {
     createMatlabFile(testingCat)
     createMatlabFile(trainingCat)
     createMatlabFile(targetCat)
+
+    labelCatalog.processCatalog(
+      treatmentConfig.testingSourceCatalog,
+      treatmentConfig.testingLabelSpec,
+      treatmentConfig.testingRawSpec,
+      "/Users/jwhite/Projects/iterate/testingLabels.csv")
+
+    labelCatalog.processCatalog(
+      treatmentConfig.trainingSourceCatalog,
+      treatmentConfig.trainingLabelSpec,
+      treatmentConfig.trainingRawSpec,
+      "/Users/jwhite/Projects/iterate/trainingLabels.csv")
+
   }
   catch {
     case e: ConfigException.Parse => {

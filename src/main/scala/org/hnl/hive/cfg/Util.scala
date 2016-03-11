@@ -51,6 +51,13 @@ object Util extends Logging {
   def basename(path: String): String = Paths.get(path).getFileName.toString
 
   /**
+   * returns the name of the parent directory for the given path
+   * @param path the bath
+   * @return the parent name (path minus last element)
+   */
+  def dirname(path: String): String = Paths.get(path).getParent.toString
+
+  /**
    * returns list of basenames for the given path list
    * @param paths the list of paths
    * @return the basename (laste element) of the path

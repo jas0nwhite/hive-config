@@ -49,18 +49,23 @@ class TreatmentConfig protected (config: Config) extends Logging {
    */
   val trainingSourceSpecs = getAbsolutePathList("training.source-spec")
   val trainingResultPaths = getAbsolutePathList("training.result-path")
+  val trainingRawSpec = getString("training.raw-spec")
+  val trainingLabelSpec = getString("training.label-spec")
 
   /*
    * testing settings (allow multiple paths)
    */
   val testingSourceSpecs = getAbsolutePathList("testing.source-spec")
   val testingResultPaths = getAbsolutePathList("testing.result-path")
+  val testingRawSpec = getString("testing.raw-spec")
+  val testingLabelSpec = getString("testing.label-spec")
 
   /*
    * target settings (allow multiple paths)
    */
   val targetSourceSpecs = getAbsolutePathList("target.source-spec")
   val targetResultPaths = getAbsolutePathList("target.result-path")
+  val targetVgramSpec = getString("target.vgram-spec")
 
   /*
    * chemicals

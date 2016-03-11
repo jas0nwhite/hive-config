@@ -16,6 +16,7 @@ libraryDependencies ++= {
   Seq(
   	"org.clapper"                      %% "grizzled-scala"         % "1.4.0",
   	"com.typesafe"                      % "config"                 % "1.3.0",
+  	"com.jsuereth"                     %% "scala-arm"              % "1.4",
 //  "net.liftweb"                      %% "lift-common"            % "2.6.3",
   	
   	"org.clapper"                      %% "grizzled-slf4j"         % "1.0.2",

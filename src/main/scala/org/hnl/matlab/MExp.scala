@@ -3,6 +3,9 @@ package org.hnl.matlab // scalastyle:ignore number.of.types
 import scala.collection.mutable.ListBuffer
 import scala.language.implicitConversions
 
+import org.hnl.hive.util.Util
+import org.hnl.matlab.MExp.intToMExp
+
 // scalastyle:off multiple.string.literals
 
 /**
@@ -127,17 +130,6 @@ object M {
    */
 
   /**
-   * zips a nested list structure with an index
-   * @param ls The nested list structure
-   * @param i The initial index value
-   * @return a nested list of tuples
-   */
-  def deepZip[A](ls: List[List[A]], i: Int = 0): List[List[(A, Int)]] = ls match {
-    case Nil     => Nil
-    case x :: xs => x.zip(Stream.from(i)) :: deepZip(xs, i + x.size)
-  }
-
-  /**
    * creates a column cell array from a list
    * @param l The list of values
    * @param f A function to convert each value to an MExp
@@ -168,7 +160,7 @@ object M {
    * @return a column cell array of rows containing index followed by value
    */
   def makeIndexedCellArray[A](ls: List[List[A]])(f: A => MExp): CCell =
-    deepCCell(deepZip(ls, 1)) { case (a, ix) => Row(ix, f(a)) }
+    deepCCell(Util.deepZip(ls, 1)) { case (a, ix) => Row(ix, f(a)) }
 
   /*
    * RAW
