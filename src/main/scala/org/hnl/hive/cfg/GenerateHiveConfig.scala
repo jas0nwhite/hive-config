@@ -9,6 +9,16 @@ import grizzled.slf4j.Logging
 import com.typesafe.config.ConfigException
 import org.hnl.hive.csv.LabelCatalog
 
+// scalastyle:off multiple.string.literals
+
+/**
+ * GenerateHiveConfig$
+ * <p>
+ * Created on Mar 6, 2016.
+ * <p>
+ *
+ * @author Jason White
+ */
 object GenerateHiveConfig extends App with Logging {
 
   info("begin processing")

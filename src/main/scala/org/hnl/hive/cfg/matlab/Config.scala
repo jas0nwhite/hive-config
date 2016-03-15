@@ -24,7 +24,7 @@ case class Config(
   override val pkg: String = ""
 
   protected val treatmentDef =
-    ClassProps().attribs("Constant")
+    ClassProps().attribs("Constant") // scalastyle:ignore multiple.string.literals
       .%(
         "",
         "treatment definition",
