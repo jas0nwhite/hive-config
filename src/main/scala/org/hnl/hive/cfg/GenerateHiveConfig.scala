@@ -3,11 +3,13 @@ package org.hnl.hive.cfg
 import java.io.File
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
+
 import org.hnl.hive.cfg.matlab._
-import com.typesafe.config.ConfigFactory
-import grizzled.slf4j.Logging
-import com.typesafe.config.ConfigException
 import org.hnl.hive.csv.LabelCatalog
+
+import com.typesafe.config.{ ConfigException, ConfigFactory }
+
+import grizzled.slf4j.Logging
 
 // scalastyle:off multiple.string.literals
 
@@ -26,9 +28,9 @@ object GenerateHiveConfig extends App with Logging {
   /*
    * check arguments
    */
-  if (args.length != 1) {
+  if (args.length == 0) {
     error("no config file specified")
-    System.exit(1)
+    System.exit(3)
   }
 
   try {
@@ -62,13 +64,13 @@ object GenerateHiveConfig extends App with Logging {
       treatmentConfig.testingSourceCatalog,
       treatmentConfig.testingLabelSpec,
       treatmentConfig.testingRawSpec,
-      "/Users/jwhite/Projects/iterate/testingLabels.csv")
+      treatmentConfig.testingLabelCatalogFile)
 
     labelCatalog.processCatalog(
       treatmentConfig.trainingSourceCatalog,
       treatmentConfig.trainingLabelSpec,
       treatmentConfig.trainingRawSpec,
-      "/Users/jwhite/Projects/iterate/trainingLabels.csv")
+      treatmentConfig.trainingLabelCatalogFile)
 
   }
   catch {
@@ -78,6 +80,10 @@ object GenerateHiveConfig extends App with Logging {
     }
     case e: ConfigException => {
       error(s"processing ${args(0)}: ${e.getMessage}")
+      System.exit(2)
+    }
+    case e: HiveConfigException => {
+      error(e.getMessage)
       System.exit(2)
     }
     case e: Throwable => {

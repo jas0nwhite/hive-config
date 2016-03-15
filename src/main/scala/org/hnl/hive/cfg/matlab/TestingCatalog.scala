@@ -18,7 +18,7 @@ case class TestingCatalog(name: String, cfg: TreatmentConfig) extends MatClassFi
   override val pkg = "hive.cfg"
 
   protected val paths =
-    ClassProps().attribs("Constant")
+    ClassProps().attribs("Constant") // scalastyle:ignore multiple.string.literals
       .%(
         "",
         "testing paths",
@@ -29,6 +29,20 @@ case class TestingCatalog(name: String, cfg: TreatmentConfig) extends MatClassFi
         'resultPathList %=% CCell(cfg.testingResultPaths: _*)
       )
 
+  protected val settings =
+    ClassProps().attribs("Constant")
+      .%(
+        "",
+        "settings",
+        ""
+      )
+      .+(
+        'vgramFile %=% cfg.testingVgramFile,
+        'labelFile %=% cfg.testingLabelFile,
+        'predictionFile %=% cfg.testingPredicitonFile,
+        'voltammetryWindow %=% Range(cfg.testingVoltammetryWindow: _*)
+      )
+
   protected val catalogs =
     ClassProps().attribs("Constant")
       .%(
@@ -37,6 +51,7 @@ case class TestingCatalog(name: String, cfg: TreatmentConfig) extends MatClassFi
         ""
       )
       .+(
+        'labelCatalogFile %=% cfg.testingLabelCatalogFile,
         'sourceCatalog %=% makeIndexedCellArray(cfg.testingSourceCatalog)((s: String) => Str(s)),
         'datasetCatalog %=% makeIndexedCellArray(cfg.testingDatasetCatalog)((s: String) => Str(s))
       )
@@ -50,6 +65,7 @@ case class TestingCatalog(name: String, cfg: TreatmentConfig) extends MatClassFi
       )
       .+(
         paths,
+        settings,
         catalogs
       )
 }

@@ -257,6 +257,16 @@ object M { // scalastyle:ignore number.of.methods
   }
 
   /*
+   * RANGE
+   */
+  case class Range(vals: MExp*) extends MExp {
+    override def toMatlab: String = this match {
+      case Range()        => ":"
+      case Range(vs @ _*) => vs.map(_.toMatlab).mkString(":") // matlab accepts strings of ranges!
+    }
+  }
+
+  /*
    * ARRAYS
    */
   case class Row(vals: MExp*) extends MExp {

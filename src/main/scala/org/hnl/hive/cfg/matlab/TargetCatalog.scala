@@ -18,7 +18,7 @@ case class TargetCatalog(name: String, cfg: TreatmentConfig) extends MatClassFil
   override val pkg = "hive.cfg"
 
   protected val paths =
-    ClassProps().attribs("Constant")
+    ClassProps().attribs("Constant") // scalastyle:ignore multiple.string.literals
       .%(
         "",
         "target directories",
@@ -27,6 +27,18 @@ case class TargetCatalog(name: String, cfg: TreatmentConfig) extends MatClassFil
       .+(
         'sourceSpecList %=% CCell(cfg.targetSourceSpecs: _*),
         'resultPathList %=% CCell(cfg.targetResultPaths: _*)
+      )
+
+  protected val settings =
+    ClassProps().attribs("Constant")
+      .%(
+        "",
+        "settings",
+        ""
+      )
+      .+(
+        'predictionSpec %=% cfg.targetPredicitonSpec,
+        'voltammetryWindow %=% Range(cfg.targetVoltammetryWindow: _*)
       )
 
   protected val catalogs =
@@ -50,6 +62,7 @@ case class TargetCatalog(name: String, cfg: TreatmentConfig) extends MatClassFil
       )
       .+(
         paths,
+        settings,
         catalogs
       )
 }
