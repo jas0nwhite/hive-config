@@ -81,14 +81,14 @@ case class Config(
         FnDef("init").returns('self)
           .doc("INIT initializes the path and returns this config object")
           .+(
-            'self %=% 'Config,
+            'self %=% Fn(name),
             Fn("addpath", 'self ~> 'codePath.curly(%::%), "-begin"),
             Fn("fprintf", raw"initialized configuration for %s\n", 'self ~> 'name)
           )
       )
 
   override val mClass =
-    ClassDef(name)
+    ClassDef(name).from("hive.cfg.ConfigBase")
       .%(
         s"configruation information for HIVE treatment '${cfg.name}'",
         "",
