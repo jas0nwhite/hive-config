@@ -28,7 +28,7 @@ object GenerateHiveConfig extends App with Logging {
   /*
    * check arguments
    */
-  if (args.length == 0) {
+  if (args.length != 1 || args(0).isEmpty) {
     error("no config file specified")
     System.exit(3)
   }
