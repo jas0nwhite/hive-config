@@ -304,7 +304,7 @@ object M { // scalastyle:ignore number.of.methods
       }
   }
 
-  case object %:% extends MExp { // scalastyle:ignore object.name
+  case object %::% extends MExp { // scalastyle:ignore object.name
     override def toMatlab: String = ":"
   }
 
@@ -313,7 +313,7 @@ object M { // scalastyle:ignore number.of.methods
    */
   case class Fn(fn: String, args: MExp*) extends MExp {
     override def toMatlab: String =
-      fn + "(" + args.map { _.toMatlab }.mkString(",") + ")"
+      fn + "(" + args.map { _.toMatlab }.mkString(", ") + ")"
   }
 
   /*

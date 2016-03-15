@@ -70,6 +70,23 @@ case class Config(
         'target %=% target.classObj
       )
 
+  protected val methods =
+    ClassMethods().attribs("Static")
+      .%(
+        "",
+        "methods",
+        ""
+      )
+      .+(
+        FnDef("init").returns('self)
+          .doc("INIT initializes the path and returns this config object")
+          .+(
+            'self %=% 'Config,
+            Fn("addpath", 'self ~> 'codePath.curly(%::%), "-begin"),
+            Fn("fprintf", raw"initialized configuration for %s\n", 'self ~> 'name)
+          )
+      )
+
   override val mClass =
     ClassDef(name)
       .%(
@@ -80,7 +97,8 @@ case class Config(
       .+(
         treatmentDef,
         treatmentDirs,
-        catalogs
+        catalogs,
+        methods
       )
 
 }

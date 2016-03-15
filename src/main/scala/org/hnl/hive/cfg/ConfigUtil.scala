@@ -132,6 +132,7 @@ class WrappedConfig(config: Config) extends Logging {
     FileSystems
       .getDefault
       .getPath(dir)
+      .normalize
       .toAbsolutePath
       .toString
 
