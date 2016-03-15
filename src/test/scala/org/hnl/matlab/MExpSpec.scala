@@ -1,5 +1,6 @@
 package org.hnl.matlab
 
+import org.hnl.matlab.M._
 import org.hnl.matlab.MExp._
 import org.scalatest._
 
@@ -20,104 +21,104 @@ class MExpSpec extends WordSpec with Matchers with Inspectors with Helpers {
   /*
    * NUMBERS
    */
-  "M.Num" should {
+  "Num" should {
     "represent a number" in {
-      test(M.Num(3), "3")
-      test(M.Num(3.5), "3.5")
-      test(M.Num(-3.5), "-3.5")
+      test(Num(3), "3")
+      test(Num(3.5), "3.5")
+      test(Num(-3.5), "-3.5")
     }
 
     "represent a number from a string" in {
-      test(M.Num("3"), "3")
-      test(M.Num("3.5"), "3.5")
-      test(M.Num("-3.5"), "-3.5")
-      test(M.Num("Inf"), "Inf")
-      test(M.Num("-Inf"), "-Inf")
-      test(M.Num("NaN"), "NaN")
-      test(M.Num("true"), "true")
-      test(M.Num("false"), "false")
+      test(Num("3"), "3")
+      test(Num("3.5"), "3.5")
+      test(Num("-3.5"), "-3.5")
+      test(Num("Inf"), "Inf")
+      test(Num("-Inf"), "-Inf")
+      test(Num("NaN"), "NaN")
+      test(Num("true"), "true")
+      test(Num("false"), "false")
     }
 
     "represent extremes" in {
-      test(M.Num(Double.NegativeInfinity), "-Inf")
-      test(M.Num(Double.PositiveInfinity), "Inf")
-      test(M.Num(Double.NaN), "NaN")
+      test(Num(Double.NegativeInfinity), "-Inf")
+      test(Num(Double.PositiveInfinity), "Inf")
+      test(Num(Double.NaN), "NaN")
     }
 
     "represent booleans" in {
-      test(M.Num(true), "true")
-      test(M.Num(false), "false")
+      test(Num(true), "true")
+      test(Num(false), "false")
     }
   }
 
   /*
    * STRINGS
    */
-  "M.Str" should {
+  "Str" should {
     "represent a string in single quotes" in {
-      test(M.Str("test"), "'test'")
+      test(Str("test"), "'test'")
     }
 
     "represent an empty string" in {
-      test(M.Str(""), "''")
+      test(Str(""), "''")
     }
 
     "represent a string with escaped quotes" in {
-      test(M.Str("Jason's Test\\n"), "'Jason''s Test\\n'")
+      test(Str("Jason's Test\\n"), "'Jason''s Test\\n'")
     }
   }
 
   /*
    * RAW
    */
-  "M.Raw" should {
+  "Raw" should {
 
     "echo the contents" in {
       val contents = "for i = 1:10; fprintf('the \"value\" is %d\\n', i); end;"
 
-      test(M.Raw(contents), contents)
+      test(Raw(contents), contents)
     }
   }
 
   /*
    * IDENTIFIERS
    */
-  "M.Var" should {
+  "Var" should {
 
     "render valid identifier unchanged" in {
       test('test, "test")
     }
 
     "strip spaces from identifier" in {
-      test(M.Var(" strip  "), "strip")
+      test(Var(" strip  "), "strip")
     }
 
     "append 'x' before non-alpha initial characters" in {
-      test(M.Var("2isnotgood"), "x2isnotgood")
-      test(M.Var("#3"), "x_3")
+      test(Var("2isnotgood"), "x2isnotgood")
+      test(Var("#3"), "x_3")
     }
 
     "replace non alpha-numeric-underscore characters with underscores" in {
-      test(M.Var("four score and 7 years ago... 'Abe'"), "four_score_and_7_years_ago_____Abe_")
+      test(Var("four score and 7 years ago... 'Abe'"), "four_score_and_7_years_ago_____Abe_")
     }
   }
 
   /*
    * ARRAYS
    */
-  "M.CVec" should {
+  "CVec" should {
 
     "render empty array" in {
-      test(M.CVec(), "[]")
+      test(CVec(), "[]")
     }
 
     "render single-valued array" in {
-      test(M.CVec(3), "[3]")
+      test(CVec(3), "[3]")
     }
 
     "render multi-valued column array" in {
       test(
-        M.CVec(1, 2, 3, 4, 5),
+        CVec(1, 2, 3, 4, 5),
         """|[
            |    1;
            |    2;
@@ -129,7 +130,7 @@ class MExpSpec extends WordSpec with Matchers with Inspectors with Helpers {
 
     "render nested arrays" in {
       test(
-        M.CVec(M.CVec(1, 2), M.CVec(3, 4)),
+        CVec(CVec(1, 2), CVec(3, 4)),
         """|[
            |    [
            |        1;
@@ -144,10 +145,10 @@ class MExpSpec extends WordSpec with Matchers with Inspectors with Helpers {
 
     "render 2-D arrays" in {
       test(
-        M.CVec(
-          M.Row(1, 2, 3),
-          M.Row(4, 5, 6),
-          M.Row(7, 8, 9)
+        CVec(
+          Row(1, 2, 3),
+          Row(4, 5, 6),
+          Row(7, 8, 9)
         ),
         """|[
            |    1, 2, 3;
@@ -158,36 +159,36 @@ class MExpSpec extends WordSpec with Matchers with Inspectors with Helpers {
     }
   }
 
-  "M.RVec" should {
+  "RVec" should {
     "render empty array" in {
-      test(M.RVec(), "[]")
+      test(RVec(), "[]")
     }
 
     "render single-valued array" in {
-      test(M.RVec(3), "[3]")
+      test(RVec(3), "[3]")
     }
 
     "render multi-valued column array" in {
-      test(M.RVec(1, 2, 3, 4, 5), "[1, 2, 3, 4, 5]")
+      test(RVec(1, 2, 3, 4, 5), "[1, 2, 3, 4, 5]")
     }
 
     "render nested arrays" in {
-      test(M.RVec(M.RVec(1, 2), M.RVec(3, 4)), "[[1, 2], [3, 4]]")
+      test(RVec(RVec(1, 2), RVec(3, 4)), "[[1, 2], [3, 4]]")
     }
   }
 
-  "M.CCell" should {
+  "CCell" should {
 
     "render empty array" in {
-      test(M.CCell(), "{}")
+      test(CCell(), "{}")
     }
 
     "render single-valued array" in {
-      test(M.CCell(3), "{3}")
+      test(CCell(3), "{3}")
     }
 
     "render multi-valued column array" in {
-      test(M.CCell(1, 2, 3, 4, 5),
+      test(CCell(1, 2, 3, 4, 5),
         """|{
            |    1;
            |    2;
@@ -200,7 +201,7 @@ class MExpSpec extends WordSpec with Matchers with Inspectors with Helpers {
 
     "render nested arrays" in {
       test(
-        M.CCell(M.CCell(1, 2), M.CCell(3, 4)),
+        CCell(CCell(1, 2), CCell(3, 4)),
         """|{
            |    {
            |        1;
@@ -216,10 +217,10 @@ class MExpSpec extends WordSpec with Matchers with Inspectors with Helpers {
 
   "render multidimensional arrays" in {
     test(
-      M.CCell(
-        M.Row("test", 1.2, 1.3),
-        M.Row("val", 3, 17),
-        M.Row("mike", 21, 8.8)
+      CCell(
+        Row("test", 1.2, 1.3),
+        Row("val", 3, 17),
+        Row("mike", 21, 8.8)
       ),
       """|{
          |    'test', 1.2, 1.3;
@@ -229,31 +230,31 @@ class MExpSpec extends WordSpec with Matchers with Inspectors with Helpers {
     )
   }
 
-  "M.RCell" should {
+  "RCell" should {
     "render empty array" in {
-      test(M.RCell(), "{}")
+      test(RCell(), "{}")
     }
 
     "render single-valued array" in {
-      test(M.RCell(3), "{3}")
+      test(RCell(3), "{3}")
     }
 
     "render multi-valued column array" in {
-      test(M.RCell(1, 2, 3, 4, 5), "{1, 2, 3, 4, 5}")
+      test(RCell(1, 2, 3, 4, 5), "{1, 2, 3, 4, 5}")
     }
 
     "render nested arrays" in {
-      test(M.RCell(M.RCell(1, 2), M.RCell(3, 4)), "{{1, 2}, {3, 4}}")
+      test(RCell(RCell(1, 2), RCell(3, 4)), "{{1, 2}, {3, 4}}")
     }
   }
 
   /*
    * CLASSES
    */
-  "M.Class" should {
+  "Class" should {
 
     "render empty class" in {
-      val mclass = M.ClassDef("Test")
+      val mclass = ClassDef("Test")
 
       val expected = List(
         "classdef Test",
@@ -265,7 +266,7 @@ class MExpSpec extends WordSpec with Matchers with Inspectors with Helpers {
     }
 
     "render class attributes" in {
-      val mclass = M.ClassDef("Test").attribs("Abstract")
+      val mclass = ClassDef("Test").attribs("Abstract")
 
       val expected = List(
         "classdef (Abstract) Test",
@@ -278,7 +279,7 @@ class MExpSpec extends WordSpec with Matchers with Inspectors with Helpers {
     }
 
     "render class inheritance" in {
-      val mclass = M.ClassDef("Test") from "handle"
+      val mclass = ClassDef("Test") from "handle"
 
       val expected = List(
         "classdef Test < handle",
@@ -292,7 +293,7 @@ class MExpSpec extends WordSpec with Matchers with Inspectors with Helpers {
 
     "render class comments" in {
       val mclass =
-        M.ClassDef("Test")
+        ClassDef("Test")
           .%(
             "Test is a testing class",
             "which we are trying to test"
@@ -317,7 +318,7 @@ class MExpSpec extends WordSpec with Matchers with Inspectors with Helpers {
       )
 
       val mclass =
-        M.ClassDef("Test")
+        ClassDef("Test")
           .comments(clist)
 
       val expected = List(
@@ -334,7 +335,7 @@ class MExpSpec extends WordSpec with Matchers with Inspectors with Helpers {
 
     "render fully-decorated class" in {
       val mclass =
-        M.ClassDef("Test").from("uint32", "TestSuper").attribs("Abstract", "Sealed")
+        ClassDef("Test").from("uint32", "TestSuper").attribs("Abstract", "Sealed")
           .%(
             "Test is a testing class",
             "which we are trying to test"
@@ -354,9 +355,9 @@ class MExpSpec extends WordSpec with Matchers with Inspectors with Helpers {
 
     "render class properties" in {
       val mclass =
-        M.ClassDef("Test")
+        ClassDef("Test")
           .+(
-            M.ClassProps()
+            ClassProps()
               .%(
                 "",
                 "A very nice set of properties",
@@ -381,10 +382,10 @@ class MExpSpec extends WordSpec with Matchers with Inspectors with Helpers {
     }
   }
 
-  "M.ClassProps" should {
+  "ClassProps" should {
 
     "render empty properties" in {
-      val mprops = M.ClassProps()
+      val mprops = ClassProps()
 
       val expected = List(
         "properties",
@@ -397,7 +398,7 @@ class MExpSpec extends WordSpec with Matchers with Inspectors with Helpers {
 
     "render property comments" in {
       val mprops =
-        M.ClassProps()
+        ClassProps()
           .%(
             "some lovely comments",
             "to test with"
@@ -415,7 +416,7 @@ class MExpSpec extends WordSpec with Matchers with Inspectors with Helpers {
 
     "render properties" in {
       val mprops =
-        M.ClassProps()
+        ClassProps()
           .%("comment")
           .+(
             'prop1 %=% 3.14,
@@ -438,10 +439,34 @@ class MExpSpec extends WordSpec with Matchers with Inspectors with Helpers {
     }
   }
 
+  "Fn" should {
+
+    "render zero-arg call" in {
+      test(
+        Fn("test"),
+        "test()"
+      )
+    }
+
+    "render one-arg call" in {
+      test(
+        Fn("test1", 'x),
+        "test1(x)"
+      )
+    }
+
+    "render multi-arg call" in {
+      test(
+        Fn("test3", 'x, 'y, 'z),
+        "test3(x, y, z)"
+      )
+    }
+  }
+
   /*
    * EXPRESSIONS
    */
-  "M.Exp" should {
+  "Exp" should {
 
     "render assignments" in {
       test(
@@ -452,14 +477,14 @@ class MExpSpec extends WordSpec with Matchers with Inspectors with Helpers {
 
     "render global variables" in {
       test(
-        M.Global('test),
+        Global('test),
         "global test"
       )
     }
 
     "render persistent variables" in {
       test(
-        M.Persistent('test),
+        Persistent('test),
         "persistent test"
       )
     }
@@ -491,7 +516,7 @@ class MExpSpec extends WordSpec with Matchers with Inspectors with Helpers {
 
     "render slice ranges" in {
       test(
-        'v.paren(M.%:%),
+        'v.paren(%::%),
         "v(:)"
       )
 
