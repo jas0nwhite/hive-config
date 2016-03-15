@@ -124,7 +124,7 @@ object MExp {
  *
  * @author Jason White
  */
-object M {
+object M { // scalastyle:ignore number.of.methods
   /*
    * API
    */

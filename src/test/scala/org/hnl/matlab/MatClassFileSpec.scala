@@ -5,6 +5,8 @@ import org.hnl.hive.cfg.matlab.MatClassFile
 import org.hnl.matlab.M.ClassDef
 import org.hnl.matlab.M.ClassObj
 
+// scalastyle:off null
+
 /**
  * MatClassFileSpec
  * <p>
