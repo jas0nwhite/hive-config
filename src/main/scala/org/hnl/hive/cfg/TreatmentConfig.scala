@@ -1,12 +1,10 @@
 package org.hnl.hive.cfg
 
-import java.nio.file.FileSystems
-import scala.collection.JavaConversions.asScalaBuffer
-import com.typesafe.config.{ Config, ConfigList, ConfigValueType }
+import org.hnl.hive.cfg.ConfigUtil.configToWrappedConfig
+
+import com.typesafe.config.Config
+
 import grizzled.slf4j.Logging
-import com.typesafe.config.ConfigValue
-import com.typesafe.config.ConfigObject
-import java.util.ArrayList
 
 // scalastyle:off multiple.string.literals
 
@@ -18,7 +16,7 @@ import java.util.ArrayList
  *
  * @author Jason White
  */
-class TreatmentConfig protected (config: Config) extends Logging {
+class TreatmentConfig protected (config: WrappedConfig) extends Logging {
 
   //
   // USER-SPECIFIED PROPERTIES
@@ -27,45 +25,57 @@ class TreatmentConfig protected (config: Config) extends Logging {
   /*
    * treatment settings
    */
-  val trainingSetId = getString("treatment.training-set")
-  val trainingStyleId = getString("treatment.training-style")
-  val clusterStyleId = getString("treatment.cluster-style")
-  val alphaSelectId = getString("treatment.alpha-select")
-  val muSelectId = getString("treatment.mu-select")
-  val name = getString("treatment.name", s"$trainingSetId-$trainingStyleId-$clusterStyleId-$alphaSelectId-$muSelectId")
+  val trainingSetId = config.getString("treatment.training-set")
+  val trainingStyleId = config.getString("treatment.training-style")
+  val clusterStyleId = config.getString("treatment.cluster-style")
+  val alphaSelectId = config.getString("treatment.alpha-select")
+  val muSelectId = config.getString("treatment.mu-select")
+  val name = config.getString("treatment.name", s"$trainingSetId-$trainingStyleId-$clusterStyleId-$alphaSelectId-$muSelectId")
 
   /*
    * project settings
    */
-  val projectHome = getAbsolutePath("project.home")
-  val trainingHome = getAbsolutePath("project.training-home")
-  val modelHome = getAbsolutePath("project.model-home")
-  val clusterHome = getAbsolutePath("project.cluster-home")
-  val alphaHome = getAbsolutePath("project.alpha-home")
-  val muHome = getAbsolutePath("project.mu-home")
+  val projectHome = config.getAbsolutePath("project.home")
+  val trainingHome = config.getAbsolutePath("project.training-home")
+  val testingHome = config.getAbsolutePath("project.testing-home")
+  val modelHome = config.getAbsolutePath("project.model-home")
+  val clusterHome = config.getAbsolutePath("project.cluster-home")
+  val alphaHome = config.getAbsolutePath("project.alpha-home")
+  val muHome = config.getAbsolutePath("project.mu-home")
+  val codePath = config.getAbsolutePathList("project.code-path")
 
   /*
    * training settings (allow multiple paths)
    */
-  val trainingSourceSpecs = getAbsolutePathList("training.source-spec")
-  val trainingResultPaths = getAbsolutePathList("training.result-path")
-  val trainingRawSpec = getString("training.raw-spec")
-  val trainingLabelSpec = getString("training.label-spec")
+  val trainingSourceSpecs = config.getAbsolutePathList("training.source-spec")
+  val trainingResultPaths = config.getAbsolutePathList("training.result-path")
+  val trainingLabelCatalogFile = config.getString("training.label-catalog-file")
+  val trainingRawSpec = config.getString("training.raw-spec")
+  val trainingLabelSpec = config.getString("training.label-spec")
+  val trainingVgramFile = config.getString("training.vgram-file")
+  val trainingLabelFile = config.getString("training.label-file")
+  val trainingVoltammetryWindow = config.getIntList("training.voltammetry-window")
 
   /*
    * testing settings (allow multiple paths)
    */
-  val testingSourceSpecs = getAbsolutePathList("testing.source-spec")
-  val testingResultPaths = getAbsolutePathList("testing.result-path")
-  val testingRawSpec = getString("testing.raw-spec")
-  val testingLabelSpec = getString("testing.label-spec")
+  val testingSourceSpecs = config.getAbsolutePathList("testing.source-spec")
+  val testingResultPaths = config.getAbsolutePathList("testing.result-path")
+  val testingLabelCatalogFile = config.getString("testing.label-catalog-file")
+  val testingRawSpec = config.getString("testing.raw-spec")
+  val testingLabelSpec = config.getString("testing.label-spec")
+  val testingVgramFile = config.getString("testing.vgram-file")
+  val testingLabelFile = config.getString("testing.label-file")
+  val testingPredicitonFile = config.getString("testing.prediction-file")
+  val testingVoltammetryWindow = config.getIntList("testing.voltammetry-window")
 
   /*
    * target settings (allow multiple paths)
    */
-  val targetSourceSpecs = getAbsolutePathList("target.source-spec")
-  val targetResultPaths = getAbsolutePathList("target.result-path")
-  val targetVgramSpec = getString("target.vgram-spec")
+  val targetSourceSpecs = config.getAbsolutePathList("target.source-spec")
+  val targetResultPaths = config.getAbsolutePathList("target.result-path")
+  val targetPredicitonSpec = config.getString("target.prediction-spec")
+  val targetVoltammetryWindow = config.getIntList("target.voltammetry-window")
 
   /*
    * chemicals
@@ -104,38 +114,6 @@ class TreatmentConfig protected (config: Config) extends Logging {
   // INTERNAL API
   //
 
-  protected def getString(key: String): String =
-    config.getString(key)
-
-  protected def getString(key: String, fallback: String): String =
-    if (config.hasPath(key)) {
-      config.getString(key)
-    }
-    else {
-      info(s"no value found for '${key}', using '${fallback}'")
-      fallback
-    }
-
-  protected def getAbsolutePath(key: String): String =
-    toAbsolutePath(config.getString(key))
-
-  protected def getAbsolutePathList(key: String): List[String] = {
-    val value: ConfigValue = config.getValue(key)
-    val kind: ConfigValueType = value.valueType
-
-    kind match {
-      case ConfigValueType.LIST => value.unwrapped().asInstanceOf[ArrayList[_]].toList.map { v => toAbsolutePath(v.toString) }
-      case ConfigValueType.NULL => Nil
-      case _                    => List(toAbsolutePath(value.unwrapped().toString))
-    }
-  }
-
-  protected def toAbsolutePath(dir: String): String =
-    FileSystems
-      .getDefault
-      .getPath(dir)
-      .toAbsolutePath
-      .toString
 }
 
 object TreatmentConfig {

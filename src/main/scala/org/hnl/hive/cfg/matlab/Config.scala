@@ -49,10 +49,12 @@ case class Config(
       .+(
         'projectHome %=% cfg.projectHome,
         'trainingHome %=% cfg.trainingHome,
+        'testingHome %=% cfg.testingHome,
         'modelHome %=% cfg.modelHome,
         'clusterHome %=% cfg.clusterHome,
         'alphaHome %=% cfg.alphaHome,
-        'muHome %=% cfg.muHome
+        'muHome %=% cfg.muHome,
+        'codePath %=% CCell(cfg.codePath: _*)
       )
 
   protected val catalogs =

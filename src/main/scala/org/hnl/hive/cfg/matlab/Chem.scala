@@ -1,9 +1,9 @@
 package org.hnl.hive.cfg.matlab
 
+import org.hnl.hive.cfg.TreatmentConfig
 import org.hnl.matlab.M._
 import org.hnl.matlab.MExp
 import org.hnl.matlab.MExp._
-import org.hnl.hive.cfg.TreatmentConfig
 
 /**
  * Chemical
@@ -13,7 +13,7 @@ import org.hnl.hive.cfg.TreatmentConfig
  *
  * @author Jason White
  */
-case class Chemical(ix: Int, colName: String, name: String, label: String, units: String, neutral: Double) extends Ordered[Chemical] {
+case class Chemical(ix: Int, colName: String, name: String, label: String, prefix: String, units: String, neutral: Double) extends Ordered[Chemical] {
 
   def compare(that: Chemical): Int = this.ix compare that.ix
 
@@ -79,6 +79,15 @@ case class Chem(name: String, chems: List[Chemical], treatment: String) extends 
             ),
             's %=% 'a.curly('this ~> 'ix)
           ),
+        FnDef("prefix", 'this).returns('s)
+          .doc("PREFIX returns the prefix of this Chem, suitable for variable or file names")
+          .+(
+            Persistent('a),
+            'a %=% RCell(
+              chems.sorted.map { c => Str(c.prefix) }: _*
+            ),
+            's %=% 'a.curly('this ~> 'ix)
+          ),
         FnDef("units", 'this).returns('s)
           .doc("UNITS returns the units of this Chem")
           .+(
@@ -96,6 +105,29 @@ case class Chem(name: String, chems: List[Chemical], treatment: String) extends 
               chems.sorted.map { c => Num(c.neutral) }: _*
             ),
             'n %=% 'a.paren('this ~> 'ix)
+          ),
+        FnDef("format", 'this, 'pattern).returns('s)
+          .doc("""FORMAT returns the pattern with fieldnames replaced with this chemical's information""")
+          .+(
+            's %=% 'pattern,
+            %---%,
+            's %=% Fn("strrep", 's, "{ix}", Fn("int2str", 'this ~> 'ix)),
+            %---%,
+            's %=% Fn("strrep", 's, "{ColName}", 'this ~> 'colName),
+            's %=% Fn("strrep", 's, "{colname}", Fn("lower", 'this ~> 'colName)),
+            's %=% Fn("strrep", 's, "{COLNAME}", Fn("upper", 'this ~> 'colName)),
+            %---%,
+            's %=% Fn("strrep", 's, "{Name}", 'this ~> 'name),
+            's %=% Fn("strrep", 's, "{name}", Fn("lower", 'this ~> 'name)),
+            's %=% Fn("strrep", 's, "{NAME}", Fn("upper", 'this ~> 'name)),
+            %---%,
+            's %=% Fn("strrep", 's, "{Label}", 'this ~> 'label),
+            's %=% Fn("strrep", 's, "{label}", Fn("lower", 'this ~> 'label)),
+            's %=% Fn("strrep", 's, "{LABEL}", Fn("upper", 'this ~> 'label)),
+            %---%,
+            's %=% Fn("strrep", 's, "{Prefix}", 'this ~> 'prefix),
+            's %=% Fn("strrep", 's, "{prefix}", Fn("lower", 'this ~> 'prefix)),
+            's %=% Fn("strrep", 's, "{PREFIX}", Fn("upper", 'this ~> 'prefix))
           )
       )
   }
@@ -134,12 +166,13 @@ object Chem {
 
   def getChemList(config: TreatmentConfig): List[Chemical] = config.chemicals.map { c =>
     Chemical(
-      c.get("ix").unwrapped().toString.toInt,
-      c.get("colName").unwrapped().toString,
-      c.get("name").unwrapped().toString,
-      c.get("label").unwrapped().toString,
-      c.get("units").unwrapped().toString,
-      c.get("neutral").unwrapped().toString.toDouble
+      c.getInt("ix"),
+      c.getString("colName"),
+      c.getString("name"),
+      c.getString("label"),
+      c.getString("prefix"),
+      c.getString("units"),
+      c.getDouble("neutral")
     )
   }
 
