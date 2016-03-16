@@ -36,8 +36,11 @@ classdef AbfToMat < hive.util.Logging
             nFiles = length(this.inputFiles);
             
             % check files
-            for ix = 1:nFiles
-                this.checkFile(this.inputFiles{ix});
+            checkList = cellfun(@(f) this.checkFile(f, true), this.inputFiles);
+            
+            if ~ prod(checkList)
+                status = this.FAILURE;
+                return;
             end
             
             % allocate cells for outputs
@@ -47,7 +50,8 @@ classdef AbfToMat < hive.util.Logging
             fSweep = NaN(nFiles, 1);
             nSamp = NaN(nFiles, 1);
             nSweep = NaN(nFiles, 1);
-                        
+            
+            % read files
             parfor ix = 1:nFiles
                 [data{ix}, fSamp(ix), fSweep(ix), header{ix}] = this.readAbf(ix); %#ok<PFBNS,PFOUS>
                 [nSamp(ix), nSweep(ix)] = size(data{ix}); %#ok<PFOUS>
@@ -90,12 +94,12 @@ classdef AbfToMat < hive.util.Logging
             data = squeeze(data); % remove extra dimensions
             sweepInterval = sampInterval * size(data, 1);
             
-            % calculate the time window            
+            % calculate the time window
             if isnan(this.timeWindow)
                 sweepWindow = 1:size(data, 2);
             else
                 sweepStart = min(this.timeWindow);
-                sweepEnd = max(this.timeWindow);                
+                sweepEnd = max(this.timeWindow);
                 
                 sweepStartIx = max(1, round(sweepStart / sweepInterval) + 1);
                 sweepEndIx = min(size(data, 2), round(sweepEnd / sweepInterval));

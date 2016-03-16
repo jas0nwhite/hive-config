@@ -14,12 +14,14 @@ classdef (Abstract) Logging
             this.doError(3, id, message, varargin{:})
         end
         
-        function checkFile(this, file, shouldContinue)
+        function exists = checkFile(this, file, shouldContinue)
             if nargin < 3
                 shouldContinue = false;
             end
             
-            if ~ exist(file, 'file')
+            exists = exist(file, 'file');
+            
+            if ~ exists
                 if (shouldContinue)
                     this.doWarn(3, 'FileNotFound', 'file "%s" does not exist', file);
                 else
