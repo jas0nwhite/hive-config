@@ -54,7 +54,8 @@ class TreatmentConfig protected (config: WrappedConfig) extends Logging {
   val trainingLabelSpec = config.getString("training.label-spec")
   val trainingVgramFile = config.getString("training.vgram-file")
   val trainingLabelFile = config.getString("training.label-file")
-  val trainingVoltammetryWindow = config.getIntList("training.voltammetry-window")
+  val trainingVgramWindows = config.getIntVectorList("training.vgram-window")
+  val trainingTimeWindows = config.getIntVectorList("training.time-window")
 
   /*
    * testing settings (allow multiple paths)
@@ -67,7 +68,8 @@ class TreatmentConfig protected (config: WrappedConfig) extends Logging {
   val testingVgramFile = config.getString("testing.vgram-file")
   val testingLabelFile = config.getString("testing.label-file")
   val testingPredicitonFile = config.getString("testing.prediction-file")
-  val testingVoltammetryWindow = config.getIntList("testing.voltammetry-window")
+  val testingVgramWindows = config.getIntVectorList("testing.vgram-window")
+  val testingTimeWindows = config.getIntVectorList("testing.time-window")
 
   /*
    * target settings (allow multiple paths)
@@ -75,7 +77,7 @@ class TreatmentConfig protected (config: WrappedConfig) extends Logging {
   val targetSourceSpecs = config.getAbsolutePathList("target.source-spec")
   val targetResultPaths = config.getAbsolutePathList("target.result-path")
   val targetPredicitonSpec = config.getString("target.prediction-spec")
-  val targetVoltammetryWindow = config.getIntList("target.voltammetry-window")
+  val targetVgramWindows = config.getIntVectorList("target.vgram-window")
 
   /*
    * chemicals
