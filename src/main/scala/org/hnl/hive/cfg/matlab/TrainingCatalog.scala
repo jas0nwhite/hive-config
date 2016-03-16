@@ -39,7 +39,8 @@ case class TrainingCatalog(name: String, cfg: TreatmentConfig) extends MatClassF
       .+(
         'vgramFile %=% cfg.trainingVgramFile,
         'labelFile %=% cfg.trainingLabelFile,
-        'voltammetryWindow %=% Range(cfg.trainingVoltammetryWindow: _*)
+        'vgramWindowList %=% CCell(cfg.trainingVgramWindows.map(l => RVec(l: _*)): _*),
+        'timeWindowList %=% CCell(cfg.trainingTimeWindows.map(l => RVec(l: _*)): _*)
       )
 
   protected val catalogs =

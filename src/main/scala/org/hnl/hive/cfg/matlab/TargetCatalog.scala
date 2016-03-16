@@ -38,7 +38,7 @@ case class TargetCatalog(name: String, cfg: TreatmentConfig) extends MatClassFil
       )
       .+(
         'predictionSpec %=% cfg.targetPredicitonSpec,
-        'voltammetryWindow %=% Range(cfg.targetVoltammetryWindow: _*)
+        'vgramWindowList %=% CCell(cfg.targetVgramWindows.map(l => RVec(l: _*)): _*)
       )
 
   protected val catalogs =

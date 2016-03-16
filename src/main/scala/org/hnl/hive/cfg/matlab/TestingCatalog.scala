@@ -40,7 +40,8 @@ case class TestingCatalog(name: String, cfg: TreatmentConfig) extends MatClassFi
         'vgramFile %=% cfg.testingVgramFile,
         'labelFile %=% cfg.testingLabelFile,
         'predictionFile %=% cfg.testingPredicitonFile,
-        'voltammetryWindow %=% Range(cfg.testingVoltammetryWindow: _*)
+        'vgramWindowList %=% CCell(cfg.testingVgramWindows.map(l => RVec(l: _*)): _*),
+        'timeWindowList %=% CCell(cfg.testingTimeWindows.map(l => RVec(l: _*)): _*)
       )
 
   protected val catalogs =

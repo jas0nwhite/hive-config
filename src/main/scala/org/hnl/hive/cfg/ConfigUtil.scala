@@ -101,6 +101,27 @@ class WrappedConfig(config: Config) extends Logging {
   }
 
   /**
+   * getIntVectorList
+   * @param key
+   * @return
+   */
+  def getIntVectorList(key: String): List[List[Int]] = doTry {
+    val value = config.getValue(key)
+
+    def asList[A](v: ConfigValue)(f: ConfigValue => A): List[A] =
+      v.asInstanceOf[ConfigList].toList.map { e => f(e) }
+
+    def asInt(v: ConfigValue): Int =
+      v.unwrapped().asInstanceOf[Number].intValue
+
+    getDeepValueType(value) match {
+      case List(ConfigValueType.LIST, ConfigValueType.LIST, ConfigValueType.NUMBER) => asList(value)(v => asList(v)(e => asInt(e)))
+      case List(ConfigValueType.LIST, ConfigValueType.NUMBER) => List(asList(value)(v => asInt(v)))
+      case List(ConfigValueType.NUMBER) => List(List(asInt(value)))
+    }
+  }
+
+  /**
    * getAbsolutePathList
    * @param key
    * @return
@@ -110,7 +131,7 @@ class WrappedConfig(config: Config) extends Logging {
     val kind: ConfigValueType = value.valueType
 
     kind match {
-      case ConfigValueType.LIST => value.unwrapped().asInstanceOf[ArrayList[_]].toList.map { v => toAbsolutePath(v.toString) }
+      case ConfigValueType.LIST => config.getStringList(key).toList.map(s => toAbsolutePath(s))
       case ConfigValueType.NULL => Nil
       case _                    => List(toAbsolutePath(value.unwrapped().toString))
     }
@@ -135,6 +156,13 @@ class WrappedConfig(config: Config) extends Logging {
       .normalize
       .toAbsolutePath
       .toString
+
+  protected def getDeepValueType(value: ConfigValue): List[ConfigValueType] = {
+    value.valueType match {
+      case l @ ConfigValueType.LIST => l :: getDeepValueType(value.asInstanceOf[ConfigList].get(0))
+      case e @ _                    => e :: Nil
+    }
+  }
 
   protected def doTry[A](f: => A): A = {
     try {
