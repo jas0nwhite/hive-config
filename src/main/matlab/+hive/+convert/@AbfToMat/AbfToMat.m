@@ -88,15 +88,15 @@ classdef AbfToMat < hive.util.Logging
             % convert data to convenient format
             sampInterval = sampInterval * 1e-6; % seconds
             data = squeeze(data); % remove extra dimensions
+            sweepInterval = sampInterval * size(data, 1);
             
-            % calculate the time window
+            % calculate the time window            
             if isnan(this.timeWindow)
                 sweepWindow = 1:size(data, 2);
             else
                 sweepStart = min(this.timeWindow);
-                sweepEnd = max(this.timeWindow);
+                sweepEnd = max(this.timeWindow);                
                 
-                sweepInterval = sampInterval * size(data, 1);
                 sweepStartIx = max(1, round(sweepStart / sweepInterval) + 1);
                 sweepEndIx = min(size(data, 2), round(sweepEnd / sweepInterval));
                 
