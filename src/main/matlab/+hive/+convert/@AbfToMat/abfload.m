@@ -85,7 +85,7 @@ function [d,si,h]=abfload(fn,varargin)
 % -------------------------------------------------------------------------
 %                       PART 1: check of input vars
 % -------------------------------------------------------------------------
-disp(['** ' mfilename])
+% disp(['** ' mfilename])
 % --- defaults   
 % gap-free
 start=0.0;
@@ -130,7 +130,7 @@ end
 % -------------------------------------------------------------------------
 %                       PART 2a: determine abf version
 % -------------------------------------------------------------------------
-disp(['opening ' fn '..']); 
+% disp(['opening ' fn '..']); 
 [fid,messg]=fopen(fn,'r',machineF); 
 if fid == -1,
  error(messg);
@@ -428,7 +428,7 @@ end
 % -------------------------------------------------------------------------
 switch h.nOperationMode
  case 1
-   disp('data were acquired in event-driven variable-length mode');
+   % disp('data were acquired in event-driven variable-length mode');
    if h.fFileVersionNumber>=2.0
      errordlg('abfload currently does not work with data acquired in event-driven variable-length mode and ABF version 2.0','ABF version issue');
    else
@@ -507,11 +507,11 @@ switch h.nOperationMode
    end
 
  case {2,5}
-   if h.nOperationMode==2
-     disp('data were acquired in event-driven fixed-length mode');
-   else
-     disp('data were acquired in waveform fixed-length mode (clampex only)');
-   end
+   % if h.nOperationMode==2
+   %  disp('data were acquired in event-driven fixed-length mode');
+   % else
+   %  disp('data were acquired in waveform fixed-length mode (clampex only)');
+   % end
    % extract timing information on sweeps
    if (h.lSynchArrayPtr<=0 || h.lSynchArraySize<=0),
      fclose(fid);
