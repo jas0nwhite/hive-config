@@ -1,24 +1,23 @@
 classdef AbfToMat < hive.util.Logging
     %ABFTOMAT Converter for ABF files to MATLAB files
     
-    properties (Constant)
-        SUCCESS = 0
-        FAILURE = 1
-        SKIPPED = 2
-    end
-    
     properties (Access = protected)
         inputFiles
         outputFile
         metadataFile
         sampleWindow
         timeWindow
+        overwrite = false
+        chemLabels = nan(0);
+        chemNames = {};
+        labelFile
     end
     
     %
-    % constructors
+    % builders
     %
     methods
+        
         function this = AbfToMat(inputFiles, outputFile, metadataFile, sampleWindow, timeWindow)
             this.inputFiles = inputFiles;
             this.outputFile = outputFile;
@@ -26,20 +25,62 @@ classdef AbfToMat < hive.util.Logging
             this.sampleWindow = sampleWindow;
             this.timeWindow = timeWindow;
         end
+        
+        function this = withOverwrite(this, setting)
+            if nargin == 1
+                setting = true;
+            end
+            
+            this.overwrite = setting;
+        end
+        
+        function this = withLabels(this, chemLabels, chemNames, labelFile)
+            this.chemLabels = chemLabels;
+            this.chemNames = chemNames;
+        end
+        
     end
     
     %
     % API
     %
     methods
+        
         function status = convert(this)
+            outFilesMissing = ~(exist(this.outputFile, 'file') && exist(this.metadataFile, 'file'));
+            labelFileMissing = ~exist(this.labelFile, 'file');
+            
+            mustConvertData = this.overwrite || outFilesMissing;
+            mustCreateLabels = this.shouldCreateLabels & (mustConvertData || labelFileMissing);
+            
+            if (~ mustConvertData) && (~ mustCreateLabels)
+                status = hive.Status.Skipped;
+                return;
+            end
+            
+            if mustConvertData
+                results = this.doConvertData();
+            else
+                results = load(this.metadataFile);
+                results.status = hive.Status.Success;
+            end
+            
+            if mustCreateLabels && results.status ~= hive.Status.Failure
+                results = doCreateLables(results);
+            end
+            
+            status = results.status;
+        end
+        
+        
+        function results = doConvertData(this)            
             nFiles = length(this.inputFiles);
             
             % check files
             checkList = cellfun(@(f) this.checkFile(f, true), this.inputFiles);
             
             if ~ prod(checkList)
-                status = this.FAILURE;
+                status = hive.Status.Failure;
                 return;
             end
             
@@ -67,7 +108,12 @@ classdef AbfToMat < hive.util.Logging
             save(this.metadataFile, ...
                 'fSamp', 'fSweep', 'header', 'nSamp', 'nSweep', 'files', 'samples', 'times');
             
-            status = this.SUCCESS;
+            if ~ isempty(this.labels)
+                % create label file if one doesn't already exist
+                if 
+            end
+            
+            status = hive.Status.Success;
         end
     end
     
@@ -82,6 +128,10 @@ classdef AbfToMat < hive.util.Logging
     % internal API
     %
     methods (Access = protected)
+        
+        function tf = shouldCreateLabels(this)
+            tf = isempty(this.labels);
+        end
         
         function [data, fSamp, fSweep, header] = readAbf(this, ix)
             abfFile = this.inputFiles{ix};
