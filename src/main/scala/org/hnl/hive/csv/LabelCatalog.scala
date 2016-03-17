@@ -46,16 +46,17 @@ class LabelCatalog(config: TreatmentConfig) extends Logging {
   type Catalog = List[List[String]]
 
   protected val chemicals = Chem.getChemList(config)
-  protected val chemLabels = chemicals.sorted.map(_.colName)
+  protected val chemCols = chemicals.sorted.map(_.colName)
+  protected val chemVars = chemicals.sorted.map(_.prefix)
 
-  protected val columns =
-    "datasetId" :: "fileId" :: chemLabels ::: ("onset" :: "offset" :: "exclude" :: "notes" :: "file" :: Nil)
+  protected val variables =
+    "datasetId" :: "fileId" :: chemVars ::: ("onset" :: "offset" :: "exclude" :: "notes" :: "file" :: Nil)
 
   protected val targetColumns =
-    "index" :: chemLabels ::: ("onset" :: "offset" :: "exclude" :: "notes" :: Nil)
+    "index" :: chemCols ::: ("onset" :: "offset" :: "exclude" :: "notes" :: Nil)
 
   protected val headerLine: String =
-    columns.mkString("", ",", "\n")
+    variables.mkString("", ",", "\n")
 
   protected def getColumnIndices(line: String): List[Int] = {
     val targetCols: List[String] = targetColumns.map(_.toLowerCase)
