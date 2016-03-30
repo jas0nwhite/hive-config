@@ -77,13 +77,14 @@ classdef Preprocessor
             
             vgramFile = fullfile(outDir, tcfg.vgramFile);
             metaFile = fullfile(outDir, 'abfMetadata.mat');
+            labelFile = fullfile(outDir, tcfg.labelFile);
             
             fprintf('    dataset %03d (%d files): %s... ', id, length(abfFiles), name);
             t = tic;
             
             status = hive.convert.AbfToMat(abfFiles, vgramFile, metaFile, vgramWin, timeWin)...
                 .withOverwrite(this.overwrite)...
-                .withLabels(abfLabels, abfChemNames)...
+                .withLabels(abfLabels, abfChemNames, labelFile)...
                 .convert;
             
             fprintf('%s (%.3fms)\n', char(status), toc(t)/1e-3);

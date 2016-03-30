@@ -22,7 +22,7 @@ classdef AbfToMat < hive.util.Logging
             this.inputFiles = inputFiles;
             this.outputFile = outputFile;
             this.metadataFile = metadataFile;
-            this.sampleWindow = sampleWindow;
+            this.sampleWindow = this.windowToRange(sampleWindow);
             this.timeWindow = timeWindow;
         end
         
@@ -37,6 +37,7 @@ classdef AbfToMat < hive.util.Logging
         function this = withLabels(this, chemLabels, chemNames, labelFile)
             this.chemLabels = chemLabels;
             this.chemNames = chemNames;
+            this.labelFile = labelFile;
         end
         
     end
@@ -66,55 +67,12 @@ classdef AbfToMat < hive.util.Logging
             end
             
             if mustCreateLabels && results.status ~= hive.Status.Failure
-                results = doCreateLables(results);
+                results = this.doCreateLabels(results);
             end
             
             status = results.status;
         end
         
-        
-        function results = doConvertData(this)            
-            nFiles = length(this.inputFiles);
-            
-            % check files
-            checkList = cellfun(@(f) this.checkFile(f, true), this.inputFiles);
-            
-            if ~ prod(checkList)
-                status = hive.Status.Failure;
-                return;
-            end
-            
-            % allocate cells for outputs
-            data = cell(nFiles, 1);
-            header = cell(nFiles, 1);
-            fSamp = NaN(nFiles, 1);
-            fSweep = NaN(nFiles, 1);
-            nSamp = NaN(nFiles, 1);
-            nSweep = NaN(nFiles, 1);
-            
-            % read files
-            parfor ix = 1:nFiles
-                [data{ix}, fSamp(ix), fSweep(ix), header{ix}] = this.readAbf(ix); %#ok<PFBNS,PFOUS>
-                [nSamp(ix), nSweep(ix)] = size(data{ix}); %#ok<PFOUS>
-            end
-            
-            save(this.outputFile, 'data');
-            
-            % copy vars for save
-            files = this.inputFiles; %#ok<NASGU>
-            samples = this.sampleWindow; %#ok<NASGU>
-            times = this.timeWindow; %#ok<NASGU>
-            
-            save(this.metadataFile, ...
-                'fSamp', 'fSweep', 'header', 'nSamp', 'nSweep', 'files', 'samples', 'times');
-            
-            if ~ isempty(this.labels)
-                % create label file if one doesn't already exist
-                if 
-            end
-            
-            status = hive.Status.Success;
-        end
     end
     
     %
@@ -130,10 +88,20 @@ classdef AbfToMat < hive.util.Logging
     methods (Access = protected)
         
         function tf = shouldCreateLabels(this)
-            tf = isempty(this.labels);
+            tf = ~ isempty(this.chemLabels);
         end
         
-        function [data, fSamp, fSweep, header] = readAbf(this, ix)
+        function range = windowToRange(~, window)
+            if sum(isnan(window)) > 0
+                range = NaN;
+            elseif length(window) == 2
+                range = window(1):window(2);
+            else
+                range = window;
+            end
+        end
+        
+        function [data, sampleFreq, sweepFreq, header, sampleWindow, sweepWindow] = readAbf(this, ix)
             abfFile = this.inputFiles{ix};
             
             % load the data from the ABF file
@@ -158,14 +126,78 @@ classdef AbfToMat < hive.util.Logging
             end
             
             % extract the data
-            if isnan(this.sampleWindow)
-                data = data(:, sweepWindow);
+            if sum(isnan(this.sampleWindow)) > 0
+                sampleWindow = 1:size(data, 1);
             else
-                data = data(this.sampleWindow, sweepWindow);
+                sampleWindow = this.sampleWindow;
             end
             
-            fSamp = 1/sampInterval;
-            fSweep = 1/sweepInterval;
+            data = data(this.sampleWindow, sweepWindow);
+            
+            sampleFreq = 1/sampInterval;
+            sweepFreq = 1/sweepInterval;
+        end
+        
+        function results = doConvertData(this)
+            nFiles = length(this.inputFiles);
+            
+            % check files
+            checkList = cellfun(@(f) this.checkFile(f, true), this.inputFiles);
+            
+            if ~ prod(checkList)
+                results.status = hive.Status.Failure;
+                return;
+            end
+            
+            % allocate cells for outputs
+            voltammograms = cell(nFiles, 1);
+            headers = cell(nFiles, 1);
+            sampleFreq = NaN(nFiles, 1);
+            sweepFreq = NaN(nFiles, 1);
+            nSamples = NaN(nFiles, 1);
+            nSweeps = NaN(nFiles, 1);
+            sampleIx = cell(nFiles, 1);
+            sweepIx = cell(nFiles, 1);
+            
+            
+            % read files
+            parfor ix = 1:nFiles
+                [voltammograms{ix}, sampleFreq(ix), sweepFreq(ix), headers{ix}, sampleIx{ix}, sweepIx{ix}] =...
+                    this.readAbf(ix); %#ok<PFBNS,PFOUS>
+                [nSamples(ix), nSweeps(ix)] = size(voltammograms{ix});
+            end
+            
+            save(this.outputFile, 'voltammograms');
+            
+            % copy vars for save
+            results.headers = headers;
+            results.sampleFreq = sampleFreq;
+            results.sweepFreq = sweepFreq;
+            results.nSamples = nSamples;
+            results.nSweeps = nSweeps;
+            results.sampleIx = sampleIx;
+            results.sweepIx = sweepIx;
+            results.files = this.inputFiles;
+            
+            
+            save(this.metadataFile, '-struct', 'results');
+            
+            results.status = hive.Status.Success;
+        end
+        
+        function results = doCreateLabels(this, results)
+            nFiles = length(results.files);
+            data.labels = cell(nFiles, 1);
+            
+            for ix = 1:nFiles
+                data.labels{ix} = repmat(this.chemLabels(ix, :), results.nSweeps(ix), 1);
+            end
+            
+            data.chemicals = this.chemNames; %#ok<STRNU>
+            
+            save(this.labelFile, '-struct', 'data');
+            
+            results.status = hive.Status.Success;
         end
         
     end
