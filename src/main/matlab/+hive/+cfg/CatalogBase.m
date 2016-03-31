@@ -42,12 +42,20 @@ classdef (Abstract) CatalogBase
             end
         end
         
+        function n = getSize(~, setList, setIx)
+            if nargin == 2
+                n = sum(cellfun(@(c) length(c), setList));
+            else
+                n = length(setList{setIx});
+            end
+        end
+        
     end
     
     %
     % internal API
     %
-    methods (Access = protected)        
+    methods (Access = protected)
         
     end
     
