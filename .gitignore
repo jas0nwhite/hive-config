@@ -14,3 +14,4 @@ src/main/matlab/+hive/+cfg/TargetCatalog.m
 src/main/matlab/+hive/+cfg/TestingCatalog.m
 src/main/matlab/+hive/+cfg/TrainingCatalog.m
 matlab.mat
+src/main/matlab/testing/figs
