@@ -3,25 +3,22 @@ function dat = characterize(scanList, reference)
 
     slm = cell(nScans, 1);
     x = 1:60;
+    knots = 3; %[1 15 60];
+    
+    prescription = slmset('degree', 1, ...
+        'knots', knots, ...
+        'interiorknots', 'free', ...
+        'plot', 'off');
 
+    refSlm = slmengine(x, reference(x), prescription);
+    
+    refKnots = refSlm.knots;
+    
     parfor ix = 1:length(scanList)
         scan = scanList{ix};
-
-        slm{ix} = slmengine(x, scan(x), 'degree', 3, 'knots', 3, 'interiorknots', 'free', 'plot', 'off');
+        
+        slm{ix} = slmengine(x, scan(x), prescription, 'knots', refKnots);
     end
-    
-    refSlm = slmengine(x, reference(x), 'degree', 3, 'knots', 3, 'interiorknots', 'free', 'plot', 'off');
-
-%    k = mean(cellfun(@(s) s.knots(2), slm));
-%
-%    parfor ix = 1:length(scanList)
-%        scan = scanList{ix};
-%
-%        x = 1:length(scan);
-%        y = scan;
-%
-%        slm{ix} = slmengine(x(1:60), y(1:60), 'degree', 3, 'knots', [1, k, 60], 'plot', 'off');
-%    end
 
     dat.slm = slm;
     dat.refSlm = refSlm;
