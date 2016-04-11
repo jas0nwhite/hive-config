@@ -25,11 +25,13 @@ function [coreIx, noiseIx, borderIx, clustIx] = characterizeDataset(catalog, dat
         minPoints = ceil(minPoints * length(scanList));
     end
 
-    c = characterize(scanList, reference);
-    x = cellfun(@(s) s.knots(2), c.slm);
-    y = cellfun(@(s) s.coef(2), c.slm);
+    c = characterize(scanList);
+    % x = cellfun(@(s) s.knots(2), c.slm);
+    % y = cellfun(@(s) s.coef(2), c.slm);
     % refX = c.refSlm.knots(2);
     % refY = c.refSlm.coef(2);
+    x = cellfun(@(s) s.x, c.fit);
+    y = cellfun(@(s) s.y, c.fit);
 
     normX = zscore(x);
     normY = zscore(y);
@@ -68,41 +70,39 @@ function [coreIx, noiseIx, borderIx, clustIx] = characterizeDataset(catalog, dat
     subplot(2, 2, 4);
     hold on;
     
-    for ix = 1:length(c.slm)
-        model = c.slm{ix};
+    for ix = 1:length(c.fit)
+        model.x = c.fit{ix}.x;
+        model.y = c.fit{ix}.y;
+        scan.x = 1:60;
+        scan.y = scanList{ix}(scan.x);
         
-        xrange = model.knots([1, end]);
-        xev = linspace(xrange(1), xrange(2), 1001);
-        ypred = slmeval(xev, model);
-        
-        h = plot(model.x, model.y);        
-        set(h, ...
+        plot(scan.x, scan.y, ...
             'LineStyle', '-', ...
             'Marker', 'none', ...
             'Color', [0.8 0.8 0.8]);
         
-        h = plot(xev, ypred);
-        set(h, ...
+        plot(c.fit{ix}.xp, c.fit{ix}.yp, ...
             'Marker', 'none', ...
             'Color', [1.0 0.8 0.8], ...
             'LineStyle', '-', ...
             'LineWidth', 0.5);
         
-        axlim = axis;
-        yrange = axlim(3:4);
-        knots = model.knots(:);
+        % axlim = axis;
+        % yrange = axlim(3:4);
+        % knots = model.knots(:);
         
-        h = plot(repmat(knots', 2, 1), yrange(:));
-        set(h, ...
-            'Marker', 'none', ...
-            'Color', [0.8 1.0 0.8], ...
-            'LineStyle', '--');
+        % h = plot(repmat(knots', 2, 1), yrange(:));
+        % set(h, ...
+        %     'Marker', 'none', ...
+        %     'Color', [0.8 1.0 0.8], ...
+        %     'LineStyle', '--');
     end
     
     plot(x, y, 'LineStyle', 'none', 'Marker', 'o', 'MarkerEdgeColor', 'none', 'MarkerFaceColor', colors(1, :));
     
-    xlim([min(x) * 0.9, max(x) * 1.1]);
-    ylim([min(y) * 0.9, max(y) * 1.1]);
+    % xlim([min(x) * 0.9, max(x) * 1.1]);
+    % ylim([min(y) * 0.9, max(y) * 1.1]);
+    xlim([0, max(scan.x)]);
     
     title('characterization (SLM)');
     xlabel('sample #');
