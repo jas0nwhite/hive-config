@@ -1,34 +1,26 @@
-function dat = characterize(scanList)
+function dat = characterize(scanList, ~)
     nScans = length(scanList);
 
     fit = cell(nScans, 1);
-    d = 2;
-    x = 1:30;    
-    
-    prescription = slmset('degree', 3, ...
-        'interiorknots', 'free', ...
-        'plot', 'off');
 
-    parfor ix = 1:length(scanList)
-        scan = scanList{ix};
+    for ix = 1:length(scanList)
+        scan = scanList{ix}(1:60);
+        nx = length(scan);
         
-        y = scan(x);
+        xp = linspace(1, nx, 3000);
+        yp = interp1(1:nx, scan, xp, 'spline');
+
+        yy = yp - linspace(yp(1), yp(end), length(yp));
+
+        maxIx = ceil(median(find(yy == max(yy))));
         
-        slm = slmengine(x, y, prescription);
-        xp = linspace(min(x), max(x), 10001);
-        yp = slmeval(xp, slm);
-        
-        xx = xp((d+1):end);
-        yy = diff(yp, d);
-        
-        minIx = find(yy == min(yy), 1, 'first');
-        
-        fit{ix}.xp = xp;
-        fit{ix}.yp = yp;
-        fit{ix}.xx = xx;
-        fit{ix}.yy = yy;
-        fit{ix}.x = xp(minIx + d);
-        fit{ix}.y = yp(minIx + d);
+        x0 = xp(maxIx);
+        y0 = yp(maxIx);
+
+        fit{ix}.xp = [];
+        fit{ix}.yp = [];
+        fit{ix}.x = x0;
+        fit{ix}.y = y0;
     end
 
     dat.fit = fit;
