@@ -14,14 +14,15 @@ function report = reportCharacterization(catalog, coreIxList, noiseIxList, borde
         clusterIx = clusterIxList{datasetIx};
         dsLabels = labels(labels.datasetId == datasetIx, :);
         
-        nSteps = length(clusterIx);
-        nClusters = length(unique(clusterIx(clusterIx > 0)));
+        nSteps = length(clusterIx);        
         clusteredIx = sort([coreIx; borderIx]);
         
-        if (nClusters == 1 && isempty(noiseIx))
-            fprintf('*** dataset %d has one cluster with no outliers\n', datasetIx);
-            continue;
-        end
+        % nClusters = length(unique(clusterIx(clusterIx > 0)));
+        %
+        % if (nClusters == 1 && isempty(noiseIx))
+        %     fprintf('*** dataset %d has one cluster with no outliers\n', datasetIx);
+        %     continue;
+        % end
         
         borderTF = false(nSteps, 1);
         noiseTF = false(nSteps, 1);
