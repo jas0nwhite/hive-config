@@ -1,4 +1,4 @@
-function [coreIx, noiseIx, borderIx, clustIx] = characterizeAll(catalog, epsPct, minPointsPct)
+function [coreIx, noiseIx, borderIx, clustIx] = characterizeAll(catalog, minPointsPct, epsX, epsY)
 
     nDatasets = sum(cellfun(@(c) length(c), catalog.datasetCatalog));
     coreIx = cell(nDatasets, 1);
@@ -21,12 +21,19 @@ function [coreIx, noiseIx, borderIx, clustIx] = characterizeAll(catalog, epsPct,
         t = tic;
         fprintf('*** dataset %03d/%03d... ', datasetIx, nDatasets);
         
-        if argCount == 3
-            [coreIx{datasetIx}, noiseIx{datasetIx}, borderIx{datasetIx}, clustIx{datasetIx}] = ...
-                characterizeDataset(catalog, datasetIx, epsPct, minPointsPct);
-        else
-            [coreIx{datasetIx}, noiseIx{datasetIx}, borderIx{datasetIx}, clustIx{datasetIx}] = ...
-                characterizeDataset(catalog, datasetIx, epsPct);
+        switch argCount
+            case 1
+                [coreIx{datasetIx}, noiseIx{datasetIx}, borderIx{datasetIx}, clustIx{datasetIx}] = ...
+                characterizeDataset(catalog, datasetIx);
+            case 2
+                [coreIx{datasetIx}, noiseIx{datasetIx}, borderIx{datasetIx}, clustIx{datasetIx}] = ...
+                characterizeDataset(catalog, datasetIx, minPointsPct);
+            case 3
+                [coreIx{datasetIx}, noiseIx{datasetIx}, borderIx{datasetIx}, clustIx{datasetIx}] = ...
+                characterizeDataset(catalog, datasetIx, minPointsPct, epsX);
+            otherwise
+                [coreIx{datasetIx}, noiseIx{datasetIx}, borderIx{datasetIx}, clustIx{datasetIx}] = ...
+                characterizeDataset(catalog, datasetIx, minPointsPct, epsX, epsY);
         end
         
         hgexport(gcf, fullfile('testing', 'figs', sprintf('characterization-%03d.pdf', datasetIx)), s);

@@ -12,3 +12,9 @@ clc;
 
 % config
 cfg = Config.init;
+
+
+%% TESTING
+addpath(fullfile(pwd, 'lib', 'dbscan'))
+addpath(fullfile(pwd, 'lib', 'SLMTools'))
+addpath(fullfile(pwd, 'testing'))

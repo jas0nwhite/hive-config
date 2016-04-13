@@ -1,4 +1,4 @@
-function [coreIx, noiseIx, borderIx, clustIx] = characterizeDataset(catalog, datasetIx, eps, minPoints)
+function [coreIx, noiseIx, borderIx, clustIx] = characterizeDataset(catalog, datasetIx, minPoints, epsX, epsY)
 
     [setIx, sourceIx] = catalog.getSourceIxByDatasetId(datasetIx);
     [~, name, ~] = catalog.getSourceInfo(setIx, sourceIx);
@@ -12,20 +12,32 @@ function [coreIx, noiseIx, borderIx, clustIx] = characterizeDataset(catalog, dat
     scanList = summary.steps.mean;
     reference = summary.grand.mean;
     stdDev = summary.grand.std;
-    
-    if (eps == 0)
-        eps= 1;
+
+    if (nargin < 3)
+        minPoints = 3;
     end
 
-    if (nargin == 3)
-        minPoints = 3;
+    if (nargin < 4)
+        epsX = 1;
+    end
+    
+    if (nargin < 5)
+        epsY = epsX;
+    end
+    
+    if (epsX == 0)
+        epsX = 1;
+    end
+    
+    if (epsY == 0)
+        epsY = 1;
     end
 
     if (minPoints < 1)
         minPoints = ceil(minPoints * length(scanList));
     end
 
-    c = characterize(scanList);
+    c = characterize(scanList, reference);
     % x = cellfun(@(s) s.knots(2), c.slm);
     % y = cellfun(@(s) s.coef(2), c.slm);
     % refX = c.refSlm.knots(2);
@@ -33,8 +45,10 @@ function [coreIx, noiseIx, borderIx, clustIx] = characterizeDataset(catalog, dat
     x = cellfun(@(s) s.x, c.fit);
     y = cellfun(@(s) s.y, c.fit);
 
-    normX = zscore(x);
-    normY = zscore(y);
+    eps = 1;
+    
+    normX = (x - mean(x)) / epsX;
+    normY = (y - mean(y)) / epsY;
 
     normXY = horzcat(normX, normY);
 
@@ -47,65 +61,80 @@ function [coreIx, noiseIx, borderIx, clustIx] = characterizeDataset(catalog, dat
     nClust = length(unique(clustIx(coreIx)));
 
     scanMat = cell2mat(scanList');
-    time = metadata.sampleIx{1} ./ metadata.sampleFreq(1) * 1e3; % milliseconds
+    
+    samplesPerSecond = metadata.sampleFreq(1);
+    samplesPerMs = samplesPerSecond / 1e3; % milliseconds
+    samplesPerUs = samplesPerSecond / 1e6; % microseconds
+    
+    time = metadata.sampleIx{1} ./ samplesPerMs;
+    index2ms = @(s) ((s - 1) / samplesPerMs) + time(1);
+    index2us = @(s) index2ms(s) * 1e3;
 
+    
+    norm2ms = @(v) (v * epsX) / samplesPerMs;
+    norm2us = @(v) (v * epsX) / samplesPerUs;
+    norm2current = @(v) v * epsY;
+    epsXus = norm2us(1);
 
-        function resizeAxis(~, ~, ax)
-            axes(ax)
-            axis equal
-
-            % Uncomment next two lines for same axes sizes while printing
-            % set(ax, 'DataAspectRatioMode', 'auto')
-            % set(ax, 'Plotboxaspectratiomode', 'auto')
-        end
-
-
-    f = figure;
-
+    
     colors = colormap(lines(nClust));
 
     %
-    % SLM plot
+    % characterization
     %
-    subplot(2, 2, 4);
+    subplot(2, 2, 1);
     hold on;
     
-    for ix = 1:length(c.fit)
-        model.x = c.fit{ix}.x;
-        model.y = c.fit{ix}.y;
-        scan.x = 1:60;
-        scan.y = scanList{ix}(scan.x);
+    scanX = 1:60;
+    plotX = time(scanX);
+    
+    if ~isempty(coreIx)
+        scanY = horzcat(scanList{coreIx});
+        plotY = scanY(scanX, :);
         
-        plot(scan.x, scan.y, ...
+        plot(plotX, plotY, ...
             'LineStyle', '-', ...
             'Marker', 'none', ...
             'Color', [0.8 0.8 0.8]);
-        
-        plot(c.fit{ix}.xp, c.fit{ix}.yp, ...
-            'Marker', 'none', ...
-            'Color', [1.0 0.8 0.8], ...
-            'LineStyle', '-', ...
-            'LineWidth', 0.5);
-        
-        % axlim = axis;
-        % yrange = axlim(3:4);
-        % knots = model.knots(:);
-        
-        % h = plot(repmat(knots', 2, 1), yrange(:));
-        % set(h, ...
-        %     'Marker', 'none', ...
-        %     'Color', [0.8 1.0 0.8], ...
-        %     'LineStyle', '--');
     end
     
-    plot(x, y, 'LineStyle', 'none', 'Marker', 'o', 'MarkerEdgeColor', 'none', 'MarkerFaceColor', colors(1, :));
+    if ~isempty(borderIx)
+        scanY = horzcat(scanList{borderIx});
+        plotY = scanY(scanX, :);
+        
+        plot(plotX, plotY, ...
+            'LineStyle', '-', ...
+            'Marker', 'none', ...
+            'Color', [0.8 0.8 0.8]);
+    end
+    
+    if ~isempty(noiseIx)
+        scanY = horzcat(scanList{noiseIx});
+        plotY = scanY(scanX, :);
+        
+        plot(plotX, plotY, ...
+            'LineStyle', '-', ...
+            'Marker', 'none', ...
+            'Color', [1 0.5 0.5]);
+    end
+    
+    for i = 1:nClust
+        plotIx = clustIx == i;
+        plot(index2ms(x(plotIx)), y(plotIx), 'o', ...
+            'MarkerEdgeColor', colors(i, :), 'MarkerFaceColor', colors(i, :));
+    end
+    
+    if ~isempty(noiseIx)
+        plot(index2ms(x(noiseIx)), y(noiseIx), 'or');
+    end
+    
     
     % xlim([min(x) * 0.9, max(x) * 1.1]);
     % ylim([min(y) * 0.9, max(y) * 1.1]);
-    xlim([0, max(scan.x)]);
+    % xlim([min(plotX), max(plotX)]);
     
-    title('characterization (SLM)');
-    xlabel('sample #');
+    title('characterization');
+    xlabel('time (ms)');
     ylabel('current (nA)');
     hold off;
     
@@ -113,11 +142,11 @@ function [coreIx, noiseIx, borderIx, clustIx] = characterizeDataset(catalog, dat
     %
     % cluster plot
     %
-    eq = subplot(2, 2, 2);
+    subplot(2, 2, 2);
     hold on;
 
     if ~isempty(borderIx)
-        plot(normX(borderIx), normY(borderIx), 'oc', 'MarkerFaceColor', 'c', 'MarkerSize', 15);
+        plot(norm2us(normX(borderIx)), norm2current(normY(borderIx)), 'oc', 'MarkerFaceColor', 'c', 'MarkerSize', 15);
     end
 
     theta = linspace(0, 2*pi, 100);
@@ -133,7 +162,7 @@ function [coreIx, noiseIx, borderIx, clustIx] = characterizeDataset(catalog, dat
            
             for j = 1:length(patchIx)
                 ix = patchIx(j);
-                [px, py] = polybool('union', px, py, cx + normX(ix), cy + normY(ix));
+                [px, py] = polybool('union', px, py, norm2us(cx + normX(ix)), norm2current(cy + normY(ix)));
             end
             
             patch(px, py, colors(i, :), 'FaceAlpha', .1, 'EdgeColor', colors(i, :));
@@ -141,54 +170,51 @@ function [coreIx, noiseIx, borderIx, clustIx] = characterizeDataset(catalog, dat
         
         for i = 1:nClust
             plotIx = clustIx == i;
-            plot(normX(plotIx), normY(plotIx), 'o', ...
+            plot(norm2us(normX(plotIx)), norm2current(normY(plotIx)), 'o', ...
                 'MarkerEdgeColor', colors(i, :), 'MarkerFaceColor', colors(i, :));
         end
         
     end
 
     if ~isempty(noiseIx)
-        plot(normX(noiseIx), normY(noiseIx), 'or');
+        plot(norm2us(normX(noiseIx)), norm2current(normY(noiseIx)), 'or');
     end
 
     title(sprintf('clusters: %d, retained: %d, rejected: %d', nClust, length(clusteredIx), length(noiseIx)));
-    xlabel('knot location (\sigma)');
-    ylabel('knot coefficient (\sigma)');
-    axis equal;
-
+    xlabel('\Delta time (µs)');
+    ylabel('\Delta current (nA)');
+    axis tight;
+    
     hold off;
-
-    set(f, 'ResizeFcn',{@resizeAxis, eq})
-    % set(f, 'PaperPositionMode', 'auto') %Avoid resizing the figure when printing
 
 
 
     %
     % SDT plot
     %
-    subplot(2, 2, 1);
-    hold on;
-
-    plot(time, stdDev);
-    title('dataset standard deviation');
-    xlabel('time (ms)');
-    ylabel('\sigma (nA)');
-    
-    axis tight;
-    
-    plot([time(1) time(1)], get(gca, 'YLim'), 'b:');
-    plot([time(60) time(60)], get(gca, 'YLim'), 'b:');
-    %plot([time(1) time(60)], [eps eps], 'k:');
-
-    xlim([1, 12]);
-
-    hold off;
+    % subplot(2, 2, 3);
+    % hold on;
+    % 
+    % plot(time, stdDev);
+    % title('dataset standard deviation');
+    % xlabel('time (ms)');
+    % ylabel('\sigma (nA)');
+    % 
+    % axis tight;
+    % 
+    % plot([time(1) time(1)], get(gca, 'YLim'), 'b:');
+    % plot([time(60) time(60)], get(gca, 'YLim'), 'b:');
+    % %plot([time(1) time(60)], [eps eps], 'k:');
+    % 
+    % xlim([1, 12]);
+    % 
+    % hold off;
 
 
     %
     % voltammogram plot
     %
-    subplot(2, 2, 3);
+    subplot(2, 2, [3 4]);
     hold on;
     
     if ~isempty(coreIx)
@@ -220,7 +246,7 @@ function [coreIx, noiseIx, borderIx, clustIx] = characterizeDataset(catalog, dat
 
 
     suptitle(sprintf(...
-        'dataset #%d: %s\nepsilon = %0.2f, min cluster size = %0d', ...
-        datasetIx, strrep(name, '_', '-'), eps, minPoints));
+        'dataset #%d: %s\nepsilon = %0.2f µs x %0.2f nA, min cluster size = %0d', ...
+        datasetIx, strrep(name, '_', '-'), epsXus, epsY, minPoints));
     
 end
