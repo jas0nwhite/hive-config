@@ -186,7 +186,9 @@ class LabelCatalog(config: TreatmentConfig) extends Logging {
             .replaceAllLiterally("\"", "")
             .replaceAllLiterally("''", "")
             .replaceAllLiterally(",", ";")
-          rawfile = rawFiles(fileId)
+          suffix = f"$fileId%04d.abf"
+          _ = debug(s"$line -> *$suffix")
+          rawfile = rawFiles.filter(s => s.endsWith(suffix)).head
 
         } yield Line(datasetId, fileId, concentrations, onset, offset, exclude, notes, rawfile)
 
