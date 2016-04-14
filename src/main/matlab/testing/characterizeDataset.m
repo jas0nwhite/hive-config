@@ -235,14 +235,14 @@ function [coreIx, noiseIx, borderIx, clustIx] = characterizeDataset(catalog, dat
     title('dataset voltammograms');
     xlabel('time (ms)');
     ylabel('current (nA)');
-    axis tight;
     
+    xlim([1, 12]);
+    ylim([-2050, 2050]);
+
     plot([time(1) time(1)], get(gca, 'YLim'), 'b:');
     plot([time(60) time(60)], get(gca, 'YLim'), 'b:');
     
-    xlim([1, 12]);
-
-
+    
     suptitle(sprintf(...
         'dataset #%d: %s\nepsilon = %0.2f µs x %0.2f nA, min cluster size = %0d', ...
         datasetIx, strrep(name, '_', '-'), epsXus, epsY, minPoints));
