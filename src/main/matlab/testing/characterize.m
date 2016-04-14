@@ -1,4 +1,4 @@
-function dat = characterize(scanList, ~)
+function dat = characterize(scanList)
     nScans = length(scanList);
 
     fit = cell(nScans, 1);
