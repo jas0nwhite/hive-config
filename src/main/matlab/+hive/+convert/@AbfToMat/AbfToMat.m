@@ -132,7 +132,7 @@ classdef AbfToMat < hive.util.Logging
                 sampleWindow = this.sampleWindow;
             end
             
-            data = data(this.sampleWindow, sweepWindow);
+            data = data(sampleWindow, sweepWindow);
             
             sampleFreq = 1/sampInterval;
             sweepFreq = 1/sweepInterval;
