@@ -10,9 +10,7 @@ function [coreIx, noiseIx, borderIx, clustIx] = characterizeDataset(catalog, dat
     metadata = load(metadataFile);
 
     scanList = summary.steps.mean;
-    reference = summary.grand.mean;
-    stdDev = summary.grand.std;
-
+    
     if (nargin < 3)
         minPoints = 3;
     end
@@ -37,7 +35,7 @@ function [coreIx, noiseIx, borderIx, clustIx] = characterizeDataset(catalog, dat
         minPoints = ceil(minPoints * length(scanList));
     end
 
-    c = characterize(scanList, reference);
+    c = characterize(scanList);
     % x = cellfun(@(s) s.knots(2), c.slm);
     % y = cellfun(@(s) s.coef(2), c.slm);
     % refX = c.refSlm.knots(2);
@@ -68,10 +66,10 @@ function [coreIx, noiseIx, borderIx, clustIx] = characterizeDataset(catalog, dat
     
     time = metadata.sampleIx{1} ./ samplesPerMs;
     index2ms = @(s) ((s - 1) / samplesPerMs) + time(1);
-    index2us = @(s) index2ms(s) * 1e3;
+    index2us = @(s) index2ms(s) * 1e3; %#ok<NASGU>
 
     
-    norm2ms = @(v) (v * epsX) / samplesPerMs;
+    norm2ms = @(v) (v * epsX) / samplesPerMs; %#ok<NASGU>
     norm2us = @(v) (v * epsX) / samplesPerUs;
     norm2current = @(v) v * epsY;
     epsXus = norm2us(1);
