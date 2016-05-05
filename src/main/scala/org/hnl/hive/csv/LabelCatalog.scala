@@ -11,6 +11,7 @@ import org.hnl.hive.cfg.matlab.Chem
 
 import grizzled.slf4j.Logging
 import resource.managed
+import org.hnl.hive.cfg.NamingUtil
 
 // scalastyle:off multiple.string.literals
 
@@ -32,10 +33,11 @@ class LabelCatalog(config: TreatmentConfig) extends Logging {
       offset: Double,
       exclude: Boolean,
       notes: String,
-      file: String) extends Ordered[Line] {
+      file: String,
+      probe: String) extends Ordered[Line] {
 
     def toCsvLine: String =
-      s"""$datasetId,$fileId,${concentrations.mkString(",")},$onset,$offset,$exclude,$notes,$file\n"""
+      s"""$datasetId,$fileId,${concentrations.mkString(",")},$onset,$offset,$exclude,$notes,$file,$probe\n"""
 
     import scala.math.Ordered.orderingToOrdered // scalastyle:ignore import.grouping
 
@@ -50,7 +52,7 @@ class LabelCatalog(config: TreatmentConfig) extends Logging {
   protected val chemVars = chemicals.sorted.map(_.prefix)
 
   protected val variables =
-    "datasetId" :: "fileId" :: chemVars ::: ("onset" :: "offset" :: "exclude" :: "notes" :: "file" :: Nil)
+    "datasetId" :: "fileId" :: chemVars ::: ("onset" :: "offset" :: "exclude" :: "notes" :: "file" :: "probe" :: Nil)
 
   protected val targetColumns =
     "index" :: chemCols ::: ("onset" :: "offset" :: "exclude" :: "notes" :: Nil)
@@ -151,6 +153,11 @@ class LabelCatalog(config: TreatmentConfig) extends Logging {
         val csvHdr = csvLines.take(1).toList(0)
         val rawFiles = Util.findPaths(Util.dirname(file) + "/" + rawGlob).sorted
 
+        val probeName = for {
+          dataset <- NamingUtil.datasetNameFromPath(file)
+          dsInfo <- NamingUtil.datasetInfoFromName(dataset)
+        } yield dsInfo.probeDate + "_" + dsInfo.probeName
+
         val colIx = getColumnIndices(csvHdr)
 
         debug(s"file  : ${file}")
@@ -190,7 +197,7 @@ class LabelCatalog(config: TreatmentConfig) extends Logging {
           _ = debug(s"$line -> *$suffix")
           rawfile = rawFiles.filter(s => s.endsWith(suffix)).head
 
-        } yield Line(datasetId, fileId, concentrations, onset, offset, exclude, notes, rawfile)
+        } yield Line(datasetId, fileId, concentrations, onset, offset, exclude, notes, rawfile, probeName.getOrElse("<error>"))
 
         // write the lines to the output stream
         lines.foreach { line => out.write(line.toCsvLine) }
