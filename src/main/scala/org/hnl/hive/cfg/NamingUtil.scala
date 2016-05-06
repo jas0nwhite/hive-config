@@ -4,6 +4,8 @@ import scala.util.matching.Regex
 
 import grizzled.slf4j.Logging
 
+// scalastyle:off multiple.string.literals
+
 /**
  * Utilities to parse naming of various files and directories created by the HNL
  * <p>
