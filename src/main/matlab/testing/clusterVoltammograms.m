@@ -1,52 +1,22 @@
-function [coreIx, noiseIx, borderIx, clustIx] = clusterDatasets(catalog, datasetIxList, minPoints, epsX, epsY, label)
+function [coreIx, noiseIx, borderIx, clustIx] = clusterVoltammograms(vgramList, sampleFreq, sampleIx, minPoints, epsX, epsY, label)
 
-    nDatasets = length(datasetIxList);
-    scanList = cell(nDatasets, 1);
-    sampleFreq = nan(nDatasets, 1);
-    sampleIx = cell(nDatasets, 1);
-    
-    parfor listIx = 1:nDatasets
-        t = tic;
-        fprintf('*** dataset %03d/%03d... ', listIx, nDatasets);
-        
-        [setIx, sourceIx] = catalog.getSourceIxByDatasetId(datasetIxList(listIx)); %#ok<PFBNS>
-        [~, name, ~] = catalog.getSourceInfo(setIx, sourceIx);
-
-        resultPath = catalog.getSetValue(catalog.resultPathList, setIx);
-        summaryFile = fullfile(resultPath, name, 'summary.mat');
-        metadataFile = fullfile(resultPath, name, 'abfMetadata.mat');
-        labelFile = fullfile(resultPath, name, catalog.labelFile);
-
-        summary = load(summaryFile);
-        metadata = load(metadataFile);
-        labeldata = load(labelFile);
-
-        sampleFreq(listIx) = metadata.sampleFreq(1);
-        sampleIx{listIx} = metadata.sampleIx{1};
-        
-        neutral = cellfun(@(c) Chem.get(c).neutral, labeldata.chemicals);
-        distance = cellfun(@(step) sum((step(1, :) - neutral).^2), labeldata.labels);
-
-        neutralStepIx = find(distance == min(distance), 1, 'first');
-
-        scanList(listIx) = summary.steps.mean(neutralStepIx);
-        
-        fprintf('DONE (%.3f sec)\n', toc(t));
-    end
-
-    if (nargin < 3)
-        minPoints = 3;
+    if ~iscell(vgramList)
+        vgramList = num2cell(vgramList, 1);
     end
 
     if (nargin < 4)
+        minPoints = 3;
+    end
+
+    if (nargin < 5)
         epsX = 1;
     end
     
-    if (nargin < 5)
+    if (nargin < 6)
         epsY = epsX;
     end
     
-    if (nargin < 6)
+    if (nargin < 7)
         label = '';
     else
         label = [label ': '];
@@ -61,10 +31,10 @@ function [coreIx, noiseIx, borderIx, clustIx] = clusterDatasets(catalog, dataset
     end
 
     if (minPoints < 1)
-        minPoints = ceil(minPoints * length(scanList));
+        minPoints = ceil(minPoints * length(vgramList));
     end
 
-    c = characterize(scanList);
+    c = characterize(vgramList);
     % x = cellfun(@(s) s.knots(2), c.slm);
     % y = cellfun(@(s) s.coef(2), c.slm);
     % refX = c.refSlm.knots(2);
@@ -87,7 +57,7 @@ function [coreIx, noiseIx, borderIx, clustIx] = clusterDatasets(catalog, dataset
     clusteredIx = sort(union(coreIx, borderIx));
     nClust = length(unique(clustIx(coreIx)));
 
-    scanMat = cell2mat(scanList');
+    scanMat = cell2mat(vgramList);
     
     samplesPerSecond = unique(sampleFreq);
     samplesPerMs = samplesPerSecond / 1e3; % milliseconds
@@ -116,7 +86,7 @@ function [coreIx, noiseIx, borderIx, clustIx] = clusterDatasets(catalog, dataset
     plotX = time(scanX);
     
     if ~isempty(coreIx)
-        scanY = horzcat(scanList{coreIx});
+        scanY = horzcat(vgramList{coreIx});
         plotY = scanY(scanX, :);
         
         plot(plotX, plotY, ...
@@ -126,7 +96,7 @@ function [coreIx, noiseIx, borderIx, clustIx] = clusterDatasets(catalog, dataset
     end
     
     if ~isempty(borderIx)
-        scanY = horzcat(scanList{borderIx});
+        scanY = horzcat(vgramList{borderIx});
         plotY = scanY(scanX, :);
         
         plot(plotX, plotY, ...
@@ -136,7 +106,7 @@ function [coreIx, noiseIx, borderIx, clustIx] = clusterDatasets(catalog, dataset
     end
     
     if ~isempty(noiseIx)
-        scanY = horzcat(scanList{noiseIx});
+        scanY = horzcat(vgramList{noiseIx});
         plotY = scanY(scanX, :);
         
         plot(plotX, plotY, ...
