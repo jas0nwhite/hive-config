@@ -87,6 +87,11 @@ class WrappedConfig(config: Config) extends Logging {
     config.getDouble(key)
   }
 
+  /**
+   * getDoubleList
+   * @param key
+   * @return
+   */
   def getDoubleList(key: String): List[Double] = doTry {
     config.getDoubleList(key).map(_.toDouble).toList
   }
@@ -144,6 +149,15 @@ class WrappedConfig(config: Config) extends Logging {
    */
   def getObjectList(key: String): List[WrappedConfig] = doTry {
     config.getObjectList(key).map { o => new WrappedConfig(o.toConfig()) }.toList
+  }
+
+  /**
+   * getConfigObject
+   * @param key
+   * @return
+   */
+  def getConfigObject(key: String): Config = doTry {
+    config.getObject(key).toConfig()
   }
 
   /*

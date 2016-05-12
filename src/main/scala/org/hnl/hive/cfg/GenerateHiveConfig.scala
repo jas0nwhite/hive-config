@@ -62,15 +62,15 @@ object GenerateHiveConfig extends App with Logging {
 
     labelCatalog.processCatalog(
       treatmentConfig.testingSourceCatalog,
-      treatmentConfig.testingLabelSpec,
-      treatmentConfig.testingRawSpec,
-      treatmentConfig.testingLabelCatalogFile)
+      treatmentConfig.testing.labelSpec,
+      treatmentConfig.testing.rawSpec,
+      treatmentConfig.testing.labelCatalogFile)
 
     labelCatalog.processCatalog(
       treatmentConfig.trainingSourceCatalog,
-      treatmentConfig.trainingLabelSpec,
-      treatmentConfig.trainingRawSpec,
-      treatmentConfig.trainingLabelCatalogFile)
+      treatmentConfig.training.labelSpec,
+      treatmentConfig.training.rawSpec,
+      treatmentConfig.training.labelCatalogFile)
 
   }
   catch {

@@ -47,29 +47,13 @@ class TreatmentConfig protected (config: WrappedConfig) extends Logging {
   /*
    * training settings (allow multiple paths)
    */
-  val trainingSourceSpecs = config.getAbsolutePathList("training.source-spec")
-  val trainingResultPaths = config.getAbsolutePathList("training.result-path")
-  val trainingLabelCatalogFile = config.getString("training.label-catalog-file")
-  val trainingRawSpec = config.getString("training.raw-spec")
-  val trainingLabelSpec = config.getString("training.label-spec")
-  val trainingVgramFile = config.getString("training.vgram-file")
-  val trainingLabelFile = config.getString("training.label-file")
-  val trainingVgramWindows = config.getIntVectorList("training.vgram-window")
-  val trainingTimeWindows = config.getIntVectorList("training.time-window")
+  val training = InvitroConfig.fromConfig(config.getConfigObject("training"))
 
   /*
    * testing settings (allow multiple paths)
    */
-  val testingSourceSpecs = config.getAbsolutePathList("testing.source-spec")
-  val testingResultPaths = config.getAbsolutePathList("testing.result-path")
-  val testingLabelCatalogFile = config.getString("testing.label-catalog-file")
-  val testingRawSpec = config.getString("testing.raw-spec")
-  val testingLabelSpec = config.getString("testing.label-spec")
-  val testingVgramFile = config.getString("testing.vgram-file")
-  val testingLabelFile = config.getString("testing.label-file")
+  val testing = InvitroConfig.fromConfig(config.getConfigObject("testing"))
   val testingPredicitonFile = config.getString("testing.prediction-file")
-  val testingVgramWindows = config.getIntVectorList("testing.vgram-window")
-  val testingTimeWindows = config.getIntVectorList("testing.time-window")
 
   /*
    * target settings (allow multiple paths)
@@ -91,13 +75,13 @@ class TreatmentConfig protected (config: WrappedConfig) extends Logging {
   /*
    * training catalog
    */
-  val trainingSourceCatalog = Util.findPaths(trainingSourceSpecs)
+  val trainingSourceCatalog = Util.findPaths(training.sourceSpecs)
   val trainingDatasetCatalog = trainingSourceCatalog.map(Util.basenames(_))
 
   /*
    * testing catalog
    */
-  val testingSourceCatalog = Util.findPaths(testingSourceSpecs)
+  val testingSourceCatalog = Util.findPaths(testing.sourceSpecs)
   val testingDatasetCatalog = testingSourceCatalog.map(Util.basenames(_))
 
   /*

@@ -25,8 +25,8 @@ case class TrainingCatalog(name: String, cfg: TreatmentConfig) extends MatClassF
         ""
       )
       .+(
-        'sourceSpecList %=% CCell(cfg.trainingSourceSpecs: _*),
-        'resultPathList %=% CCell(cfg.trainingResultPaths: _*)
+        'sourceSpecList %=% CCell(cfg.training.sourceSpecs: _*),
+        'resultPathList %=% CCell(cfg.training.resultPaths: _*)
       )
 
   protected val settings =
@@ -37,10 +37,12 @@ case class TrainingCatalog(name: String, cfg: TreatmentConfig) extends MatClassF
         ""
       )
       .+(
-        'vgramFile %=% cfg.trainingVgramFile,
-        'labelFile %=% cfg.trainingLabelFile,
-        'vgramWindowList %=% CCell(cfg.trainingVgramWindows.map(l => RVec(l: _*)): _*),
-        'timeWindowList %=% CCell(cfg.trainingTimeWindows.map(l => RVec(l: _*)): _*)
+        'vgramFile %=% cfg.training.vgramFile,
+        'metaFile %=% cfg.training.metaFile,
+        'labelFile %=% cfg.training.labelFile,
+        'characterizationFile %=% cfg.training.characterizationFile,
+        'vgramWindowList %=% CCell(cfg.training.vgramWindows.map(l => RVec(l: _*)): _*),
+        'timeWindowList %=% CCell(cfg.training.timeWindows.map(l => RVec(l: _*)): _*)
       )
 
   protected val catalogs =
@@ -51,7 +53,7 @@ case class TrainingCatalog(name: String, cfg: TreatmentConfig) extends MatClassF
         ""
       )
       .+(
-        'labelCatalogFile %=% cfg.trainingLabelCatalogFile,
+        'labelCatalogFile %=% cfg.training.labelCatalogFile,
         'sourceCatalog %=% makeIndexedCellArray(cfg.trainingSourceCatalog)((s: String) => Str(s)),
         'datasetCatalog %=% makeIndexedCellArray(cfg.trainingDatasetCatalog)((s: String) => Str(s))
       )
