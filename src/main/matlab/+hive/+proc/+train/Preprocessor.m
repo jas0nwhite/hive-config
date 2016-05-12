@@ -76,7 +76,7 @@ classdef Preprocessor
             end
             
             vgramFile = fullfile(outDir, tcfg.vgramFile);
-            metaFile = fullfile(outDir, 'abfMetadata.mat');
+            metaFile = fullfile(outDir, tcfg.metaFile);
             labelFile = fullfile(outDir, tcfg.labelFile);
             
             fprintf('    dataset %03d (%d files): %s... ', id, length(abfFiles), name);

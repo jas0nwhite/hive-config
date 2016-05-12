@@ -14,7 +14,7 @@ function [coreIx, noiseIx, borderIx, clustIx] = clusterDatasets(catalog, dataset
 
         resultPath = catalog.getSetValue(catalog.resultPathList, setIx);
         summaryFile = fullfile(resultPath, name, 'summary.mat');
-        metadataFile = fullfile(resultPath, name, 'abfMetadata.mat');
+        metadataFile = fullfile(resultPath, name, catalog.metaFile);
         labelFile = fullfile(resultPath, name, catalog.labelFile);
 
         summary = load(summaryFile);

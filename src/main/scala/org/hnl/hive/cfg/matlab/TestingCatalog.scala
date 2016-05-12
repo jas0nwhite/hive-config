@@ -25,8 +25,8 @@ case class TestingCatalog(name: String, cfg: TreatmentConfig) extends MatClassFi
         ""
       )
       .+(
-        'sourceSpecList %=% CCell(cfg.testingSourceSpecs: _*),
-        'resultPathList %=% CCell(cfg.testingResultPaths: _*)
+        'sourceSpecList %=% CCell(cfg.testing.sourceSpecs: _*),
+        'resultPathList %=% CCell(cfg.testing.resultPaths: _*)
       )
 
   protected val settings =
@@ -37,11 +37,13 @@ case class TestingCatalog(name: String, cfg: TreatmentConfig) extends MatClassFi
         ""
       )
       .+(
-        'vgramFile %=% cfg.testingVgramFile,
-        'labelFile %=% cfg.testingLabelFile,
+        'vgramFile %=% cfg.testing.vgramFile,
+        'metaFile %=% cfg.testing.metaFile,
+        'labelFile %=% cfg.testing.labelFile,
+        'characterizationFile %=% cfg.testing.characterizationFile,
         'predictionFile %=% cfg.testingPredicitonFile,
-        'vgramWindowList %=% CCell(cfg.testingVgramWindows.map(l => RVec(l: _*)): _*),
-        'timeWindowList %=% CCell(cfg.testingTimeWindows.map(l => RVec(l: _*)): _*)
+        'vgramWindowList %=% CCell(cfg.testing.vgramWindows.map(l => RVec(l: _*)): _*),
+        'timeWindowList %=% CCell(cfg.testing.timeWindows.map(l => RVec(l: _*)): _*)
       )
 
   protected val catalogs =
@@ -52,7 +54,7 @@ case class TestingCatalog(name: String, cfg: TreatmentConfig) extends MatClassFi
         ""
       )
       .+(
-        'labelCatalogFile %=% cfg.testingLabelCatalogFile,
+        'labelCatalogFile %=% cfg.testing.labelCatalogFile,
         'sourceCatalog %=% makeIndexedCellArray(cfg.testingSourceCatalog)((s: String) => Str(s)),
         'datasetCatalog %=% makeIndexedCellArray(cfg.testingDatasetCatalog)((s: String) => Str(s))
       )
