@@ -15,3 +15,5 @@ src/main/matlab/+hive/+cfg/TestingCatalog.m
 src/main/matlab/+hive/+cfg/TrainingCatalog.m
 matlab.mat
 src/main/matlab/testing/figs
+src/main/matlab/testing/jae
+data
