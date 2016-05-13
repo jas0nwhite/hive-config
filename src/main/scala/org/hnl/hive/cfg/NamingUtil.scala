@@ -37,9 +37,10 @@ object NamingUtil extends Logging {
   }
 
   val dateP = """\d{4}_\d{2}_\d{2}"""
-  val nameP = """(?:[ap]m\d_)?[A-Za-z_]+"""
+  val altq = """(?:_alt)?"""
+  val nameP = """(?:[ap]m\d?_)?[A-Za-z_]+"""
 
-  val pH = new Regex(s"""($dateP)_(pH_[LH]+(?:_alt)?)_($nameP)_($dateP)""")
+  val pH = new Regex(s"""($dateP)_(pH_[LH]{3}$altq)_($nameP)_($dateP)""")
   val dopamine = new Regex(s"""($dateP)_(dopamine)_($nameP)_($dateP)""")
   val serotonin = new Regex(s"""($dateP)_(serotonin)_($nameP)_($dateP)""")
   val random = new Regex(s"""($dateP)_((?:increased_)?random_high_(?:DA|5HT)(?:_[0-9])?)_($nameP)_($dateP)""")
