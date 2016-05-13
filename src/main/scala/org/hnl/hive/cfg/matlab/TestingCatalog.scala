@@ -55,8 +55,8 @@ case class TestingCatalog(name: String, cfg: TreatmentConfig) extends MatClassFi
       )
       .+(
         'labelCatalogFile %=% cfg.testing.labelCatalogFile,
-        'sourceCatalog %=% makeIndexedCellArray(cfg.testingSourceCatalog)((s: String) => Str(s)),
-        'datasetCatalog %=% makeIndexedCellArray(cfg.testingDatasetCatalog)((s: String) => Str(s))
+        'sourceCatalog %=% makeIndexedCellArray(cfg.testing.sourceCatalog)((s: String) => Str(s)),
+        'datasetCatalog %=% makeIndexedCellArray(cfg.testing.datasetCatalog)((s: String) => Str(s))
       )
 
   override val mClass =

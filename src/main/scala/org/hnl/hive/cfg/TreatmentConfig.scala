@@ -73,18 +73,6 @@ class TreatmentConfig protected (config: WrappedConfig) extends Logging {
   //
 
   /*
-   * training catalog
-   */
-  val trainingSourceCatalog = Util.findPaths(training.sourceSpecs)
-  val trainingDatasetCatalog = trainingSourceCatalog.map(Util.basenames(_))
-
-  /*
-   * testing catalog
-   */
-  val testingSourceCatalog = Util.findPaths(testing.sourceSpecs)
-  val testingDatasetCatalog = testingSourceCatalog.map(Util.basenames(_))
-
-  /*
    * target catalog
    */
   val targetSourceCatalog = Util.findPaths(targetSourceSpecs)
