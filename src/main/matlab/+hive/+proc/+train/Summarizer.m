@@ -44,7 +44,7 @@ classdef Summarizer < hive.util.Logging
                     [id, name, ~] = tcfg.getSourceInfo(setIx, sourceIx);
                     
                     summaryFile = fullfile(tcfg.resultPathList{setIx}, name, 'summary.mat');
-                    metadataFile = fullfile(tcfg.resultPathList{setIx}, name, 'abfMetadata.mat');
+                    metadataFile = fullfile(tcfg.resultPathList{setIx}, name, tcfg.metaFile);
                     
                     summary = load(summaryFile);
                     metadata = load(metadataFile, 'sampleIx');
