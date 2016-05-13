@@ -17,25 +17,6 @@ classdef Characterizer < hive.proc.ProcessorBase
             this.actionLabel = 'Characterizing';
         end
                
-        function c = characterizeVoltammogram(~, vgram)
-            % define region of interest
-            roi = vgram(1:60);
-            nx = length(roi);
-            
-            % "resample" with spline to create smoother output
-            xp = linspace(1, nx, 3000);
-            yp = interp1(1:nx, roi, xp, 'spline');
-            
-            % subtract linear trend defined by endpoints of ROI
-            yy = yp - linspace(yp(1), yp(end), length(yp));
-            
-            % find location and value of maximum
-            maxIx = ceil(median(find(yy == max(yy))));
-            
-            % return coordinates of maximum
-            c = [xp(maxIx), yp(maxIx)];
-        end
-        
     end
     
     %
@@ -78,13 +59,14 @@ classdef Characterizer < hive.proc.ProcessorBase
             end
         end
         
-        function c = processStep(this, vgrams)
+        function c = processStep(~, vgrams)
             nVgrams = size(vgrams, 2);
             
             c = nan(nVgrams, 2);
             
             for vgramIx = 1:nVgrams
-                c(vgramIx, :) = this.characterizeVoltammogram(vgrams(:, vgramIx));
+                [x, y] = hive.proc.analyze.characterizeVoltammogram(vgrams(:, vgramIx));
+                c(vgramIx, :) = [x, y];
             end
         end
         
