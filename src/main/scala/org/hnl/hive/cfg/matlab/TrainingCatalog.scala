@@ -54,8 +54,8 @@ case class TrainingCatalog(name: String, cfg: TreatmentConfig) extends MatClassF
       )
       .+(
         'labelCatalogFile %=% cfg.training.labelCatalogFile,
-        'sourceCatalog %=% makeIndexedCellArray(cfg.trainingSourceCatalog)((s: String) => Str(s)),
-        'datasetCatalog %=% makeIndexedCellArray(cfg.trainingDatasetCatalog)((s: String) => Str(s))
+        'sourceCatalog %=% makeIndexedCellArray(cfg.training.sourceCatalog)((s: String) => Str(s)),
+        'datasetCatalog %=% makeIndexedCellArray(cfg.training.datasetCatalog)((s: String) => Str(s))
       )
 
   override val mClass =

@@ -61,13 +61,13 @@ object GenerateHiveConfig extends App with Logging {
     createMatlabFile(targetCat)
 
     labelCatalog.processCatalog(
-      treatmentConfig.testingSourceCatalog,
+      treatmentConfig.testing.sourceCatalog,
       treatmentConfig.testing.labelSpec,
       treatmentConfig.testing.rawSpec,
       treatmentConfig.testing.labelCatalogFile)
 
     labelCatalog.processCatalog(
-      treatmentConfig.trainingSourceCatalog,
+      treatmentConfig.training.sourceCatalog,
       treatmentConfig.training.labelSpec,
       treatmentConfig.training.rawSpec,
       treatmentConfig.training.labelCatalogFile)
