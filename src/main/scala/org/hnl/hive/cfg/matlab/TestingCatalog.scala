@@ -1,5 +1,6 @@
 package org.hnl.hive.cfg.matlab
 
+import org.hnl.hive.cfg.InvitroDataset
 import org.hnl.hive.cfg.TreatmentConfig
 import org.hnl.matlab.M._
 import org.hnl.matlab.MExp
@@ -56,7 +57,11 @@ case class TestingCatalog(name: String, cfg: TreatmentConfig) extends MatClassFi
       .+(
         'labelCatalogFile %=% cfg.testing.labelCatalogFile,
         'sourceCatalog %=% makeIndexedCellArray(cfg.testing.sourceCatalog)((s: String) => Str(s)),
-        'datasetCatalog %=% makeIndexedCellArray(cfg.testing.datasetCatalog)((s: String) => Str(s))
+        'datasetCatalog %=% makeIndexedCellArray(cfg.testing.datasetCatalog)((s: String) => Str(s)),
+        'infoCatalog %=% makeIndexedCellArray(cfg.testing.infoCatalog)((x: Option[InvitroDataset]) => x match {
+          case Some(ds) => Fn("hive.cfg.InvitroDataset", ds.dsDate, ds.dsClass, ds.dsProtocol, ds.probeName, ds.probeDate)
+          case None     => RVec()
+        })
       )
 
   override val mClass =
