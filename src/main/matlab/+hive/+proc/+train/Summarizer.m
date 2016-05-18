@@ -37,28 +37,85 @@ classdef Summarizer < hive.util.Logging
             tcfg = this.cfg.training;
             nSets = length(tcfg.sourceCatalog);
             
+            s = hgexport('readstyle', 'Default');
+            s.format = 'pdf';
+            s.Width = 8.5;
+            s.Height = 8.5;
+            s.FontMode = 'scaled';
+            s.LineMode = 'scaled';
+            
             for setIx = 1:nSets
                 nSources = tcfg.getSize(tcfg.sourceCatalog, setIx);
+                outPath = tcfg.resultPathList{setIx};
                 
-                for sourceIx = 1:nSources
+                fprintf('\n***\n*** Plotting set %d from %s\n***\n\n', setIx, outPath);
+                
+                parfor sourceIx = 1:nSources
                     [id, name, ~] = tcfg.getSourceInfo(setIx, sourceIx);
                     
-                    summaryFile = fullfile(tcfg.resultPathList{setIx}, name, 'summary.mat');
-                    metadataFile = fullfile(tcfg.resultPathList{setIx}, name, tcfg.metaFile);
+                    fprintf('    dataset %03d: %s... ', id, name);
+                    t = tic;
+                    
+                    summaryFile = fullfile(outPath, name, 'summary.mat');
+                    metadataFile = fullfile(outPath, name, tcfg.metaFile);
+                    labelFile = fullfile(outPath, name, tcfg.labelFile);
                     
                     summary = load(summaryFile);
                     metadata = load(metadataFile, 'sampleIx');
+                    labs = load(labelFile);
                     
                     x = median(cell2mat(metadata.sampleIx));
                     y = cell2mat(summary.steps.median');
+                    labels = cell2mat(labs.labels);
+                    
+                    muCounts = arrayfun(@(i) numel(unique(labels(:, i))), 1:size(labels, 2));
+                    chemIx = find(muCounts > 1);
+                    
+                    if (numel(chemIx) > 1)
+                        % mixture
+                        continue;
+                    end
+                    
+                    nSteps = size(y, 2);
+                    mu = arrayfun(@(ix) labs.labels{ix}(1, chemIx), 1:nSteps);
+                    muList = sort(unique(mu));
+                    nMus = numel(muList);
+                    
+                    ticks = linspace(min(muList), max(muList), 5);
+                    tickLabels = arrayfun(@(n) num2str(n), ticks, 'uniformOutput', false);
+                    
+                    chem = Chem.get(chemIx);
+                    
+                    colorbarLabel = ''; %#ok<NASGU>
+                    switch chem
+                        case Chem.pH
+                            colorbarLabel = 'pH';
+                        otherwise
+                            colorbarLabel = sprintf('[%s] (%s)', chem.label, chem.units);
+                    end
                     
                     figure;
-                    plot(x, y);
+                    hold all;
+                    colors = parula(nMus);
+                    colormap(colors);
+                    
+                    
+                    for ix = 1:nSteps
+                        colorIx = muList == mu(ix);
+                        plot(x, y(:, ix), 'Color', colors(colorIx, :));
+                    end
+                    
                     title(sprintf('%03d: %s', id, name), 'interpreter', 'none');
                     xlabel('sample #');
                     ylabel('current (nA)');
+                    axis tight;
                     ylim([-2100 2100]);
-                    drawnow;
+                    c = colorbar('Ticks', (ticks - min(ticks)) / (max(ticks) - min(ticks)), 'TickLabels', tickLabels);
+                    c.Label.String = colorbarLabel;
+                    hgexport(gcf, fullfile(tcfg.resultPathList{setIx}, name, 'mono-steps.pdf'), s);
+                    close;
+                    
+                    fprintf(' %.3fms\n', 1e3 * toc(t));
                 end
                 
             end
