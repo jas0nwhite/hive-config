@@ -2,16 +2,29 @@ classdef DBSCAN < hive.util.Logging
     %DBSCAN Summary of this class goes here
     %   Detailed explanation goes here
     
-    properties
+    properties (SetAccess = protected)
+        levels = []
+        coreIx = []
+        noiseIx = []
+        borderIx = []
+        clustIx = []
+        normValues = []
+        values = []
+        minPoints = NaN
+        epsilonVector = []
     end
     
     methods (Static)
-        function [coreIx, noiseIx, borderIx, clustIx] = cluster(values, minPoints, epsilonVector)
-            
-            coreIx = [];
-            noiseIx = [];
-            borderIx = [];
-            clustIx = [];
+        function s = cluster(values, minPoints, epsilonVector)            
+            s = hive.proc.cluster.DBSCAN();
+            s.coreIx = [];
+            s.noiseIx = [];
+            s.borderIx = [];
+            s.clustIx = [];
+            s.normValues = [];
+            s.values = values;
+            s.minPoints = minPoints;
+            s.epsilonVector = epsilonVector;
             
             [nValues, nDims] = size(values);
             
@@ -43,53 +56,99 @@ classdef DBSCAN < hive.util.Logging
             end
             
             %
-            % we need to normalize the data in order to support multiple
-            % dimensions
+            % we need to normalize the data in terms of the given epsion
+            % vector, since this DBSCAN implementation only supports a
+            % 1-D epsilon
             %
-            
-            % find the mean of each dimension
-            valueMeans = nan(nDims, 1);
-            
-            for dimIx = 1:nDims
-                valueMeans(dimIx) = mean(values, dimIx);
-            end
-            
-            %%
-            %% STOPPED HERE
-            %%
             
             eps = 1;
             
-            normX = (x - mean(x)) / epsX;
-            normY = (y - mean(y)) / epsY;
+            s.normValues = bsxfun(@rdivide, ...
+                bsxfun(@minus, values, mean(values, 1)), ...
+                epsilonVector);
             
-            normXY = horzcat(normX, normY);
+            [s.clustIx, s.levels] = dbscan(s.normValues, eps, minPoints);
             
-            [clustIx, lc] = dbscan(normXY, eps, minPoints);
-            
-            coreIx = find(lc > 0);
-            noiseIx = find(lc == -1);
-            borderIx = find(lc == -2);
-            clusteredIx = sort(union(coreIx, borderIx));
-            nClust = length(unique(clustIx(coreIx)));
-            
-            scanMat = cell2mat(values);
-            
-            samplesPerSecond = unique(sampleFreq);
-            samplesPerMs = samplesPerSecond / 1e3; % milliseconds
-            samplesPerUs = samplesPerSecond / 1e6; % microseconds
-            
-            time = sampleIx{1} ./ samplesPerMs;
-            index2ms = @(s) ((s - 1) / samplesPerMs) + time(1);
-            index2us = @(s) index2ms(s) * 1e3; %#ok<NASGU>
-            
-            
-            norm2ms = @(v) (v * epsX) / samplesPerMs; %#ok<NASGU>
-            norm2us = @(v) (v * epsX) / samplesPerUs;
-            norm2current = @(v) v * epsY;
-            epsXus = norm2us(1);
+            s.coreIx = find(s.levels > 0);
+            s.noiseIx = find(s.levels == -1);
+            s.borderIx = find(s.levels == -2);            
         end
         
+    end
+    
+    
+    
+    methods
+        
+        function plot2D(this, xlab, ylab, ax)
+            if nargin < 4
+                figure;
+                ax = gca();
+            end
+            
+            if nargin < 3
+                ylab = sprintf('Y (\\epsilon_y = %0.2f)', this.epsilonVector(2));
+            end
+            
+            if nargin < 2
+                xlab = sprintf('X (\\epsilon_x = %0.2f)', this.epsilonVector(1));
+            end
+            
+            data = this.values(:, 1:2);
+            epsilon = this.epsilonVector(1:2);
+            
+            clusteredIx = sort(union(this.coreIx, this.borderIx));
+            nClust = length(unique(this.clustIx(this.coreIx)));
+            
+            colors = colormap(ax, lines(nClust));
+            hold(ax, 'on');
+            
+            if ~isempty(this.borderIx)
+                plot(ax, data(this.borderIx, 1), data(this.borderIx, 2), 'oc', 'MarkerFaceColor', 'c', 'MarkerSize', 15);
+            end
+            
+            theta = linspace(0, 2*pi, 100);
+            cx = epsilon(1) * cos(theta);
+            cy = epsilon(2) * -sin(theta); % -sin(theta) to make a clockwise contour
+            
+            if ~isempty(this.coreIx)
+                
+                for i = 1:nClust
+                    patchIx = find(this.levels == i);
+                    px = [];
+                    py = [];
+                    
+                    for j = 1:length(patchIx)
+                        ix = patchIx(j);
+                        [px, py] = polybool('union', px, py, cx + data(ix, 1), cy + data(ix, 2));
+                    end
+                    
+                    patch(px, py, colors(i, :), 'FaceAlpha', .1, 'EdgeColor', colors(i, :), 'Parent', ax);
+                end
+                
+                for i = 1:nClust
+                    plotIx = this.clustIx == i;
+                    plot(ax, data(plotIx, 1), data(plotIx, 2), 'o', ...
+                        'MarkerEdgeColor', colors(i, :), 'MarkerFaceColor', colors(i, :));
+                end
+                
+            end
+            
+            if ~isempty(this.noiseIx)
+                plot(ax, data(this.noiseIx, 1), data(this.noiseIx, 2), 'or');
+            end
+            
+            title(ax, ...
+                sprintf('epsilon = %0.2f x %0.2f, min cluster size = %d\nclusters: %d, retained: %d, rejected: %d', ...
+                epsilon(1), epsilon(2), this.minPoints,...
+                nClust, length(clusteredIx), length(this.noiseIx)));
+            xlabel(ax, xlab);
+            ylabel(ax, ylab);
+            axis(ax, 'tight');
+            
+            hold(ax, 'off');
+            
+        end
     end
     
 end
