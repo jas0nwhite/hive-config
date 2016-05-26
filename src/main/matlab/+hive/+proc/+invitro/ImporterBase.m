@@ -1,5 +1,5 @@
-classdef (Abstract) PreprocessorBase < hive.proc.ProcessorBase
-    %PREPROCESSORBASE Summary of this class goes here
+classdef (Abstract) ImporterBase < hive.proc.ProcessorBase
+    %IMPORTERBASE Summary of this class goes here
     %   Detailed explanation goes here
     
     properties (Access = protected)

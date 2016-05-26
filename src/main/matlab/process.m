@@ -3,13 +3,13 @@ clc;
 cfg = Config;
 
 
-%% preprocess
+%% import
 t = tic;
-hive.proc.train.Preprocessor(cfg).withOverwrite(false).process();
+hive.proc.train.Importer(cfg).withOverwrite(false).process();
 toc(t);
 
 t = tic;
-hive.proc.test.Preprocessor(cfg).withOverwrite(false).process();
+hive.proc.test.Importer(cfg).withOverwrite(false).process();
 toc(t);
 
 
