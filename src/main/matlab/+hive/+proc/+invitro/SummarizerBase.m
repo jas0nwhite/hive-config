@@ -1,5 +1,5 @@
 classdef (Abstract) SummarizerBase < hive.proc.ProcessorBase
-    %SUMMARIZER Summary of this class goes here
+    %SUMMARIZERBASE Summary of this class goes here
     %   Detailed explanation goes here
     
     properties (Access = protected)

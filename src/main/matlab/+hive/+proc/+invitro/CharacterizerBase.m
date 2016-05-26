@@ -1,5 +1,5 @@
 classdef (Abstract) CharacterizerBase < hive.proc.ProcessorBase
-    %CHARACTERIZER Summary of this class goes here
+    %CHARACTERIZERBASE Summary of this class goes here
     %   Detailed explanation goes here
     
     properties (Access = protected)

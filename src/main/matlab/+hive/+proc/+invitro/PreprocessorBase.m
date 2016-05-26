@@ -1,5 +1,5 @@
 classdef (Abstract) PreprocessorBase < hive.proc.ProcessorBase
-    %PREPROCESSOR Summary of this class goes here
+    %PREPROCESSORBASE Summary of this class goes here
     %   Detailed explanation goes here
     
     properties (Access = protected)
