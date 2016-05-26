@@ -3,7 +3,6 @@ classdef Characterizer < hive.proc.ProcessorBase
     %   Detailed explanation goes here
     
     properties (Access = protected)
-        characterFile = 'characterization.mat';
     end
     
     %
@@ -16,7 +15,7 @@ classdef Characterizer < hive.proc.ProcessorBase
             this.cfg = cfg.training;
             this.actionLabel = 'Characterizing';
         end
-               
+        
     end
     
     %
@@ -29,31 +28,32 @@ classdef Characterizer < hive.proc.ProcessorBase
         end
         
         function processSource(this, setIx, sourceIx, nSources)
-            t = tic;
+            [id, name, ~] = this.cfg.getSourceInfo(setIx, sourceIx);
             
-            fprintf('%d/%d: ', sourceIx, nSources);
+            fprintf('    dataset %03d (%d files): %s... ', id, nSources, name);
+            t = tic;
             
             directory = fullfile(this.cfg.resultPathList{setIx}, this.cfg.datasetCatalog{setIx}{sourceIx, 2});
             
             infile = fullfile(directory, this.cfg.vgramFile);
-            outfile = fullfile(directory, this.characterFile);
+            outfile = fullfile(directory, this.cfg.characterizationFile);
             
             if this.overwrite || ~exist(outfile, 'file')
                 load(infile);
-
+                
                 nSteps = length(voltammograms); %#ok<USENS>
-
+                
                 vgramChar = cell(nSteps, 1);
-
+                
                 fprintf('%s %d steps...', this.actionLabel, nSteps);
-
+                
                 for stepIx = 1:nSteps
                     vgramChar{stepIx} = this.processStep(voltammograms{stepIx});
                 end
-
+                
                 save(outfile, 'vgramChar');
                 
-                fprintf(' %0.1fms\n', 1e3 * toc(t));
+                fprintf(' %0.3fs\n', toc(t));
             else
                 fprintf('SKIP.\n');
             end
@@ -71,6 +71,6 @@ classdef Characterizer < hive.proc.ProcessorBase
         end
         
     end
-        
+    
 end
 

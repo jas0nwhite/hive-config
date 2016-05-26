@@ -53,7 +53,7 @@ classdef (Abstract) ProcessorBase < hive.util.Logging
         function processSet(this, setIx)
             nSources = size(this.cfg.sourceCatalog{setIx}, 1);
             
-            fprintf('\n***\n*** %s set %d (%d sources)\n***\n\n', this.actionLabel, setIx, nSources);
+            this.displayProcessSetHeader(setIx, nSources);
             
             args = this.getArgsForProcessSource(setIx);
             
@@ -72,6 +72,9 @@ classdef (Abstract) ProcessorBase < hive.util.Logging
             argv = {};
         end
         
+        function displayProcessSetHeader(this, setIx, nSources)
+            fprintf('\n***\n*** %s set %d (%d sources)\n***\n\n', this.actionLabel, setIx, nSources);
+        end
     end
     
     %

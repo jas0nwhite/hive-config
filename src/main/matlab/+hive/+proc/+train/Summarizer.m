@@ -1,10 +1,8 @@
-classdef Summarizer < hive.util.Logging
+classdef Summarizer < hive.proc.ProcessorBase
     %SUMMARIZER Summary of this class goes here
     %   Detailed explanation goes here
     
     properties (Access = protected)
-        cfg
-        overwrite = false
     end
     
     %
@@ -13,29 +11,14 @@ classdef Summarizer < hive.util.Logging
     methods
         
         function this = Summarizer(cfg)
-            this.cfg = cfg;
+            this.treatment = cfg;
+            this.cfg = cfg.training;
+            this.actionLabel = 'Summarizing';
             gcp();
         end
         
-        function this = withOverwrite(this, setting)
-            if nargin == 1
-                setting = true;
-            end
-            
-            this.overwrite = setting;
-        end
-        
-        function this = process(this)
-            nSets = size(this.cfg.training.sourceCatalog);
-            
-            for setIx = 1:nSets
-                this.processSet(setIx)
-            end
-        end
-        
         function this = plot(this)
-            tcfg = this.cfg.training;
-            nSets = length(tcfg.sourceCatalog);
+            nSets = length(this.cfg.sourceCatalog);
             
             s = hgexport('readstyle', 'Default');
             s.format = 'pdf';
@@ -45,20 +28,20 @@ classdef Summarizer < hive.util.Logging
             s.LineMode = 'scaled';
             
             for setIx = 1:nSets
-                nSources = tcfg.getSize(tcfg.sourceCatalog, setIx);
-                outPath = tcfg.resultPathList{setIx};
+                nSources = this.cfg.getSize(this.cfg.sourceCatalog, setIx);
+                outPath = this.cfg.resultPathList{setIx};
                 
                 fprintf('\n***\n*** Plotting set %d from %s\n***\n\n', setIx, outPath);
                 
                 parfor sourceIx = 1:nSources
-                    [id, name, ~] = tcfg.getSourceInfo(setIx, sourceIx);
+                    [id, name, ~] = this.cfg.getSourceInfo(setIx, sourceIx); %#ok<PFBNS>
                     
                     fprintf('    dataset %03d: %s... ', id, name);
                     t = tic;
                     
                     summaryFile = fullfile(outPath, name, 'summary.mat');
-                    metadataFile = fullfile(outPath, name, tcfg.metaFile);
-                    labelFile = fullfile(outPath, name, tcfg.labelFile);
+                    metadataFile = fullfile(outPath, name, this.cfg.metaFile);
+                    labelFile = fullfile(outPath, name, this.cfg.labelFile);
                     
                     summary = load(summaryFile);
                     metadata = load(metadataFile, 'sampleIx');
@@ -112,10 +95,10 @@ classdef Summarizer < hive.util.Logging
                     ylim([-2100 2100]);
                     c = colorbar('Ticks', (ticks - min(ticks)) / (max(ticks) - min(ticks)), 'TickLabels', tickLabels);
                     c.Label.String = colorbarLabel;
-                    hgexport(gcf, fullfile(tcfg.resultPathList{setIx}, name, 'mono-steps.pdf'), s);
+                    hgexport(gcf, fullfile(this.cfg.resultPathList{setIx}, name, 'mono-steps.pdf'), s);
                     close;
                     
-                    fprintf(' %.3fms\n', 1e3 * toc(t));
+                    fprintf(' %0.3fs\n', toc(t));
                 end
                 
             end
@@ -125,30 +108,28 @@ classdef Summarizer < hive.util.Logging
     end
     
     %
-    % internal API
+    % IMPLEMENTATION
     %
     methods (Access = protected)
         
-        function processSet(this, setIx)
-            nSources = size(this.cfg.training.sourceCatalog{setIx}, 1);
+        function argv = getArgsForProcessSource(this, setIx)
+            argv = {
+                this.cfg.getSetValue(this.cfg.resultPathList, setIx)
+                };
+        end
+        
+        function displayProcessSetHeader(this, setIx, nSources)
+            path = this.cfg.getSetValue(this.cfg.resultPathList, setIx);
             
-            tcfg = this.cfg.training;
-            
-            path = tcfg.getSetValue(tcfg.resultPathList, setIx);
-            
-            fprintf('\n***\n*** Processing set %d from %s\n***\n\n', setIx, path);
-            
-            parfor sourceIx = 1:nSources
-                this.processSource(setIx, sourceIx, path) %#ok<PFBNS>
-            end
+            fprintf('\n***\n*** %s set %d (%d sources) from %s\n***\n\n',...
+                this.actionLabel, setIx, nSources, path);
         end
         
         function processSource(this, setIx, sourceIx, path)
-            tcfg = this.cfg.training;
-            [id, name, ~] = tcfg.getSourceInfo(setIx, sourceIx);
+            [id, name, ~] = this.cfg.getSourceInfo(setIx, sourceIx);
             
             outDir = fullfile(path, name);
-            vgramFile = fullfile(outDir, tcfg.vgramFile);
+            vgramFile = fullfile(outDir, this.cfg.vgramFile);
             outFile = fullfile(outDir, 'summary.mat');
             
             fprintf('    dataset %03d: %s... ', id, name);
