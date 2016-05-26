@@ -1,5 +1,5 @@
-classdef Preprocessor < hive.proc.invitro.PreprocessorBase
-    %PREPROCESSOR Summary of this class goes here
+classdef Importer < hive.proc.invitro.ImporterBase
+    %IMPORTER Summary of this class goes here
     %   Detailed explanation goes here
     
     properties (Access = protected)
@@ -10,10 +10,10 @@ classdef Preprocessor < hive.proc.invitro.PreprocessorBase
     %
     methods
         
-        function this = Preprocessor(cfg)
+        function this = Importer(cfg)
             this.treatment = cfg;
             this.cfg = cfg.testing;
-            this.actionLabel = 'Preprocessing testing';
+            this.actionLabel = 'Importing testing';
             this.labels = readtable(this.cfg.labelCatalogFile);
         end
         
