@@ -1,5 +1,5 @@
-classdef Summarizer < hive.proc.SummarizerBase
-    %SUMMARIZER Summary of this class goes here
+classdef Characterizer < hive.proc.CharacterizerBase
+    %CHARACTERIZER Summary of this class goes here
     %   Detailed explanation goes here
     
     properties (Access = protected)
@@ -10,10 +10,10 @@ classdef Summarizer < hive.proc.SummarizerBase
     %
     methods
         
-        function this = Summarizer(cfg)
+        function this = Characterizer(cfg)
             this.treatment = cfg;
-            this.cfg = cfg.training;
-            this.actionLabel = 'Summarizing training';
+            this.cfg = cfg.testing;
+            this.actionLabel = 'Characterizing testing';
         end
         
     end

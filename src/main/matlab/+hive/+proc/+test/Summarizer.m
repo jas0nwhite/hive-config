@@ -12,8 +12,8 @@ classdef Summarizer < hive.proc.SummarizerBase
         
         function this = Summarizer(cfg)
             this.treatment = cfg;
-            this.cfg = cfg.training;
-            this.actionLabel = 'Summarizing training';
+            this.cfg = cfg.testing;
+            this.actionLabel = 'Summarizing testing';
         end
         
     end

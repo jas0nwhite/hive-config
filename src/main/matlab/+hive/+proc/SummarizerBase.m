@@ -32,6 +32,13 @@ classdef (Abstract) SummarizerBase < hive.proc.ProcessorBase
                     fprintf('    dataset %03d: %s... ', id, name);
                     t = tic;
                     
+                    plotFile = fullfile(outPath, name, 'mono-steps.pdf')
+                    
+                    if (~this.overwrite && exist(plotFile, 'file'))
+                        fprintf(' SKIP. %0.3fs\n', toc(t));
+                        continue;
+                    end
+                    
                     summaryFile = fullfile(outPath, name, 'summary.mat');
                     metadataFile = fullfile(outPath, name, this.cfg.metaFile);
                     labelFile = fullfile(outPath, name, this.cfg.labelFile);
@@ -49,6 +56,7 @@ classdef (Abstract) SummarizerBase < hive.proc.ProcessorBase
                     
                     if (numel(chemIx) > 1)
                         % mixture
+                        fprintf(' SKIP. %0.3fs\n', toc(t));
                         continue;
                     end
                     
@@ -88,7 +96,7 @@ classdef (Abstract) SummarizerBase < hive.proc.ProcessorBase
                     ylim([-2100 2100]);
                     c = colorbar('Ticks', (ticks - min(ticks)) / (max(ticks) - min(ticks)), 'TickLabels', tickLabels);
                     c.Label.String = colorbarLabel;
-                    hgexport(gcf, fullfile(this.cfg.resultPathList{setIx}, name, 'mono-steps.pdf'), s);
+                    hgexport(gcf, plotFile, s);
                     close;
                     
                     fprintf(' %0.3fs\n', toc(t));
