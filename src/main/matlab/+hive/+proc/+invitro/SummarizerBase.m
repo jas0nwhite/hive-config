@@ -2,6 +2,10 @@ classdef (Abstract) SummarizerBase < hive.proc.ProcessorBase
     %SUMMARIZERBASE Summary of this class goes here
     %   Detailed explanation goes here
     
+    properties (Constant)
+        summaryFile = 'summary.mat'
+    end
+    
     properties (Access = protected)
     end
     
@@ -39,11 +43,11 @@ classdef (Abstract) SummarizerBase < hive.proc.ProcessorBase
                         continue;
                     end
                     
-                    summaryFile = fullfile(outPath, name, 'summary.mat');
+                    sumFile = fullfile(outPath, name, this.summaryFile);
                     metadataFile = fullfile(outPath, name, this.cfg.metaFile);
                     labelFile = fullfile(outPath, name, this.cfg.labelFile);
                     
-                    summary = load(summaryFile);
+                    summary = load(sumFile);
                     metadata = load(metadataFile, 'sampleIx');
                     labs = load(labelFile);
                     
@@ -131,7 +135,7 @@ classdef (Abstract) SummarizerBase < hive.proc.ProcessorBase
             
             outDir = fullfile(path, name);
             vgramFile = fullfile(outDir, this.cfg.vgramFile);
-            outFile = fullfile(outDir, 'summary.mat');
+            outFile = fullfile(outDir, this.summaryFile);
             
             fprintf('    dataset %03d: %s... ', id, name);
             t = tic;

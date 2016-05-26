@@ -33,4 +33,13 @@ hive.proc.test.Characterizer(cfg).withOverwrite(false).process();
 toc(t);
 
 
-%% 
+%% index
+t = tic;
+hive.proc.train.Indexer(cfg).withOverwrite(false).process().plot();
+toc(t);
+
+t = tic;
+hive.proc.test.Indexer(cfg).withOverwrite(false).process().plot();
+toc(t);
+
+

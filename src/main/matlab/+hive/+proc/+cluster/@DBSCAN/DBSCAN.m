@@ -6,6 +6,7 @@ classdef DBSCAN < hive.util.Logging
         levels = []
         coreIx = []
         noiseIx = []
+        clusteredIx = []
         borderIx = []
         clustIx = []
         normValues = []
@@ -15,7 +16,7 @@ classdef DBSCAN < hive.util.Logging
     end
     
     methods (Static)
-        function s = cluster(values, minPoints, epsilonVector)            
+        function s = cluster(values, minPoints, epsilonVector)
             s = hive.proc.cluster.DBSCAN();
             s.coreIx = [];
             s.noiseIx = [];
@@ -52,7 +53,7 @@ classdef DBSCAN < hive.util.Logging
             
             % if minPoints < 1, assume it's a percentage
             if (minPoints < 1)
-                minPoints = ceil(minPoints * nValues);
+                s.minPoints = ceil(s.minPoints * nValues);
             end
             
             %
@@ -67,11 +68,12 @@ classdef DBSCAN < hive.util.Logging
                 bsxfun(@minus, values, mean(values, 1)), ...
                 epsilonVector);
             
-            [s.clustIx, s.levels] = dbscan(s.normValues, eps, minPoints);
+            [s.clustIx, s.levels] = dbscan(s.normValues, eps, s.minPoints);
             
             s.coreIx = find(s.levels > 0);
             s.noiseIx = find(s.levels == -1);
-            s.borderIx = find(s.levels == -2);            
+            s.clusteredIx = find(s.levels ~= -1);
+            s.borderIx = find(s.levels == -2);
         end
         
     end
@@ -97,7 +99,6 @@ classdef DBSCAN < hive.util.Logging
             data = this.values(:, 1:2);
             epsilon = this.epsilonVector(1:2);
             
-            clusteredIx = sort(union(this.coreIx, this.borderIx));
             nClust = length(unique(this.clustIx(this.coreIx)));
             
             colors = colormap(ax, lines(nClust));
@@ -138,10 +139,16 @@ classdef DBSCAN < hive.util.Logging
                 plot(ax, data(this.noiseIx, 1), data(this.noiseIx, 2), 'or');
             end
             
+            if isempty(this.clusteredIx)
+                x = mean(ax.XLim);
+                y = mean(ax.YLim);
+                plot(cx + x, cy + y, ':r');
+            end
+            
             title(ax, ...
                 sprintf('epsilon = %0.2f x %0.2f, min cluster size = %d\nclusters: %d, retained: %d, rejected: %d', ...
                 epsilon(1), epsilon(2), this.minPoints,...
-                nClust, length(clusteredIx), length(this.noiseIx)));
+                nClust, length(this.clusteredIx), length(this.noiseIx)));
             xlabel(ax, xlab);
             ylabel(ax, ylab);
             axis(ax, 'tight');
