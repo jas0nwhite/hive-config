@@ -17,14 +17,19 @@ classdef (Abstract) CharacterizerBase < hive.proc.ProcessorBase
     %
     methods (Access = protected)
         
-        function processSource(this, setIx, sourceIx)
+        function argv = getArgsForProcessSource(this, setIx)
+            argv = {
+                this.cfg.getSetValue(this.cfg.resultPathList, setIx);
+                };
+        end
+        
+        function processSource(this, setIx, sourceIx, path)
             [id, name, ~] = this.cfg.getSourceInfo(setIx, sourceIx);
             
             fprintf('    dataset %03d: %s... ', id, name);
             t = tic;
             
-            directory = fullfile(this.cfg.resultPathList{setIx}, this.cfg.datasetCatalog{setIx}{sourceIx, 2});
-            
+            directory = fullfile(path, name);            
             infile = fullfile(directory, this.cfg.vgramFile);
             outfile = fullfile(directory, this.cfg.characterizationFile);
             
