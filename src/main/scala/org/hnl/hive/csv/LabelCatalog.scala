@@ -90,8 +90,13 @@ class LabelCatalog(config: TreatmentConfig) extends Logging {
       }
     }
 
-    // next, we'll open up a file for output
+    // next, let's create whatever directories are needed to hold the output file
     val outFile = new File(outputFile)
+    if (!outFile.getParentFile.isDirectory) {
+      outFile.getParentFile.mkdirs
+    }
+
+    // next, we'll open up a file for output
     val output = managed(new FileWriter(outFile))
 
     // ...and perform the rest of the work using the managed resource
