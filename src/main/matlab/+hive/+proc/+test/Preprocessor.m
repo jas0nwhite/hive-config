@@ -1,4 +1,4 @@
-classdef Preprocessor < hive.proc.PreprocessorBase
+classdef Preprocessor < hive.proc.invitro.PreprocessorBase
     %PREPROCESSOR Summary of this class goes here
     %   Detailed explanation goes here
     

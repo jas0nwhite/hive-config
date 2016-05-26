@@ -1,4 +1,4 @@
-classdef Characterizer < hive.proc.CharacterizerBase
+classdef Characterizer < hive.proc.invitro.CharacterizerBase
     %CHARACTERIZER Summary of this class goes here
     %   Detailed explanation goes here
     

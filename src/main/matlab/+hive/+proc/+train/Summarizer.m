@@ -1,4 +1,4 @@
-classdef Summarizer < hive.proc.SummarizerBase
+classdef Summarizer < hive.proc.invitro.SummarizerBase
     %SUMMARIZER Summary of this class goes here
     %   Detailed explanation goes here
     
