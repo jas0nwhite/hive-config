@@ -31,7 +31,9 @@ class InvitroConfig protected (config: WrappedConfig) extends Logging {
   val vgramFile = config.getString("vgram-file")
   val metaFile = config.getString("metadata-file")
   val labelFile = config.getString("label-file")
+  val summaryFile = config.getString("summary-file")
   val characterizationFile = config.getString("characterization-file")
+  val clusterIndexFile = config.getString("cluster-index-file")
 
   //
   // PROCESSING SETTINGS

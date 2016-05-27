@@ -3,7 +3,6 @@ classdef (Abstract) IndexerBase < hive.proc.ProcessorBase
     %   Detailed explanation goes here
     
     properties (Constant)
-        indexFile = 'vgramClusterIndex.mat'
     end
     
     properties (Access = protected)
@@ -60,7 +59,7 @@ classdef (Abstract) IndexerBase < hive.proc.ProcessorBase
             
             directory = fullfile(path, name);
             infile = fullfile(directory, this.cfg.characterizationFile);
-            outfile = fullfile(directory, this.indexFile);
+            outfile = fullfile(directory, this.cfg.clusterIndexFile);
             
             if this.overwrite || ~exist(outfile, 'file')
                 load(infile);
@@ -111,7 +110,7 @@ classdef (Abstract) IndexerBase < hive.proc.ProcessorBase
                 return;
             end
             
-            clusterFile = fullfile(outPath, name, this.indexFile);
+            clusterFile = fullfile(outPath, name, this.cfg.clusterIndexFile);
             load(clusterFile);
             
             % plot dataset cluster
