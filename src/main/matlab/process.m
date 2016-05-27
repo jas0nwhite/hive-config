@@ -43,3 +43,9 @@ hive.proc.test.Indexer(cfg).withOverwrite(false).process().plot();
 toc(t);
 
 
+%% build index cloud for clustering
+t = tic;
+hive.proc.train.Aggregator(cfg).process();
+toc(t);
+
+
