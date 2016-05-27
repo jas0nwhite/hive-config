@@ -3,7 +3,6 @@ classdef (Abstract) SummarizerBase < hive.proc.ProcessorBase
     %   Detailed explanation goes here
     
     properties (Constant)
-        summaryFile = 'summary.mat'
     end
     
     properties (Access = protected)
@@ -43,7 +42,7 @@ classdef (Abstract) SummarizerBase < hive.proc.ProcessorBase
                         continue;
                     end
                     
-                    sumFile = fullfile(outPath, name, this.summaryFile);
+                    sumFile = fullfile(outPath, name, this.cfg.summaryFile);
                     metadataFile = fullfile(outPath, name, this.cfg.metaFile);
                     labelFile = fullfile(outPath, name, this.cfg.labelFile);
                     
@@ -135,7 +134,7 @@ classdef (Abstract) SummarizerBase < hive.proc.ProcessorBase
             
             outDir = fullfile(path, name);
             vgramFile = fullfile(outDir, this.cfg.vgramFile);
-            outFile = fullfile(outDir, this.summaryFile);
+            outFile = fullfile(outDir, this.cfg.summaryFile);
             
             fprintf('    dataset %03d: %s... ', id, name);
             t = tic;

@@ -48,6 +48,7 @@ class TreatmentConfig protected (config: WrappedConfig) extends Logging {
    * training settings (allow multiple paths)
    */
   val training = InvitroConfig.fromConfig(config.getConfigObject("training"))
+  val trainingIndexCloudFile = config.getAbsolutePath("training.index-cloud-file")
 
   /*
    * testing settings (allow multiple paths)
