@@ -17,4 +17,5 @@ cfg = Config.init;
 %% TESTING
 addpath(fullfile(pwd, 'lib', 'dbscan'))
 addpath(fullfile(pwd, 'lib', 'SLMTools'))
+addpath(fullfile(pwd, 'lib', 'glmnet_interface'))
 addpath(fullfile(pwd, 'testing'))
