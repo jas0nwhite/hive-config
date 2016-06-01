@@ -25,6 +25,7 @@ classdef (Abstract) SummarizerBase < hive.proc.ProcessorBase
             
             for setIx = 1:nSets
                 nSources = this.cfg.getSize(this.cfg.sourceCatalog, setIx);
+                inPath = this.cfg.importPathList{setIx};
                 outPath = this.cfg.resultPathList{setIx};
                 
                 fprintf('\n***\n*** Plotting set %d from %s\n***\n\n', setIx, outPath);
@@ -43,8 +44,8 @@ classdef (Abstract) SummarizerBase < hive.proc.ProcessorBase
                     end
                     
                     sumFile = fullfile(outPath, name, this.cfg.summaryFile);
-                    metadataFile = fullfile(outPath, name, this.cfg.metaFile);
-                    labelFile = fullfile(outPath, name, this.cfg.labelFile);
+                    metadataFile = fullfile(inPath, name, this.cfg.metaFile);
+                    labelFile = fullfile(inPath, name, this.cfg.labelFile);
                     
                     summary = load(sumFile);
                     metadata = load(metadataFile, 'sampleIx');
@@ -118,22 +119,23 @@ classdef (Abstract) SummarizerBase < hive.proc.ProcessorBase
         
         function argv = getArgsForProcessSource(this, setIx)
             argv = {
+                this.cfg.getSetValue(this.cfg.importPathList, setIx)
                 this.cfg.getSetValue(this.cfg.resultPathList, setIx)
                 };
         end
         
         function displayProcessSetHeader(this, setIx, nSources)
-            path = this.cfg.getSetValue(this.cfg.resultPathList, setIx);
+            path = this.cfg.getSetValue(this.cfg.importPathList, setIx);
             
             fprintf('\n***\n*** %s set %d (%d sources) from %s\n***\n\n',...
                 this.actionLabel, setIx, nSources, path);
         end
         
-        function processSource(this, setIx, sourceIx, path)
+        function processSource(this, setIx, sourceIx, inPath, outPath)
             [id, name, ~] = this.cfg.getSourceInfo(setIx, sourceIx);
             
-            outDir = fullfile(path, name);
-            vgramFile = fullfile(outDir, this.cfg.vgramFile);
+            vgramFile = fullfile(inPath, name, this.cfg.vgramFile);
+            outDir = fullfile(outPath, name);
             outFile = fullfile(outDir, this.cfg.summaryFile);
             
             fprintf('    dataset %03d: %s... ', id, name);
@@ -144,6 +146,10 @@ classdef (Abstract) SummarizerBase < hive.proc.ProcessorBase
                 [summary, status] = this.analyzeVgramFile(vgramFile); %#ok<ASGLU>
                 
                 if status == hive.Status.Success
+                    if (~exist(outDir, 'dir'))
+                        mkdir(outDir)
+                    end
+                    
                     save(outFile, '-struct', 'summary');
                 end
                 

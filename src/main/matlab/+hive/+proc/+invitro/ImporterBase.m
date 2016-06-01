@@ -20,14 +20,14 @@ classdef (Abstract) ImporterBase < hive.proc.ProcessorBase
         
         function argv = getArgsForProcessSource(this, setIx)
             argv = {
-                this.cfg.getSetValue(this.cfg.resultPathList, setIx);
+                this.cfg.getSetValue(this.cfg.importPathList, setIx);
                 this.cfg.getSetValue(this.cfg.vgramWindowList, setIx);
                 this.cfg.getSetValue(this.cfg.timeWindowList, setIx);
                 };
         end
         
         function displayProcessSetHeader(this, setIx, nSources)
-            outPath = this.cfg.getSetValue(this.cfg.resultPathList, setIx);
+            outPath = this.cfg.getSetValue(this.cfg.importPathList, setIx);
 
             fprintf('\n***\n*** %s set %d (%d sources) into %s\n***\n\n',...
                 this.actionLabel, setIx, nSources, outPath);

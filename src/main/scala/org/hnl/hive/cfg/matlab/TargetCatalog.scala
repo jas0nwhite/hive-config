@@ -37,6 +37,7 @@ case class TargetCatalog(name: String, cfg: TreatmentConfig) extends MatClassFil
         ""
       )
       .+(
+        'trainingDataFile %=% cfg.targetTrainingDataFile,
         'predictionSpec %=% cfg.targetPredicitonSpec,
         'vgramWindowList %=% CCell(cfg.targetVgramWindows.map(l => RVec(l: _*)): _*)
       )
