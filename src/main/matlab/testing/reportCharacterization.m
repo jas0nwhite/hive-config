@@ -1,6 +1,6 @@
 function report = reportCharacterization(catalog, coreIxList, noiseIxList, borderIxList, clusterIxList)
     
-    labels = readtable(catalog.labelCatalogFile);
+    labels = readtable(catalog.labelCatalogFile, 'Delimiter', ',');
 
     nDatasets = length(clusterIxList);
     

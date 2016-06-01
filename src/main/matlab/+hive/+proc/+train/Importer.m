@@ -14,7 +14,7 @@ classdef Importer < hive.proc.invitro.ImporterBase
             this.treatment = cfg;
             this.cfg = cfg.training;
             this.actionLabel = 'Importing training';
-            this.labels = readtable(this.cfg.labelCatalogFile);
+            this.labels = readtable(this.cfg.labelCatalogFile, 'Delimiter', ',');
         end
         
     end

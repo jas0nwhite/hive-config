@@ -54,6 +54,7 @@ class TreatmentConfig protected (config: WrappedConfig) extends Logging {
    * testing settings (allow multiple paths)
    */
   val testing = InvitroConfig.fromConfig(config.getConfigObject("testing"))
+  val testingTrainingDataFile = config.getString("testing.training-data-file")
   val testingPredicitonFile = config.getString("testing.prediction-file")
 
   /*
@@ -61,6 +62,7 @@ class TreatmentConfig protected (config: WrappedConfig) extends Logging {
    */
   val targetSourceSpecs = config.getAbsolutePathList("target.source-spec")
   val targetResultPaths = config.getAbsolutePathList("target.result-path")
+  val targetTrainingDataFile = config.getString("target.training-data-file")
   val targetPredicitonSpec = config.getString("target.prediction-spec")
   val targetVgramWindows = config.getIntVectorList("target.vgram-window")
 

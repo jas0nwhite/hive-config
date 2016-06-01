@@ -3,7 +3,6 @@ classdef TrainingDataAssembler < hive.proc.ProcessorBase
     %   Detailed explanation goes here
     
     properties (Constant)
-        trainingDataFile = 'trainingData.mat'
     end
     
     properties (Access = protected)
@@ -105,15 +104,22 @@ classdef TrainingDataAssembler < hive.proc.ProcessorBase
             fprintf('    dataset %03d: %s:', id, name);
             t = tic;
             
-            [trainingDatasetIx, neighbors, distances] = this.findNeighbors(path, name); %#ok<ASGLU>
+            outFile = fullfile(path, name, this.cfg.trainingDataFile);
             
-            [voltammograms, labels, chemicals] = this.gatherTrainingData(trainingDatasetIx); %#ok<ASGLU>
-            
-            save(fullfile(path, name, this.trainingDataFile),...
-                'neighbors', 'distances', 'trainingDatasetIx',...
-                'voltammograms', 'labels', 'chemicals');
-            
-            fprintf('%s (%.3fs)\n', '', toc(t));
+            if (this.overwrite || ~exist(outFile, 'file'))
+                
+                [trainingDatasetIx, neighbors, distances] = this.findNeighbors(path, name); %#ok<ASGLU>
+                
+                [voltammograms, labels, chemicals] = this.gatherTrainingData(trainingDatasetIx); %#ok<ASGLU>
+                
+                save(outFile,...
+                    'neighbors', 'distances', 'trainingDatasetIx',...
+                    'voltammograms', 'labels', 'chemicals');
+                
+                fprintf(' DONE. (%.3fs)\n', toc(t));
+            else
+                fprintf(' SKIP. (%.3fs)\n', toc(t));
+            end
         end
         
         function [voltammograms, labels, chemicals] = gatherTrainingData(this, trainingDatasetIx)

@@ -9,7 +9,7 @@ function [coreIx, noiseIx, borderIx, clustIx] = clusterProbes( catalog, probeLis
     borderIx = cell(nProbes, 1);
     clustIx = cell(nProbes, 1);
     
-    labels = readtable(catalog.labelCatalogFile);
+    labels = readtable(catalog.labelCatalogFile, 'Delimiter', ',');
     [g, datasets] = findgroups(labels.datasetId);
     probes = splitapply(@unique, labels.probe, g);
     

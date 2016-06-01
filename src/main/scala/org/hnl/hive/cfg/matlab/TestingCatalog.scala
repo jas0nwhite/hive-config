@@ -29,6 +29,7 @@ case class TestingCatalog(name: String, treatmentCfg: TreatmentConfig) extends M
       )
       .+(
         'sourceSpecList %=% CCell(cfg.sourceSpecs: _*),
+        'importPathList %=% CCell(cfg.importPaths: _*),
         'resultPathList %=% CCell(cfg.resultPaths: _*)
       )
 
@@ -46,6 +47,7 @@ case class TestingCatalog(name: String, treatmentCfg: TreatmentConfig) extends M
         'summaryFile %=% cfg.summaryFile,
         'characterizationFile %=% cfg.characterizationFile,
         'clusterIndexFile %=% cfg.clusterIndexFile,
+        'trainingDataFile %=% treatmentCfg.testingTrainingDataFile,
         'predictionFile %=% treatmentCfg.testingPredicitonFile,
         'vgramWindowList %=% CCell(cfg.vgramWindows.map(l => RVec(l: _*)): _*),
         'timeWindowList %=% CCell(cfg.timeWindows.map(l => RVec(l: _*)): _*)

@@ -19,19 +19,19 @@ classdef (Abstract) CharacterizerBase < hive.proc.ProcessorBase
         
         function argv = getArgsForProcessSource(this, setIx)
             argv = {
+                this.cfg.getSetValue(this.cfg.importPathList, setIx);
                 this.cfg.getSetValue(this.cfg.resultPathList, setIx);
                 };
         end
         
-        function processSource(this, setIx, sourceIx, path)
+        function processSource(this, setIx, sourceIx, inPath, outPath)
             [id, name, ~] = this.cfg.getSourceInfo(setIx, sourceIx);
             
             fprintf('    dataset %03d: %s... ', id, name);
             t = tic;
             
-            directory = fullfile(path, name);            
-            infile = fullfile(directory, this.cfg.vgramFile);
-            outfile = fullfile(directory, this.cfg.characterizationFile);
+            infile = fullfile(inPath, name, this.cfg.vgramFile);
+            outfile = fullfile(outPath, name, this.cfg.characterizationFile);
             
             if this.overwrite || ~exist(outfile, 'file')
                 load(infile);

@@ -20,6 +20,7 @@ class InvitroConfig protected (config: WrappedConfig) extends Logging {
   // PATHS AND FILESPECS
   //
   val sourceSpecs = config.getAbsolutePathList("source-spec")
+  val importPaths = config.getAbsolutePathList("import-path")
   val resultPaths = config.getAbsolutePathList("result-path")
   val rawSpec = config.getString("raw-spec")
   val labelSpec = config.getString("label-spec")

@@ -29,6 +29,7 @@ case class TrainingCatalog(name: String, treatmentCfg: TreatmentConfig) extends 
       )
       .+(
         'sourceSpecList %=% CCell(cfg.sourceSpecs: _*),
+        'importPathList %=% CCell(cfg.importPaths: _*),
         'resultPathList %=% CCell(cfg.resultPaths: _*)
       )
 
