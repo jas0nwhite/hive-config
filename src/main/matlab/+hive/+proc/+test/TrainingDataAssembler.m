@@ -134,10 +134,12 @@ classdef TrainingDataAssembler < hive.proc.ProcessorBase
                 chemicals{chemIx} = Chem.get(chemIx).name;
             end
             
-            for dsIx = 1:nDatasets
-                setIx = this.cloud.setIx(dsIx);
-                sourceIx = this.cloud.sourceIx(dsIx);
-                stepIx = this.cloud.stepIx(dsIx);
+            for ix = 1:nDatasets
+                tsIx = trainingDatasetIx(ix);
+                
+                setIx = this.cloud.setIx(tsIx);
+                sourceIx = this.cloud.sourceIx(tsIx);
+                stepIx = this.cloud.stepIx(tsIx);
                 
                 [id, name, ~] = training.getSourceInfo(setIx, sourceIx);
                 path = training.getSetValue(training.resultPathList, setIx);
@@ -149,9 +151,8 @@ classdef TrainingDataAssembler < hive.proc.ProcessorBase
                     this.error('analyteMismatch', 'analyte mismatch in dataset %d: %s', id, name);
                 end
                 
-                voltammograms{dsIx} = vData.voltammograms{stepIx};
-                labels{dsIx} = lData.labels{stepIx};
-                
+                voltammograms{ix} = vData.voltammograms{stepIx};
+                labels{ix} = lData.labels{stepIx};
             end
             
             % resize for consistency
