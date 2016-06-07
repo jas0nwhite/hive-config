@@ -68,66 +68,64 @@ for setIx = 1:nSets
         %
         predictionFile = fullfile(targetDir, 'predictions.mat');
         
-        if (~exist(predictionFile, 'file'))
+        
+        %% load data
+        sourcePath = tcfg.getSetValue(tcfg.importPathList, setIx);
+        sourceDir = fullfile(sourcePath, name);
+        
+        testing = load(fullfile(sourceDir, tcfg.labelFile));
+        load(fullfile(sourceDir, tcfg.vgramFile));
+        testing.voltammograms = voltammograms;
+        clear voltammograms;
+        
+        %% testing data
+        x = diff(horzcat(testing.voltammograms{:})', 1, 2);
+        labels = vertcat(testing.labels{:});
+        
+        %% generate predictions
+        predictions = cvglmnetPredict(CVerr, x, 'lambda_min');
+        chemicals = testing.chemicals;
+        
+        save(predictionFile, 'predictions', 'labels', 'chemicals');
+        
+        
+        %% plot
+        figure;
+        
+        for chemIx = 1:Chem.count
+            chem = Chem.get(chemIx);
             
-            %% load data
-            sourcePath = tcfg.getSetValue(tcfg.importPathList, setIx);
-            sourceDir = fullfile(sourcePath, name);
+            subplot(3, 1, chemIx);
+            hold on;
+            plot(labels(:, chemIx), '.');
+            plot(round(predictions(:, chemIx), 4), '.');
+            grid on;
             
-            testing = load(fullfile(sourceDir, tcfg.labelFile));
-            load(fullfile(sourceDir, tcfg.vgramFile));
-            testing.voltammograms = voltammograms;
-            clear voltammograms;
+            title(chem.name);
+            xlabel('sample #');
             
-            %% testing data
-            x = diff(horzcat(testing.voltammograms{:})', 1, 2);
-            labels = vertcat(testing.labels{:});
-            
-            %% generate predictions
-            predictions = cvglmnetPredict(CVerr, x, 'lambda_min');
-            chemicals = testing.chemicals;
-            
-            save(predictionFile, 'predictions', 'labels', 'chemicals');
-            
-            
-            %% plot
-            figure;
-            
-            for chemIx = 1:Chem.count
-                chem = Chem.get(chemIx);
-                
-                subplot(3, 1, chemIx);
-                hold on;
-                plot(labels(:, chemIx), '.');
-                plot(round(predictions(:, chemIx), 4), '.');
-                grid on;
-                
-                title(chem.name);
-                xlabel('sample #');
-                
-                switch Chem.get(chemIx)
-                    case Chem.pH
-                        ylab = 'pH';
-                    otherwise
-                        ylab = sprintf('%s (%s)', chem.label, chem.units);
-                end
-                
-                ylabel(ylab);
+            switch Chem.get(chemIx)
+                case Chem.pH
+                    ylab = 'pH';
+                otherwise
+                    ylab = sprintf('%s (%s)', chem.label, chem.units);
             end
             
-            suptitle(strrep(name, '_', '\_'));
-            
-            s = hgexport('readstyle', 'Default');
-            s.Height = 11;
-            s.Width = 8.5;
-            s.ScaledFontSize = 'auto';
-            s.ScaledLineWidth = 'auto';
-            s.Format = 'pdf';
-            
-            hgexport(gcf, fullfile(targetDir, 'predictions.pdf'), s);
-            
-            close;
+            ylabel(ylab);
         end
+        
+        suptitle(strrep(name, '_', '\_'));
+        
+        s = hgexport('readstyle', 'Default');
+        s.Height = 11;
+        s.Width = 8.5;
+        s.ScaledFontSize = 'auto';
+        s.ScaledLineWidth = 'auto';
+        s.Format = 'pdf';
+        
+        hgexport(gcf, fullfile(targetDir, 'predictions.pdf'), s);
+        
+        close;
         
     end
     
