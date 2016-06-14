@@ -75,6 +75,12 @@ classdef Aggregator
                 end
             end
 
+            parent = fileparts(this.cfg.indexCloudFile);
+            
+            if ~exist(parent, 'dir')
+                mkdir(parent)
+            end
+            
             save(this.cfg.indexCloudFile, 'sourceId', 'setIx', 'sourceIx', 'stepIx', 'labels', 'characterization',...
                 'clusterIx', 'nVgramsRetained', 'nVgramsRejected', 'nVgramClusters');
         end
