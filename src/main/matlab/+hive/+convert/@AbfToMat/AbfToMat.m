@@ -110,7 +110,7 @@ classdef AbfToMat < hive.util.Logging
             % convert data to convenient format
             sampInterval = sampInterval * 1e-6; % seconds
             data = squeeze(data); % remove extra dimensions
-            sweepInterval = sampInterval * size(data, 1);
+            sweepInterval = sampInterval * unique(diff(header.sweepStartInPts));
             
             % calculate the time window
             if isnan(this.timeWindow)
@@ -156,15 +156,17 @@ classdef AbfToMat < hive.util.Logging
             sweepFreq = NaN(nFiles, 1);
             nSamples = NaN(nFiles, 1);
             nSweeps = NaN(nFiles, 1);
+            recTime = NaN(nFiles, 1);
             sampleIx = cell(nFiles, 1);
             sweepIx = cell(nFiles, 1);
             
             
             % read files
-            parfor ix = 1:nFiles
+            for ix = 1:nFiles
                 [voltammograms{ix}, sampleFreq(ix), sweepFreq(ix), headers{ix}, sampleIx{ix}, sweepIx{ix}] =...
                     this.readAbf(ix); %#ok<PFBNS,PFOUS>
                 [nSamples(ix), nSweeps(ix)] = size(voltammograms{ix});
+                recTime(ix) = diff(headers{ix}.recTime);
             end
             
             save(this.outputFile, 'voltammograms');
@@ -178,7 +180,7 @@ classdef AbfToMat < hive.util.Logging
             results.sampleIx = sampleIx;
             results.sweepIx = sweepIx;
             results.files = this.inputFiles;
-            
+            results.recTime = recTime;
             
             save(this.metadataFile, '-struct', 'results');
             
