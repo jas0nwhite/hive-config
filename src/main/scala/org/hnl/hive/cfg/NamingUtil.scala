@@ -36,14 +36,22 @@ object NamingUtil extends Logging {
     }
   }
 
-  val dateP = """\d{4}_\d{2}_\d{2}"""
   val altq = """(?:_alt)?"""
+  val fastq = """(?:_[0-9]+Vs_[0-9]+Hz(?:_corrected)?)?"""
+  val uncorrq = """(?:_uncorrelated_[0-9]+k_[0-9]+Hz)?"""
+
+  val dateP = """\d{4}_\d{2}_\d{2}"""
   val nameP = """(?:[ap]m\d?_)?[A-Za-z_]+"""
 
-  val pH = new Regex(s"""($dateP)_(pH_[LH]{3}$altq)_($nameP)_($dateP)""")
-  val dopamine = new Regex(s"""($dateP)_(dopamine)_($nameP)_($dateP)""")
-  val serotonin = new Regex(s"""($dateP)_(serotonin)_($nameP)_($dateP)""")
-  val random = new Regex(s"""($dateP)_((?:increased_)?random_high_(?:DA|5HT)(?:_[0-9])?)_($nameP)_($dateP)""")
+  val dopamineP = s"""(?:dopamine|DA)$fastq$uncorrq"""
+  val serotoninP = s"""(?:serotonin|5HT)$fastq$uncorrq"""
+  val phP = s"""pH_[LH]{3}$fastq$altq$uncorrq"""
+  val randomP = """(?:increased_)?random_high_(?:DA|5HT)(?:_[0-9])?"""
+
+  val pH = new Regex(s"""($dateP)_($phP)_($nameP)_($dateP)""")
+  val dopamine = new Regex(s"""($dateP)_($dopamineP)_($nameP)_($dateP)""")
+  val serotonin = new Regex(s"""($dateP)_($serotoninP)_($nameP)_($dateP)""")
+  val random = new Regex(s"""($dateP)_($randomP)_($nameP)_($dateP)""")
 
   def datasetInfoFromName(dataset: String): Option[InvitroDataset] = {
     dataset match {
