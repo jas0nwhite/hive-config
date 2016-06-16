@@ -36,7 +36,8 @@ classdef (Abstract) SummarizerBase < hive.proc.ProcessorBase
                     fprintf('    dataset %03d: %s... ', id, name);
                     t = tic;
                     
-                    plotFile = fullfile(outPath, name, 'mono-steps.pdf')
+                    plotFile = fullfile(outPath, name, 'mono-steps.pdf');
+                    figFile = fullfile(outPath, name, 'mono-steps.fig');
                     
                     if (~this.overwrite && exist(plotFile, 'file'))
                         fprintf(' SKIP. %0.3fs\n', toc(t));
@@ -88,7 +89,7 @@ classdef (Abstract) SummarizerBase < hive.proc.ProcessorBase
                     colormap(colors);
                     
                     
-                    for ix = 1:nSteps
+                    for ix = nSteps:-1:1
                         colorIx = muList == mu(ix);
                         plot(x, y(:, ix), 'Color', colors(colorIx, :));
                     end
@@ -100,6 +101,8 @@ classdef (Abstract) SummarizerBase < hive.proc.ProcessorBase
                     ylim([-2100 2100]);
                     c = colorbar('Ticks', (ticks - min(ticks)) / (max(ticks) - min(ticks)), 'TickLabels', tickLabels);
                     c.Label.String = colorbarLabel;
+                    % set(gca, 'Color', [0.9, 0.9, 0.9]);
+                    savefig(gcf, figFile);
                     hgexport(gcf, plotFile, s);
                     close;
                     

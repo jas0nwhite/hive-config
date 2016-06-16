@@ -25,8 +25,16 @@ classdef (Abstract) CatalogBase
         end
         
         function [setIx, sourceIx] = getSourceIxByDatasetId(this, datasetId)
-            locations = cellfun(@(c) find(vertcat(c{:, 1}) == datasetId), this.datasetCatalog,...
-                'UniformOutput', false);
+            nSets = size(this.datasetCatalog, 1);
+            locations = cell(nSets, 1);
+            
+            for ix = 1:nSets
+                if ~isempty(this.datasetCatalog{ix})
+                    locations{ix} = find(vertcat(this.datasetCatalog{ix}{: , 1}) == datasetId);
+                else
+                    locations{ix} = [];
+                end
+            end
             
             setIx = find(cellfun(@(v) ~isempty(v), locations));
             sourceIx = locations{setIx};
@@ -44,9 +52,9 @@ classdef (Abstract) CatalogBase
         
         function n = getSize(~, setList, setIx)
             if nargin == 2
-                n = sum(cellfun(@(c) length(c), setList));
+                n = sum(cellfun(@(c) size(c, 1), setList));
             else
-                n = length(setList{setIx});
+                n = size(setList{setIx}, 1);
             end
         end
         
