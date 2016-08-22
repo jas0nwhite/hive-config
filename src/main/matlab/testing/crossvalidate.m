@@ -103,7 +103,7 @@ function buildDatasets(dsIx, cfg, trainingPct, muMin, muMax)
     
     combos = cellfun(@(c) unique(vertcat(c(:))), dat.labels, 'unif', false);
     nCombos = size(combos, 1);
-    isDoubled = nCombos == 2 * size(dat.labels, 1);
+    isDoubled = nCombos == 2 * size(unique(cell2mat(dat.labels), 'rows'), 1);
     
     if (isDoubled)
         % only use even numbered steps -- fast protocol only
