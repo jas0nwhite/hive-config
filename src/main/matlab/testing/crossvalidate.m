@@ -341,7 +341,9 @@ function analyzeDataset(dsIx, cfg)
         vpsString = 'uncorrelated';
     else
         voltage = 2;
-        seconds = (diff(tcfg.getSetValue(tcfg.vgramWindowList, setId)) + 1) / fSample;
+        sampleIx = tcfg.getSetValue(tcfg.vgramWindowList, setId);
+        sampleRange = [ min(sampleIx), max(sampleIx) ];
+        seconds = (diff(sampleRange) + 1) / fSample;
         vps = floor(voltage * 2 / seconds);
         vpsString = sprintf('%dV/s', vps);
     end

@@ -91,7 +91,13 @@ classdef (Abstract) SummarizerBase < hive.proc.ProcessorBase
                     
                     for ix = nSteps:-1:1
                         colorIx = muList == mu(ix);
+                        
+                        xs = sort(x);
+                        if (x == xs)
                         plot(x, y(:, ix), 'Color', colors(colorIx, :));
+                        else
+                            plot(xs, y(:, ix), '.', 'Color', colors(colorIx, :));
+                        end
                     end
                     
                     title(sprintf('%03d: %s', id, name), 'interpreter', 'none');
