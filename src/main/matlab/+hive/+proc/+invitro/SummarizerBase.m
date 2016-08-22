@@ -94,7 +94,7 @@ classdef (Abstract) SummarizerBase < hive.proc.ProcessorBase
                         
                         xs = sort(x);
                         if (x == xs)
-                        plot(x, y(:, ix), 'Color', colors(colorIx, :));
+                            plot(x, y(:, ix), 'Color', colors(colorIx, :));
                         else
                             plot(xs, y(:, ix), '.', 'Color', colors(colorIx, :));
                         end

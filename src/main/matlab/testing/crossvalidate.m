@@ -154,6 +154,7 @@ function buildDatasets(dsIx, cfg, trainingPct, muMin, muMax)
             trainN = round(stepValidN * trainingPct);
         end
         
+        rng(1972);
         trainIx{ix} = datasample(index, trainN, 'Replace', false);
         testIx{ix} = setdiff(index, trainIx{ix});
         
