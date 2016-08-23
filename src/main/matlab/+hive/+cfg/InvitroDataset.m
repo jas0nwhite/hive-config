@@ -18,7 +18,12 @@ classdef InvitroDataset
             this.protocol = dsProtocol;
             this.probeDesignation = pName;
             this.probeDate = pDate;
-            this.probeName = [pName '_' pDate];
+            
+            if (length(pDate) == 0)
+                this.probeName = pName;
+            else
+                this.probeName = [pName '_' pDate];
+            end
         end
     end
     
