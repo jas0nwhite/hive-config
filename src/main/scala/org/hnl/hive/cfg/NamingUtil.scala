@@ -48,17 +48,23 @@ object NamingUtil extends Logging {
   val phP = s"""pH_[LH]{3}$fastq$altq$uncorrq"""
   val randomP = """(?:increased_)?random_high_(?:DA|5HT)(?:_[0-9])?"""
 
-  val pH = new Regex(s"""($dateP)_($phP)_($nameP)_($dateP)""")
-  val dopamine = new Regex(s"""($dateP)_($dopamineP)_($nameP)_($dateP)""")
-  val serotonin = new Regex(s"""($dateP)_($serotoninP)_($nameP)_($dateP)""")
-  val random = new Regex(s"""($dateP)_($randomP)_($nameP)_($dateP)""")
+  val pH = new Regex(s"""($dateP)_($phP)_($nameP)_?($dateP)?""")
+  val dopamine = new Regex(s"""($dateP)_($dopamineP)_($nameP)_?($dateP)?""")
+  val serotonin = new Regex(s"""($dateP)_($serotoninP)_($nameP)_?($dateP)?""")
+  val random = new Regex(s"""($dateP)_($randomP)_($nameP)_?($dateP)?""")
 
   def datasetInfoFromName(dataset: String): Option[InvitroDataset] = {
     dataset match {
+      case pH(dsDate, dsProtocol, probeName, null)             => Some(InvitroDataset(dsDate, "pH", dsProtocol, probeName, ""))
+      case dopamine(dsDate, dsProtocol, probeName, null)       => Some(InvitroDataset(dsDate, "dopamine", dsProtocol, probeName, ""))
+      case serotonin(dsDate, dsProtocol, probeName, null)      => Some(InvitroDataset(dsDate, "serotonin", dsProtocol, probeName, ""))
+      case random(dsDate, dsProtocol, probeName, null)         => Some(InvitroDataset(dsDate, "mixture", dsProtocol, probeName, ""))
+
       case pH(dsDate, dsProtocol, probeName, probeDate)        => Some(InvitroDataset(dsDate, "pH", dsProtocol, probeName, probeDate))
       case dopamine(dsDate, dsProtocol, probeName, probeDate)  => Some(InvitroDataset(dsDate, "dopamine", dsProtocol, probeName, probeDate))
       case serotonin(dsDate, dsProtocol, probeName, probeDate) => Some(InvitroDataset(dsDate, "serotonin", dsProtocol, probeName, probeDate))
       case random(dsDate, dsProtocol, probeName, probeDate)    => Some(InvitroDataset(dsDate, "mixture", dsProtocol, probeName, probeDate))
+
       case _ => {
         warn(s"could not parse dataset name [$dataset]");
         None
