@@ -349,6 +349,10 @@ function analyzeDataset(dsIx, cfg)
         vpsString = sprintf('%dV/s', vps);
     end
     
+    if (~isempty(regexp(resultDir, '-shuffled', 'once')))
+        vpsString = sprintf('%s shuffled', vpsString);
+    end
+    
     pTitle = {
         sprintf('%s  |  %s  |  %s @ %dHz  |  %dkHz',...
         chem.label, strrep(probe, '_', '\_'), vpsString, fSweep, fSample * 1e-3)
