@@ -55,10 +55,12 @@ object NamingUtil extends Logging {
 
   def datasetInfoFromName(dataset: String): Option[InvitroDataset] = {
     dataset match {
+      // scalastyle:off null
       case pH(dsDate, dsProtocol, probeName, null)             => Some(InvitroDataset(dsDate, "pH", dsProtocol, probeName, ""))
       case dopamine(dsDate, dsProtocol, probeName, null)       => Some(InvitroDataset(dsDate, "dopamine", dsProtocol, probeName, ""))
       case serotonin(dsDate, dsProtocol, probeName, null)      => Some(InvitroDataset(dsDate, "serotonin", dsProtocol, probeName, ""))
       case random(dsDate, dsProtocol, probeName, null)         => Some(InvitroDataset(dsDate, "mixture", dsProtocol, probeName, ""))
+      // scalastyle:on null
 
       case pH(dsDate, dsProtocol, probeName, probeDate)        => Some(InvitroDataset(dsDate, "pH", dsProtocol, probeName, probeDate))
       case dopamine(dsDate, dsProtocol, probeName, probeDate)  => Some(InvitroDataset(dsDate, "dopamine", dsProtocol, probeName, probeDate))
