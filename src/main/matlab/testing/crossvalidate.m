@@ -339,25 +339,30 @@ function analyzeDataset(dsIx, cfg)
     muLabel = [chem.label units];
     
     if (~isempty(regexp(info.protocol, '_uncorrelated_', 'once')))
-        vpsString = 'uncorrelated';
+        vpsString = 'random burst';
     else
         voltage = 2;
         sampleIx = tcfg.getSetValue(tcfg.vgramWindowList, setId);
-        sampleRange = [ min(sampleIx), max(sampleIx) ];
-        seconds = (diff(sampleRange) + 1) / fSample;
-        vps = floor(voltage * 2 / seconds);
+        % sampleRange = max(sampleIx) - min(sampleIx) + 1;
+        sampleRange = round(max(sampleIx) - min(sampleIx), -3);
+        seconds = sampleRange / fSample;
+        vps = round(voltage * 2 / seconds);
         vpsString = sprintf('%dV/s', vps);
     end
     
     if (~isempty(regexp(resultDir, '-shuffled', 'once')))
-        vpsString = sprintf('%s shuffled', vpsString);
+        vpsString = sprintf('%s (shuffled)', vpsString);
     end
     
-    pTitle = {
-        sprintf('%s  |  %s  |  %s @ %dHz  |  %dkHz',...
-        chem.label, strrep(probe, '_', '\_'), vpsString, fSweep, fSample * 1e-3)
-        sprintf('monoanalyte  |  LASSO  |  n=%d', training.n)
-        };
+    % pTitle = {
+    %     sprintf('%s  |  %s  |  %s @ %dHz  |  %dkHz',...
+    %     chem.label, strrep(probe, '_', '\_'), vpsString, fSweep, fSample * 1e-3)
+    %     sprintf('monoanalyte  |  LASSO  |  n=%d', training.n)
+    %     };
+    
+    pTitle = sprintf('%s  |  probe %s  |  %s @ %dHz',...
+        chem.label, strrep(probe, '_', '\_'), vpsString, fSweep);
+
     
     
     
@@ -432,11 +437,15 @@ function analyzeDataset(dsIx, cfg)
     grid on;
     axis manual;
     
+    savefig(gcf, fullfile(resultDir, 'cv-plot.fig'));
+    
     s = hgexport('readstyle', 'png-4MP');
     s.Format = 'png';
-    
-    savefig(gcf, fullfile(resultDir, 'cv-plot.fig'));
     hgexport(gcf, fullfile(resultDir, 'cv-plot.png'), s);
+    
+    s.Format = 'eps';
+    hgexport(gcf, fullfile(resultDir, 'cv-plot.eps'), s);
+    
     close;
     %%
     save(cvStatsFile, 'predRmse', 'predSnr', 'predSnre');
