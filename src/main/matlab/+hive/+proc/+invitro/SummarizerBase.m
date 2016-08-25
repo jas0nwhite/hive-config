@@ -85,7 +85,7 @@ classdef (Abstract) SummarizerBase < hive.proc.ProcessorBase
                     
                     figure;
                     hold all;
-                    colors = parula(nMus);
+                    colors = jet(nMus);
                     colormap(colors);
                     
                     
@@ -93,7 +93,7 @@ classdef (Abstract) SummarizerBase < hive.proc.ProcessorBase
                         colorIx = muList == mu(ix);
                         
                         xs = sort(x);
-                        if (x == xs)
+                        if (isequaln(x, xs) && max(diff(xs)) == 1)
                             plot(x, y(:, ix), 'Color', colors(colorIx, :));
                         else
                             plot(xs, y(:, ix), '.', 'Color', colors(colorIx, :));
