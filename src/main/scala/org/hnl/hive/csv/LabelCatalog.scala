@@ -184,7 +184,7 @@ class LabelCatalog(config: TreatmentConfig) extends Logging {
         val lines = for {
           line <- csvLines
 
-          if (line.trim.length > 0)
+          if (line.replace(",", "").trim.length > 0) // only process non-empty lines
 
           // get column values, retaining empty strings (with "-1" argument)
           vals = line.split(",", -1).map(_.trim)
