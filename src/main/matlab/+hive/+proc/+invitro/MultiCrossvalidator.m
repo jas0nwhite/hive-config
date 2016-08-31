@@ -436,7 +436,7 @@ classdef MultiCrossvalidator < hive.proc.ProcessorBase
                 
                 axis tight;
                 xl = xlim();
-                yl = [min(labels(:)), max(labels(:))];
+                yl = [this.muMin, this.muMax];
                 xtwix = diff(xl) / 20;
                 ytwix = diff(yl) / 20;
                 
@@ -469,7 +469,7 @@ classdef MultiCrossvalidator < hive.proc.ProcessorBase
             ylabel(['RMSE' units]);
             
             grid on;
-            xl = [min(labels(:)), max(labels(:))];
+            xl = [this.muMin, this.muMax];
             yl = [0, max(predRmse(:))];
             xtwix = diff(xl) / 20;
             ytwix = diff(yl) / 20;
@@ -506,7 +506,7 @@ classdef MultiCrossvalidator < hive.proc.ProcessorBase
             
             
             grid on;
-            xl = [0, max(labels(:))];
+            xl = [this.muMin, this.muMax];
             yl = [0, max(predSnr(:))];
             xtwix = diff(xl) / 20;
             ytwix = diff(yl) / 20;
@@ -534,8 +534,9 @@ classdef MultiCrossvalidator < hive.proc.ProcessorBase
             
             
             
-            suptitle(sprintf('probe %s  |  %s @ %dHz',...
-                strrep(regexprep(probe, '[_]+', '_'), '_', '\_'), vpsString, fSweep));
+            suptitle(sprintf('probe %s  |  %s @ %dHz\n\\fontsize{8}%s  |  dataset %03d  |  set %02d  |  source %03d',...
+                strrep(regexprep(probe, '[_]+', '_'), '_', '\_'), vpsString, fSweep,...
+                strrep(info.protocol, '_', '\_'), dsIx, setId, sourceId));
             
             savefig(gcf, fullfile(resultDir, 'cv-plot.fig'));
             
@@ -555,6 +556,11 @@ classdef MultiCrossvalidator < hive.proc.ProcessorBase
             
             fprintf('    %03d: DONE (%.3fs)\n', id, toc(t));
         end
+        
+        
+        
+        
+        
         
     end
     
