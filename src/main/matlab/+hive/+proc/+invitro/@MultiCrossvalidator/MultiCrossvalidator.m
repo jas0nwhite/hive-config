@@ -46,7 +46,6 @@ classdef MultiCrossvalidator < hive.proc.ProcessorBase
             %
             % ASSEMBLE TRAINING AND TESTING DATA
             %
-            this.cfg = this.treatment.training;
             nDatasets = this.cfg.getSize(this.cfg.datasetCatalog);
             
             g = tic;
@@ -132,6 +131,8 @@ classdef MultiCrossvalidator < hive.proc.ProcessorBase
         generatePredictions(this, dsIx)
         
         analyzeDataset(this, dsIx)
+        
+        summarize(this, dsIxList)
             
     end
     
