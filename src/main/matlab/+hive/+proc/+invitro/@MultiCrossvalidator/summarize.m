@@ -1,15 +1,13 @@
-function summarize(this, dsIxList)
+function summarize(this)
 %SUMMARIZE Summary of this function goes here
 %   Detailed explanation goes here
     
     t = tic();
     
-    %% read in all datasets
+    % read in all datasets
     nSets = numel(this.cfg.sourceCatalog);
     
-    %%
     for setId = 1:nSets
-        %%
         nSources = size(this.cfg.sourceCatalog{setId}, 1);
         chemicals = {Chem.Dopamine.name, Chem.Serotonin.name};
         nChem = numel(chemicals);
@@ -18,10 +16,8 @@ function summarize(this, dsIxList)
         predictionC = cell(nSources, 1);
         
         
-        %%
         for sourceId = 1:nSources
-            %%
-            [id, name, ~] = this.cfg.getSourceInfo(setId, sourceId);
+            [~, name, ~] = this.cfg.getSourceInfo(setId, sourceId);
             
             % importDir = fullfile(this.cfg.getSetValue(this.cfg.importPathList, setId), name);
             % metadataFile = fullfile(importDir, this.cfg.metaFile);
@@ -42,7 +38,6 @@ function summarize(this, dsIxList)
             predictionC{sourceId} = cv.predictions(:, columnIx);
             
         end
-        %%
         
         truth = vertcat(labelC{:});
         signal = vertcat(predictionC{:});
@@ -50,8 +45,13 @@ function summarize(this, dsIxList)
         
         labels = arrayfun(@(c) unique(truth(:, c)), 1:nChem, 'unif', false);
         
-        doCalcC = @(f) arrayfun(@(c) (arrayfun(@(i) f(c, i), 1:numel(labels{c}), 'unif', false)), 1:nChem, 'unif', false);
-        doCalc = @(f) arrayfun(@(c) cell2mat(arrayfun(@(i) f(c, i), 1:numel(labels{c}), 'unif', false)), 1:nChem, 'unif', false);
+        doCalcC = @(f) arrayfun(@(c) (arrayfun(@(i) ...
+            f(c, i), ...
+            1:numel(labels{c}), 'unif', false)), 1:nChem, 'unif', false);
+        
+        doCalc = @(f) arrayfun(@(c) cell2mat(arrayfun(@(i) ...
+            f(c, i), ...
+            1:numel(labels{c}), 'unif', false)), 1:nChem, 'unif', false);
         
         ix = doCalcC(@(c, i) truth(:, c) == labels{c}(i));
         n = doCalc(@(c, i) sum(ix{c}{i}));
@@ -61,7 +61,7 @@ function summarize(this, dsIxList)
         snrdb = doCalc(@(c, i) snr(signal(ix{c}{i}, c), noise(ix{c}{i}, c)));
         
         
-        %%
+        %
         % TASK SPECIFIC
         %
         data = table;
@@ -78,15 +78,14 @@ function summarize(this, dsIxList)
         
         figDir = this.testCfg.getSetValue(this.testCfg.resultPathList, setId);
         
-        %%
-        
+
         % da ~ DA*SE
         fit_da_DASE = fitlm(data, 'da ~ DA*SE');
         
         figure;
         plotEffects(fit_da_DASE);
         xlim([this.muMin - 100, this.muMax + 100]);
-        xlabel('Effect: \Delta [DA] (nM)');
+        xlabel('Effect: \Delta da (nM)');
         title(char(fit_da_DASE.Formula));
         grid on;
         box off;
@@ -96,7 +95,12 @@ function summarize(this, dsIxList)
         hgexport(gcf, fullfile(figDir, 'fit_da_DASE.png'), s);
         close;
         
-        disp(fit_da_DASE);
+        fid = fopen(fullfile(figDir, 'fit_da_DASE.txt'), 'w');
+        txt = evalc('disp(fit_da_DASE)');
+        txt = regexprep(txt, '<[/]?strong>', '');
+        fprintf(fid, '%s', txt);
+        fclose(fid);
+        
         
         % se ~ DA*SE
         fit_se_DASE = fitlm(data, 'se ~ DA*SE');
@@ -104,7 +108,7 @@ function summarize(this, dsIxList)
         figure;
         plotEffects(fit_se_DASE);
         xlim([this.muMin - 100, this.muMax + 100]);
-        xlabel('Effect: \Delta [5-HT] (nM)');
+        xlabel('Effect: \Delta se (nM)');
         title(char(fit_se_DASE.Formula));
         grid on;
         box off;
@@ -114,9 +118,14 @@ function summarize(this, dsIxList)
         hgexport(gcf, fullfile(figDir, 'fit_se_DASE.png'), s);
         close;
         
-        disp(fit_se_DASE);
+        fid = fopen(fullfile(figDir, 'fit_se_DASE.txt'), 'w');
+        txt = evalc('disp(fit_se_DASE)');
+        txt = regexprep(txt, '<[/]?strong>', '');
+        fprintf(fid, '%s', txt);
+        fclose(fid);
         
-        %% performance: DA
+        
+        % performance: DA
         P.X = truth(:, 1);
         P.Y = signal(:, 1);
         P.Noise = noise(:, 1);
@@ -144,7 +153,7 @@ function summarize(this, dsIxList)
         close(fig);
         
         
-        %% performance: 5-HT
+        % performance: 5-HT
         P.X = truth(:, 2);
         P.Y = signal(:, 2);
         P.Noise = noise(:, 2);
@@ -174,7 +183,6 @@ function summarize(this, dsIxList)
         
     end
     
-    %%
     toc(t);
 
 end
