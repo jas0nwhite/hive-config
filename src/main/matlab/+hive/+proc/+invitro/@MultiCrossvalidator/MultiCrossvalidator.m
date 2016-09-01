@@ -132,7 +132,7 @@ classdef MultiCrossvalidator < hive.proc.ProcessorBase
         
         analyzeDataset(this, dsIx)
         
-        summarize(this, dsIxList)
+        summarize(this)
             
     end
     
