@@ -116,6 +116,22 @@ classdef MultiCrossvalidator < hive.proc.ProcessorBase
             end
             
             fprintf('\n*** DONE (%.3fs)\n\n\n', toc(g));
+            
+            
+            %
+            % EVALUATE MODELS
+            %
+            g = tic;
+            
+            nSets = size(this.cfg.sourceCatalog, 1);
+            
+            fprintf('*** CROSS-EVALUATING %d SETS...\n\n', nSets);
+            
+            for setId = 1:nSets
+               this.evaluateAllModels(setId); 
+            end
+            
+            fprintf('\n*** DONE (%.3fs)\n\n\n', toc(g));
         end
     end
     
@@ -133,7 +149,11 @@ classdef MultiCrossvalidator < hive.proc.ProcessorBase
         analyzeDataset(this, dsIx)
         
         summarize(this)
-            
+        
+        evalutateAllModels(this, setId)
+        
+        [r, s] = evaluateModels(this, setId, sourceId)
+        
     end
     
     %
