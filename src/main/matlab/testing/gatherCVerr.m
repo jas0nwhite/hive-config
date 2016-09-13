@@ -1,4 +1,4 @@
-function [ CVerr, labels, chemicals ] = gatherCVerr( cfg )
+function [ CVerr, labels, chemicals, betas ] = gatherCVerr( cfg )
 %GATHERCVERR Summary of this function goes here
 %   Detailed explanation goes here
     %%
@@ -7,6 +7,7 @@ function [ CVerr, labels, chemicals ] = gatherCVerr( cfg )
     CVerr = cell(nSets, 1);
     labels = cell(nSets, 1);
     chemicals = cell(nSets, 1);
+    betas = cell(nSets, 1);
     
     %%
     for setIx = 1:nSets
@@ -16,7 +17,9 @@ function [ CVerr, labels, chemicals ] = gatherCVerr( cfg )
         
         CVerr{setIx} = cell(nDatasets, 1);
         labels{setIx} = cell(nDatasets, 1);
-        chemicals{setIx} = cell(nDatasets, 1);        
+        chemicals{setIx} = cell(nDatasets, 1);
+        betas{setIx} = cell(nDatasets, 2);
+        
         %%
         for sourceIx = 1:nDatasets
             %%
@@ -27,6 +30,7 @@ function [ CVerr, labels, chemicals ] = gatherCVerr( cfg )
             
             model = load(modelFile);
             CVerr{setIx, sourceIx} = model.CVerr;
+            betas{setIx, sourceIx} = cvglmnetCoef(model.CVerr, 'lambda_min');
             
             info = load(trainingFile, 'labels', 'chemical');
             labels{setIx, sourceIx} = unique(info.labels, 'rows');
