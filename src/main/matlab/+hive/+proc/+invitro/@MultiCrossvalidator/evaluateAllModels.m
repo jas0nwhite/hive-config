@@ -22,21 +22,41 @@ function evaluateAllModels( this, setId )
     nAnalytes = size(chemical, 2);
     
     % process all sources
-    rmseMat = nan(nSources, nSources, nAnalytes);
-    snrMat = nan(nSources, nSources, nAnalytes);
+    sourceResults = cell(nSources, 1);
     
     if this.doParfor
         parfor sourceId = 1:nSources
-            [rmseMat(sourceId, :, :), snrMat(sourceId, :, :)] = this.evaluateModels(setId, sourceId); %#ok<PFOUS,PFBNS>
+            sourceResults{sourceId} = this.evaluateModels(setId, sourceId); %#ok<PFBNS>
         end
     else
         for sourceId = 1:nSources
-            [rmseMat(sourceId, :, :), snrMat(sourceId, :, :)] = this.evaluateModels(setId, sourceId);
+            sourceResults{sourceId} = this.evaluateModels(setId, sourceId);
         end
     end
     
+    % collate
+    results.rmse = nan(nSources, nSources, nAnalytes);
+    results.snr = nan(nSources, nSources, nAnalytes);
+    results.n = nan(nSources, nSources, 1);
+    results.sd = nan(nSources, nSources, nAnalytes);
+    results.lmAlpha = nan(nSources, nSources, nAnalytes);
+    results.lmBeta = nan(nSources, nSources, nAnalytes);
+    results.lmRsquared = nan(nSources, nSources, nAnalytes);
+    results.lmRmse = nan(nSources, nSources, nAnalytes);
+    
+    for sourceId = 1:nSources
+        results.rmse(sourceId, :, :)       = sourceResults{sourceId}.rmse(:, :);
+        results.snr(sourceId, :, :)        = sourceResults{sourceId}.snr(:, :);
+        results.n(sourceId, :)             = sourceResults{sourceId}.n(:);
+        results.sd(sourceId, :, :)         = sourceResults{sourceId}.sd(:, :);
+        results.lmAlpha(sourceId, :, :)    = sourceResults{sourceId}.lmAlpha(:, :);
+        results.lmBeta(sourceId, :, :)     = sourceResults{sourceId}.lmBeta(:, :);
+        results.lmRsquared(sourceId, :, :) = sourceResults{sourceId}.lmRsquared(:, :);
+        results.lmRmse(sourceId, :, :)     = sourceResults{sourceId}.lmRmse(:, :);
+    end
+    
     % save results
-    save(cvPermuteFile, 'rmseMat', 'snrMat');
+    save(cvPermuteFile, '-struct', 'results');
 
 end
 
