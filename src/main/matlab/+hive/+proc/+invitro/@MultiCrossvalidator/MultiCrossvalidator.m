@@ -152,7 +152,7 @@ classdef MultiCrossvalidator < hive.proc.ProcessorBase
         
         evalutateAllModels(this, setId)
         
-        [r, s] = evaluateModels(this, setId, sourceId)
+        results = evaluateModels(this, setId, sourceId)
         
     end
     
