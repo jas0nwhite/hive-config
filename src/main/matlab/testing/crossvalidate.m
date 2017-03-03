@@ -200,18 +200,28 @@ function trainModel(dsIx, cfg)
         return
     end
     
-    training = load(cvTrainFile);
+    training = load(cvTrainFile);    
     
-    % cross validated glmnet options
-    options.alpha = 1.0; % LASSO - to optimize, use 0:.1:1 in a loop
-    family = 'gaussian';
-    type = 'mse';
-    nfolds = 10; % when finding best alpha, set this to []
-    foldid = []; % when finding best alpha, set this to a precalculated list of fold ids
-    parallel = 1; % if true (=1), then will run in parallel mode
-    keep = 0;
-    grouped = 1;
+    % do the training
+    switch cfg.alphaSelectId
+        case 0
+            alpha = 1.0; % LASSO - to optimize, use 0:.1:1 in a loop   
+        case 1
+            alpha = 0.0:0.1:1.0;
+        otherwise
+            error('unhandled alphaSelectId %03d', cfg.alphaSelectId);
+    end
     
+    CVerr = trainForAlpha(training, alpha); %#ok<NASGU>
+    
+    save(cvModelFile, 'CVerr');
+    
+    fprintf('    %03d: DONE (%.3fs)\n', id, toc(t));
+end
+
+
+
+function CVerr = trainForAlpha(training, alphaRange)
     % training data
     % training data supplied in ?training.voltammograms? variable
     % 1st dimension is observations, 2nd dimension is variables
@@ -222,14 +232,44 @@ function trainModel(dsIx, cfg)
     % 1st dimension is observations, 2nd dimension is analyte concentrations
     Y = training.labels';
     
-    % this could take a long time, so try it out first with a small amount of data
-    CVerr = cvglmnet(X, Y, family, options, type, nfolds, foldid, parallel, keep, grouped); %#ok<NASGU>
+    % cross-validation folds
+    rng(032272);
+    nfolds = [];
+    foldid = randsample(...
+            1:10,...
+            size(Y, 2),...
+            true);
     
-    save(cvModelFile, 'CVerr');
+    % train for each alpha in the range
+    nAlpha = numel(alphaRange);
     
-    fprintf('    %03d: DONE (%.3fs)\n', id, toc(t));
+    CVerrList = cell(nAlpha, 1);
+    
+    for alphaIx = 1:nAlpha
+        alpha = alphaRange(alphaIx);
+        
+        % cross validated glmnet options
+        options.alpha = alpha;
+        family = 'gaussian';
+        type = 'mse';
+        parallel = 1; % if true (=1), then will run in parallel mode
+        keep = 0;
+        grouped = 1;
+        
+        % this could take a long time, so try it out first with a small amount of data
+        CVerrList{alphaIx} = cvglmnet(X, Y, family, options, type, nfolds, foldid, parallel, keep, grouped);
+        CVerrList{alphaIx}.alpha = alpha;
+    end
+    
+    % find the mean squared cross-validated error value for each fit
+    mse = cellfun(@(C) C.cvm(C.lambda == C.lambda_min), CVerrList);
+    
+    % find which alphaIx minimizes MSE
+    [~, bestIx] = min(mse);
+    
+    % winner winner chicken dinner
+    CVerr = CVerrList{bestIx};
 end
-
 
 
 function generatePredicitons(dsIx, cfg)
