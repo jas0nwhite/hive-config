@@ -1,4 +1,4 @@
-classdef MultiCrossvalidator < hive.proc.ProcessorBase
+classdef Crossvalidator < hive.proc.ProcessorBase
     %CROSSVALIDATEMIXTURES Summary of this class goes here
     %   Detailed explanation goes here
     
@@ -14,11 +14,11 @@ classdef MultiCrossvalidator < hive.proc.ProcessorBase
     %
     methods
         
-        function this = MultiCrossvalidator(cfg)
+        function this = Crossvalidator(cfg)
             this.treatment = cfg;
             this.cfg = cfg.training;
             this.testCfg = cfg.testing;
-            this.actionLabel = 'Cross-validating mixtures';
+            this.actionLabel = 'Cross-validating';
             
             % defaults
             this.trainingPct = .1;
