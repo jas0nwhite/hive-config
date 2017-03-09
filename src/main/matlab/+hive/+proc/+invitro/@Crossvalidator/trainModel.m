@@ -16,9 +16,16 @@ function trainModel(this, dsIx)
     
     training = load(cvTrainFile);
     
+    nAnalytes = size(training.labels, 2);
+    
     % cross validated glmnet options
-    options.alpha = 1.0; % LASSO - to optimize, use 0:.1:1 in a loop
-    family = 'mgaussian';
+    if nAnalytes == 1
+        family = 'gaussian';
+    else
+        family = 'mgaussian';
+    end
+    
+    options.alpha = 1.0; % LASSO - to optimize, use 0:.1:1 in a loop    
     type = 'mse';
     nfolds = 10; % when finding best alpha, set this to []
     foldid = []; % when finding best alpha, set this to a precalculated list of fold ids
@@ -37,7 +44,8 @@ function trainModel(this, dsIx)
     Y = training.labels';
     
     % this could take a long time, so try it out first with a small amount of data
-    CVerr = cvglmnet(X, Y, family, options, type, nfolds, foldid, parallel, keep, grouped); %#ok<NASGU>
+    CVerr = cvglmnet(X, Y, family, options, type, nfolds, foldid, parallel, keep, grouped);
+    CVerr.alpha = options.alpha;
     
     save(cvModelFile, 'CVerr');
     

@@ -14,7 +14,11 @@ function results = evaluateModels(this, setId, sourceId)
     
     load(cvModelFile);
     
-    nAnalytes = size(CVerr.glmnet_fit.beta, 2);
+    if ndims(CVerr.glmnet_fit.beta) == 2 %#ok<ISMAT>
+        nAnalytes = 1;
+    else
+        nAnalytes = size(CVerr.glmnet_fit.beta, 2);
+    end
     
     % PROCESS EACH TESTING SET
     nTests = size(this.cfg.sourceCatalog{setId}, 1);
