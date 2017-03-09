@@ -33,10 +33,18 @@ function summarize(this)
             % training = load(cvTrainFile);
             % metadata = load(metadataFile);
             
-            [~, ~, columnIx] = intersect(chemicals, cv.chemical); % just in case
-            labelC{sourceId} = cv.labels(:, columnIx);
-            predictionC{sourceId} = cv.predictions(:, columnIx);
+            nObs = size(cv.predictions, 1);
+            labels = zeros(nObs, nChem);
+            predictions = zeros(nObs, nChem);
             
+            % find how our accumulator and the CV results match up
+            [~, accIx, cvIx] = intersect(chemicals, cv.chemical);
+            
+            labels(:, accIx) = cv.labels(:, cvIx);
+            predictions(:, accIx) = cv.predictions(:, cvIx);
+            
+            labelC{sourceId} = labels;
+            predictionC{sourceId} = predictions;
         end
         
         truth = vertcat(labelC{:});
