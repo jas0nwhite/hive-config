@@ -164,7 +164,7 @@ classdef AbfToMat < hive.util.Logging
             % read files
             for ix = 1:nFiles
                 [voltammograms{ix}, sampleFreq(ix), sweepFreq(ix), headers{ix}, sampleIx{ix}, sweepIx{ix}] =...
-                    this.readAbf(ix); %#ok<PFBNS,PFOUS>
+                    this.readAbf(ix);
                 [nSamples(ix), nSweeps(ix)] = size(voltammograms{ix});
                 recTime(ix) = diff(headers{ix}.recTime);
             end

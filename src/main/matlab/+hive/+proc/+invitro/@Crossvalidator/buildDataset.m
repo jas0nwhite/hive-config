@@ -41,6 +41,33 @@ function buildDataset(this, dsIx)
     dat = load(vgramFile);
     all.voltammograms = dat.voltammograms(stepIx);
     
+    % BUILD A MASTER INDEX
+    nSteps = size(all.voltammograms, 1);
+    
+    all.index = cell(nSteps, 1);
+    offset = 0;
+    
+    for ix = 1:nSteps
+        all.sweepNumber{ix} = (1:size(all.labels{ix}, 1)) + offset;
+        offset = max(all.sweepNumber{ix});
+    end 
+    
+    % CLEAN JITTERED DATA IF NECESSARY
+    jitterOutput = '';
+    if isobject(this.jitterCorrector)
+        all.voltammograms = arrayfun(@(s) this.jitterCorrector.removeJitter(all.voltammograms{s}), stepIx,...
+            'UniformOutput', false);
+        
+        ixRemoved = arrayfun(@(s) isnan(all.voltammograms{s}(1, :)), stepIx, 'UniformOutput', false);
+        nRemoved = sum(arrayfun(@(s) sum(ixRemoved{s}), stepIx));
+        
+        all.voltammograms = arrayfun(@(s) all.voltammograms{s}(:, ~ixRemoved{s}), stepIx', 'UniformOutput', false);
+        all.labels = arrayfun(@(s) all.labels{s}(~ixRemoved{s}, :), stepIx', 'UniformOutput', false);
+        all.sweepNumber = arrayfun(@(s) all.sweepNumber{s}(~ixRemoved{s}), stepIx', 'UniformOutput', false);
+        
+        jitterOutput = sprintf('[-%d jitter]', nRemoved);
+    end
+    
     clear dat;
     
     % FIND TARGET ANALYTES
@@ -52,12 +79,11 @@ function buildDataset(this, dsIx)
     vgrams = horzcat(all.voltammograms{:});
     
     offset = 0;
-    nSteps = size(all.voltammograms, 1);
     testIx = cell(nSteps, 1);
     trainIx = cell(nSteps, 1);
     
     % sample each step uniformly
-    for ix = 1:size(all.voltammograms, 1)
+    for ix = 1:nSteps
         step = all.labels{ix};
         stepInMuRange = arrayfun(@(i) ...
             prod(step(i, chemIx) >= this.muMin & step(i, chemIx) <= this.muMax), 1:size(step, 1));
@@ -68,7 +94,7 @@ function buildDataset(this, dsIx)
         stepValidN = numel(stepValidIx);
         
         if (this.trainingPct >= 1)
-            if (this.trainingPct >= stepN)
+            if (this.trainingPct >= stepValidN)
                 % leave some samples left for testing
                 trainN = round(stepValidN * .9);
             else
@@ -86,21 +112,41 @@ function buildDataset(this, dsIx)
         offset = offset + stepN;
     end
     
-    test.ix = vertcat(testIx{:});
-    test.n = numel(test.ix);
-    test.voltammograms = vgrams(:, test.ix);
-    test.labels = muVals(test.ix, chemIx);
+    sweeps = horzcat(all.sweepNumber{:});
+    
+    ix = horzcat(testIx{:});
+    test.n = numel(ix);
+    test.voltammograms = vgrams(:, ix);
+    test.labels = muVals(ix, chemIx);
     test.chemical = all.chemicals(chemIx);
+    test.sweepNumber = sweeps(ix);
+    
+    offset = 0;
+    test.ix = cell(nSteps, 1);
+    for i = 1:nSteps
+        test.ix{i} = (1:numel(testIx{i})) + offset;
+        offset = max(test.ix{i});
+    end
+    test.ix = test.ix(arrayfun(@(c) ~isempty(c{:}), test.ix));
     
     save(cvTestFile, '-struct', 'test');
     
-    train.ix = vertcat(trainIx{:});
-    train.n = numel(train.ix);
-    train.voltammograms = vgrams(:, train.ix);
-    train.labels = muVals(train.ix, chemIx);
+    ix = horzcat(trainIx{:});
+    train.n = numel(ix);
+    train.voltammograms = vgrams(:, ix);
+    train.labels = muVals(ix, chemIx);
     train.chemical = all.chemicals(chemIx);
+    train.sweepNumber = sweeps(ix);
+    
+    offset = 0;
+    train.ix = cell(nSteps, 1);
+    for i = 1:nSteps
+        train.ix{i} = (1:numel(trainIx{i})) + offset;
+        offset = max(train.ix{i});
+    end
+    test.ix = train.ix(arrayfun(@(c) ~isempty(c{:}), train.ix));
     
     save(cvTrainFile, '-struct', 'train');
     
-    fprintf('    %03d: DONE (%.3fs)\n', id, toc(t));
+    fprintf('    %03d: DONE (%.3fs) %s\n', id, toc(t), jitterOutput);
 end
