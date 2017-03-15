@@ -20,7 +20,7 @@ function analyzeDataset(this, dsIx)
     end
     
     cv = load(cvPredFile);
-    testing = load(cvTestFile, 'ix');
+    testing = load(cvTestFile, 'ix', 'sweepNumber');
     training = load(cvTrainFile);
     metadata = load(metadataFile);
     
@@ -36,8 +36,9 @@ function analyzeDataset(this, dsIx)
     predSnre = nan(nSteps, nChems);
     
     for ix = 1:nSteps
-        signal = cv.predictions(ix, :);
-        truth = cv.labels(ix, :);
+        selectIx = testing.ix{ix};
+        signal = cv.predictions(selectIx, :);
+        truth = cv.labels(selectIx, :);
         noise = signal - truth;
         estimate = mean(signal);
         noiseEst = bsxfun(@minus, signal, estimate);
@@ -50,7 +51,7 @@ function analyzeDataset(this, dsIx)
     fSample = round(metadata.sampleFreq(1), 0);
     fSweep = round(metadata.sweepFreq(1), 0);
     
-    plotT = (testing.ix - 1) / metadata.sweepFreq(1);
+    plotT = (testing.sweepNumber - 1) / metadata.sweepFreq(1);
     
     % plot
     info = this.cfg.infoCatalog{setId}{sourceId, 2};
@@ -112,9 +113,10 @@ function analyzeDataset(this, dsIx)
         xlabel('samples');
         ylabel(muLabel);
         
-        plot(plotT(:), cv.predictions(:, chemIx), '.', 'Color', colors(chemIx, :), 'MarkerSize', 10);
+        plot(plotT, cv.predictions(:, chemIx), '.', 'Color', colors(chemIx, :), 'MarkerSize', 10);
         for ix = 1:nSteps
-            stepX = [min(plotT(ix, :)), max(plotT(ix, :))];
+            selectIx = testing.ix{ix};
+            stepX = [min(plotT(selectIx)), max(plotT(selectIx))];
             stepY = [labels(ix, chemIx), labels(ix, chemIx)];
             plot(stepX, stepY, 'Color', labColor);
         end

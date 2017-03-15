@@ -7,6 +7,7 @@ classdef Crossvalidator < hive.proc.ProcessorBase
         trainingPct
         muMin
         muMax
+        jitterCorrector
     end
     
     %
@@ -36,6 +37,10 @@ classdef Crossvalidator < hive.proc.ProcessorBase
         
         function this = withMaximum(this, setting)
             this.muMax = setting;
+        end
+        
+        function this = withJitterCorrector(this, object)
+            this.jitterCorrector = object;
         end
         
         function this = process(this)
