@@ -16,36 +16,17 @@ function trainModel(this, dsIx)
     
     training = load(cvTrainFile);
     
-    nAnalytes = size(training.labels, 2);
-    
-    % cross validated glmnet options
-    if nAnalytes == 1
-        family = 'gaussian';
-    else
-        family = 'mgaussian';
+    % do the training
+    switch this.treatment.alphaSelectId
+        case 0
+            alpha = 1.0; % LASSO
+        case 1
+            alpha = 0.0:0.1:1.0; % find best alpha
+        otherwise
+            error('unhandled alphaSelectId %03d', cfg.alphaSelectId);
     end
     
-    options.alpha = 1.0; % LASSO - to optimize, use 0:.1:1 in a loop    
-    type = 'mse';
-    nfolds = 10; % when finding best alpha, set this to []
-    foldid = []; % when finding best alpha, set this to a precalculated list of fold ids
-    parallel = 1; % if true (=1), then will run in parallel mode
-    keep = 0;
-    grouped = 1;
-    
-    % training data
-    % training data supplied in ?training.voltammograms? variable
-    % 1st dimension is observations, 2nd dimension is variables
-    X = diff(training.voltammograms', 1, 2); %#ok<UDIM> % first differential along second dimension
-    
-    % training labels
-    % training labels supplied in ?training.labels? variable
-    % 1st dimension is observations, 2nd dimension is analyte concentrations
-    Y = training.labels';
-    
-    % this could take a long time, so try it out first with a small amount of data
-    CVerr = cvglmnet(X, Y, family, options, type, nfolds, foldid, parallel, keep, grouped);
-    CVerr.alpha = options.alpha;
+    CVerr = this.trainModelForAlpha(training, alpha); %#ok<NASGU>
     
     save(cvModelFile, 'CVerr');
     

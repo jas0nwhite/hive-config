@@ -8,6 +8,7 @@ classdef Crossvalidator < hive.proc.ProcessorBase
         muMin
         muMax
         jitterCorrector
+        trainingDebug = false
     end
     
     %
@@ -41,6 +42,14 @@ classdef Crossvalidator < hive.proc.ProcessorBase
         
         function this = withJitterCorrector(this, object)
             this.jitterCorrector = object;
+        end
+        
+        function this = withTrainingDebug(this, setting)
+            if nargin == 1
+                this.trainingDebug = true;
+            else
+                this.trainingDebug = setting;
+            end
         end
         
         function this = process(this)
@@ -148,6 +157,8 @@ classdef Crossvalidator < hive.proc.ProcessorBase
         buildDataset(this, dsIx)
         
         trainModel(this, dsIx)
+        
+        CVerr = trainModelForAlpha(this, training, alphaRange)
         
         generatePredictions(this, dsIx)
         
