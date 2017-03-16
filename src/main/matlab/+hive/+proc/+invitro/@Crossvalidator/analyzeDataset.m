@@ -26,7 +26,8 @@ function analyzeDataset(this, dsIx)
     
     
     % stats
-    labels = unique(cv.labels, 'rows', 'stable');
+    %labels = unique(cv.labels, 'rows', 'stable');
+    labels = [cv.labels(diff(cv.labels) ~= 0); cv.labels(end)]; % support duplicate labels
     
     nSteps = size(testing.ix, 1);
     nChems = size(cv.labels, 2);
