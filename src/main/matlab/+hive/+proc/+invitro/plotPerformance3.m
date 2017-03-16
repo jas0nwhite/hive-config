@@ -55,13 +55,16 @@ function fig = plotPerformance3(P)
     ytwix = diff(yl) / 20;
     
     xlim([xl(1) - xtwix, xl(2) + xtwix]);
-    ylim([yl(1) - 2*ytwix, yl(2) + 2*ytwix]);
     
-    h = refline(0, rms(P.Noise));
-    h.Color = colors(7, :);
-    h.LineStyle = '--';
-    
-    plot(P.Summary.X, P.Summary.Yrmse, '.', 'Color', colors(1, :), 'MarkerSize', 15);
+    if yl(1) < yl(2)
+        ylim([yl(1) - 2*ytwix, yl(2) + 2*ytwix]);
+        
+        h = refline(0, rms(P.Noise));
+        h.Color = colors(7, :);
+        h.LineStyle = '--';
+        
+        plot(P.Summary.X, P.Summary.Yrmse, '.', 'Color', colors(1, :), 'MarkerSize', 15);
+    end
     
     grid on;
     box off;
@@ -82,16 +85,19 @@ function fig = plotPerformance3(P)
     ytwix = diff(yl) / 20;
     
     xlim([xl(1) - xtwix, xl(2) + xtwix]);
-    ylim([yl(1) - 2*ytwix, yl(2) + 2*ytwix]);
     
-    % set(gca, 'Xscale', 'log');
-    % plot(p.Summary.X, p.Summary.Ysnr, '.', 'Color', colors(1, :));
-    
-    h = refline(0, snr(P.Y, P.Noise));
-    h.Color = colors(7, :);
-    h.LineStyle = '--';
-    
-    plot(P.Summary.X, P.Summary.Ysnr, '.', 'Color', colors(1, :), 'MarkerSize', 15);
+    if yl(1) < yl(2)
+        ylim([yl(1) - 2*ytwix, yl(2) + 2*ytwix]);
+        
+        % set(gca, 'Xscale', 'log');
+        % plot(p.Summary.X, p.Summary.Ysnr, '.', 'Color', colors(1, :));
+        
+        h = refline(0, snr(P.Y, P.Noise));
+        h.Color = colors(7, :);
+        h.LineStyle = '--';
+        
+        plot(P.Summary.X, P.Summary.Ysnr, '.', 'Color', colors(1, :), 'MarkerSize', 15);
+    end
     
     grid on;
     box off;
