@@ -4,13 +4,16 @@ classdef (Abstract) ImporterBase < hive.proc.ProcessorBase
     
     properties (Access = protected)
         labels
+        vgramChannel = 'FSCV_1'
     end
     
     %
     % API
     %
     methods
-        
+        function this = withVgramChannel(this, channel)
+            this.vgramChannel = channel;
+        end
     end
     
     %
@@ -57,8 +60,9 @@ classdef (Abstract) ImporterBase < hive.proc.ProcessorBase
             vgramFile = fullfile(outDir, this.cfg.vgramFile);
             metaFile = fullfile(outDir, this.cfg.metaFile);
             labelFile = fullfile(outDir, this.cfg.labelFile);
+            otherFile = fullfile(outDir, 'otherwaveforms.mat');
             
-            status = hive.convert.AbfToMat(abfFiles, vgramFile, metaFile, vgramWin, timeWin)...
+            status = hive.convert.AbfToMat(abfFiles, this.vgramChannel, vgramFile, metaFile, otherFile, vgramWin, timeWin)...
                 .withOverwrite(this.overwrite)...
                 .withLabels(abfLabels, abfChemNames, labelFile)...
                 .convert;
