@@ -41,7 +41,7 @@ object NamingUtil extends Logging {
   val uncorrq = """(?:_uncorrelated_[0-9]+k_[0-9]+Hz)?"""
 
   val dateP = """\d{4}_\d{2}_\d{2}"""
-  val nameP = """(?:[ap]m\d?_)?[A-Za-z_]+"""
+  val nameP = """(?:[ap]m\d?_)?(?:[A-Za-z_]+|[A-Za-z0-9]+)"""
 
   val dopamineP = s"""(?:dopamine|DA)$fastq$uncorrq"""
   val serotoninP = s"""(?:serotonin|5HT)$fastq$uncorrq"""
