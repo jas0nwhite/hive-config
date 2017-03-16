@@ -3,8 +3,10 @@ classdef AbfToMat < hive.util.Logging
     
     properties (Access = protected)
         inputFiles
+        vgramChannel
         outputFile
         metadataFile
+        otherFile
         sampleWindow
         timeWindow
         overwrite = false
@@ -18,10 +20,12 @@ classdef AbfToMat < hive.util.Logging
     %
     methods
         
-        function this = AbfToMat(inputFiles, outputFile, metadataFile, sampleWindow, timeWindow)
+        function this = AbfToMat(inputFiles, vgramChannel, outputFile, metadataFile, otherFile, sampleWindow, timeWindow)
             this.inputFiles = inputFiles;
+            this.vgramChannel = vgramChannel;
             this.outputFile = outputFile;
             this.metadataFile = metadataFile;
+            this.otherFile = otherFile;
             this.sampleWindow = this.windowToRange(sampleWindow);
             this.timeWindow = timeWindow;
         end
@@ -101,15 +105,20 @@ classdef AbfToMat < hive.util.Logging
             end
         end
         
-        function [data, sampleFreq, sweepFreq, header, sampleWindow, sweepWindow] = readAbf(this, ix)
+        function results = readAbf(this, ix)
             abfFile = this.inputFiles{ix};
             
             % load the data from the ABF file
-            [data, sampInterval, header] = hive.convert.AbfToMat.abfload(abfFile);
+            [raw, sampInterval, header] = hive.convert.AbfToMat.abfload(abfFile);
+            
+            % find the channel index
+            vgramChannelIx = arrayfun(@(s) strcmpi(s, this.vgramChannel), header.recChNames);
+            otherChannels = header.recChNames{~vgramChannelIx};
             
             % convert data to convenient format
             sampInterval = sampInterval * 1e-6; % seconds
-            data = squeeze(data); % remove extra dimensions
+            otherData = squeeze(raw(:, ~vgramChannelIx, :)); % extract other data
+            data = squeeze(raw(:, vgramChannelIx, :)); % extract voltammogram data
             sweepInterval = sampInterval * unique(diff(header.sweepStartInPts));
             
             % calculate the time window
@@ -127,15 +136,25 @@ classdef AbfToMat < hive.util.Logging
             
             % extract the data
             if sum(isnan(this.sampleWindow)) > 0
-                sampleWindow = 1:size(data, 1);
+                sampWindow = 1:size(data, 1);
             else
-                sampleWindow = this.sampleWindow;
+                sampWindow = this.sampleWindow;
             end
             
-            data = data(sampleWindow, sweepWindow);
+            data = data(sampWindow, sweepWindow);
             
             sampleFreq = 1/sampInterval;
             sweepFreq = 1/sweepInterval;
+            
+            % return results
+            results.data = data;
+            results.sampleFreq = sampleFreq;
+            results.sweepFreq = sweepFreq;
+            results.header = header;
+            results.sampleWindow = sampWindow;
+            results.sweepWindow = sweepWindow;
+            results.otherData = otherData;
+            results.otherChannels = otherChannels;            
         end
         
         function results = doConvertData(this)
@@ -159,17 +178,32 @@ classdef AbfToMat < hive.util.Logging
             recTime = NaN(nFiles, 1);
             sampleIx = cell(nFiles, 1);
             sweepIx = cell(nFiles, 1);
+            otherData = cell(nFiles, 1);
+            otherChannels = cell(nFiles, 1);
             
             
             % read files
-            for ix = 1:nFiles
-                [voltammograms{ix}, sampleFreq(ix), sweepFreq(ix), headers{ix}, sampleIx{ix}, sweepIx{ix}] =...
-                    this.readAbf(ix);
+            for ix = 1:nFiles                
+                abf = this.readAbf(ix);
+                
+                voltammograms{ix} = abf.data;
+                sampleFreq(ix) = abf.sampleFreq;
+                sweepFreq(ix) = abf.sweepFreq;
+                headers{ix} = abf.header;
+                sampleIx{ix} = abf.sampleWindow;
+                sweepIx{ix} = abf.sweepWindow;
+                otherData{ix} = abf.otherData;
+                otherChannels{ix} = abf.otherChannels;
+                
                 [nSamples(ix), nSweeps(ix)] = size(voltammograms{ix});
                 recTime(ix) = diff(headers{ix}.recTime);
             end
             
             save(this.outputFile, 'voltammograms');
+            
+            if sum(arrayfun(@(c) numel(c{:}), otherData)) > 0
+                save(this.otherFile, 'otherData', 'otherChannels');
+            end
             
             % copy vars for save
             results.headers = headers;
