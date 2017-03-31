@@ -113,7 +113,12 @@ classdef AbfToMat < hive.util.Logging
             
             % find the channel index
             vgramChannelIx = arrayfun(@(s) strcmpi(s, this.vgramChannel), header.recChNames);
-            otherChannels = header.recChNames{~vgramChannelIx};
+            
+            if numel(vgramChannelIx) > 1
+                otherChannels = header.recChNames{~vgramChannelIx};
+            else
+                otherChannels = {};
+            end
             
             % convert data to convenient format
             sampInterval = sampInterval * 1e-6; % seconds
