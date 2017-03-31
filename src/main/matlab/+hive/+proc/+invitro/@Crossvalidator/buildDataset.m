@@ -55,15 +55,15 @@ function buildDataset(this, dsIx)
     % CLEAN JITTERED DATA IF NECESSARY
     jitterOutput = '';
     if isobject(this.jitterCorrector)
-        all.voltammograms = arrayfun(@(s) this.jitterCorrector.removeJitter(all.voltammograms{s}), stepIx,...
+        all.voltammograms = arrayfun(@(s) this.jitterCorrector.removeJitter(all.voltammograms{s}), 1:nSteps,...
             'UniformOutput', false);
         
-        ixRemoved = arrayfun(@(s) isnan(all.voltammograms{s}(1, :)), stepIx, 'UniformOutput', false);
-        nRemoved = sum(arrayfun(@(s) sum(ixRemoved{s}), stepIx));
+        ixRemoved = arrayfun(@(s) isnan(all.voltammograms{s}(1, :)), 1:nSteps, 'UniformOutput', false);
+        nRemoved = sum(arrayfun(@(s) sum(ixRemoved{s}), 1:nSteps));
         
-        all.voltammograms = arrayfun(@(s) all.voltammograms{s}(:, ~ixRemoved{s}), stepIx', 'UniformOutput', false);
-        all.labels = arrayfun(@(s) all.labels{s}(~ixRemoved{s}, :), stepIx', 'UniformOutput', false);
-        all.sweepNumber = arrayfun(@(s) all.sweepNumber{s}(~ixRemoved{s}), stepIx', 'UniformOutput', false);
+        all.voltammograms = arrayfun(@(s) all.voltammograms{s}(:, ~ixRemoved{s}), (1:nSteps)', 'UniformOutput', false);
+        all.labels = arrayfun(@(s) all.labels{s}(~ixRemoved{s}, :), (1:nSteps)', 'UniformOutput', false);
+        all.sweepNumber = arrayfun(@(s) all.sweepNumber{s}(~ixRemoved{s}), (1:nSteps)', 'UniformOutput', false);
         
         jitterOutput = sprintf('[-%d jitter]', nRemoved);
     end
