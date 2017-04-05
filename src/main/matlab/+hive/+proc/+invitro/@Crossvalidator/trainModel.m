@@ -16,17 +16,19 @@ function trainModel(this, dsIx)
     
     training = load(cvTrainFile);
     
-    % do the training
+    % DETERMINE ALPHA RANGE
     switch this.treatment.alphaSelectId
         case 0
-            alpha = 1.0; % LASSO
+            alphaRange = 1.0; % LASSO
         case 1
-            alpha = 0.0:0.1:1.0; % find best alpha
+            alphaRange = 0.0:0.1:1.0; % find best alpha
         otherwise
             error('unhandled alphaSelectId %03d', cfg.alphaSelectId);
     end
     
-    CVerr = this.trainModelForAlpha(training, alpha); %#ok<NASGU>
+    % TRAIN
+    CVerr = hive.proc.train.trainModelForAlpha(...
+        training.voltammograms, training.labels, alphaRange, this.trainingDebug); %#ok<NASGU>
     
     save(cvModelFile, 'CVerr');
     
