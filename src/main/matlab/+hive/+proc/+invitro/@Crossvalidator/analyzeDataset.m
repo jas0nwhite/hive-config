@@ -34,7 +34,7 @@ function analyzeDataset(this, dsIx)
     time = (testing.sweepNumber - 1) / metadata.sweepFreq(1);
     muRange = [this.muMin, this.muMax];
     chems = cv.chemical; 
-    hive.proc.invitro.plotCalibration3(time, predictions, labels, stepIx, chems, muRange, stats)
+    hive.proc.invitro.plotCalibration3(time, predictions, labels, stepIx, chems, muRange, stats);
         
     
     % DECORATE
