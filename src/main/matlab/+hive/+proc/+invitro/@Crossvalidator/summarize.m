@@ -88,7 +88,9 @@ function summarize(this)
         
 
         % da ~ DA*SE
+        warning off;
         fit_da_DASE = fitlm(data, 'da ~ DA*SE');
+        warning on;
         
         figure;
         plotEffects(fit_da_DASE);
@@ -111,7 +113,9 @@ function summarize(this)
         
         
         % se ~ DA*SE
+        warning off;
         fit_se_DASE = fitlm(data, 'se ~ DA*SE');
+        warning on;
         
         figure;
         plotEffects(fit_se_DASE);
