@@ -83,6 +83,8 @@ function buildDataset(this, dsIx)
     trainIx = cell(nSteps, 1);
     
     % sample each step uniformly
+    rng(1972);
+
     for ix = 1:nSteps
         step = all.labels{ix};
         stepInMuRange = arrayfun(@(i) ...
@@ -105,7 +107,6 @@ function buildDataset(this, dsIx)
             trainN = round(stepValidN * this.trainingPct);
         end
         
-        rng(1972);
         trainIx{ix} = datasample(index, trainN, 'Replace', false);
         testIx{ix} = setdiff(index, trainIx{ix});
         
