@@ -158,8 +158,6 @@ classdef Crossvalidator < hive.proc.ProcessorBase
         
         trainModel(this, dsIx)
         
-        CVerr = trainModelForAlpha(this, training, alphaRange)
-        
         generatePredictions(this, dsIx)
         
         analyzeDataset(this, dsIx)
