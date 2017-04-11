@@ -1,3 +1,6 @@
+%% config hive
+!./make-config /data/hnl/iterate/results_103/100-full.conf
+
 %% init
 clc;
 cfg = Config.init();
@@ -8,21 +11,35 @@ addpath(fullfile(pwd, 'testing'));
 
 %% import
 t = tic;
-hive.proc.train.Importer(cfg).inParallel(true).withOverwrite(false).process();
+hive.proc.train.Importer(cfg)...
+    .inParallel(true)...
+    .withOverwrite(false)...
+    .purgeExcludedData()...
+    .process();
 toc(t);
 
 t = tic;
-hive.proc.test.Importer(cfg).inParallel(true).withOverwrite(false).process();
+hive.proc.test.Importer(cfg)...
+    .inParallel(true)...
+    .withOverwrite(false)...
+    .purgeExcludedData()...
+    .process();
 toc(t);
 
 
 %% summarize
 t = tic;
-hive.proc.train.Summarizer(cfg).withOverwrite(false).process().plot();
+hive.proc.train.Summarizer(cfg)...
+    .withOverwrite(false)...
+    .process()...
+    .plot();
 toc(t);
 
 t = tic;
-hive.proc.test.Summarizer(cfg).withOverwrite(false).process().plot();
+hive.proc.test.Summarizer(cfg)...
+    .withOverwrite(false)...
+    .process()...
+    .plot();
 toc(t);
 
 
