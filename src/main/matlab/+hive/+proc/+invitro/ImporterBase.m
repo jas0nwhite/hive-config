@@ -14,6 +14,10 @@ classdef (Abstract) ImporterBase < hive.proc.ProcessorBase
         function this = withVgramChannel(this, channel)
             this.vgramChannel = channel;
         end
+        
+        function this = purgeExcludedData(this)
+            this.labels = this.labels(strcmpi(this.labels.exclude, 'false'), :);
+        end
     end
     
     %
