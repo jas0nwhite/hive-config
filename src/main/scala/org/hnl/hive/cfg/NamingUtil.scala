@@ -38,10 +38,10 @@ object NamingUtil extends Logging {
 
   val altq = """(?:_alt)?"""
   val fastq = """(?:_[0-9]+Vs_[0-9]+Hz(?:_corrected)?)?"""
-  val uncorrq = """(?:_uncorrelated_[0-9]+k_[0-9]+Hz)?"""
+  val uncorrq = """(?:_uncorrelated_(?:octaflow_)?(?:bypass_)?[0-9]+k_[0-9]+Hz)?"""
 
   val dateP = """\d{4}_\d{2}_\d{2}"""
-  val nameP = """(?:[ap]m\d?_)?(?:[A-Za-z_]+|[A-Za-z0-9]+)"""
+  val nameP = """(?:[ap]m\d?_)?(?:[A-Za-z]+|[A-Za-z]+_[A-Za-z]+|[A-Za-z0-9]+)"""
 
   val dopamineP = s"""(?:dopamine|DA)$fastq$uncorrq"""
   val serotoninP = s"""(?:serotonin|5HT)$fastq$uncorrq"""
