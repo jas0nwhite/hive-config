@@ -162,7 +162,7 @@ class LabelCatalog(config: TreatmentConfig) extends Logging {
         val probeName = for {
           dataset <- NamingUtil.datasetNameFromPath(file)
           dsInfo <- NamingUtil.datasetInfoFromName(dataset)
-        } yield dsInfo.probeDate + "_" + dsInfo.probeName
+        } yield if (dsInfo.probeDate.isEmpty) dsInfo.probeName else dsInfo.probeDate + "_" + dsInfo.probeName
 
         val colIx = getColumnIndices(csvHdr)
 
