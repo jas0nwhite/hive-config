@@ -1,9 +1,8 @@
 package org.hnl.hive.cfg
 
 import java.nio.file.FileSystems
-import java.util.ArrayList
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.language.implicitConversions
 
 import com.typesafe.config._
@@ -75,7 +74,7 @@ class WrappedConfig(config: Config) extends Logging {
    * @return
    */
   def getIntList(key: String): List[Int] = doTry {
-    config.getIntList(key).map(_.toInt).toList
+    config.getIntList(key).asScala.map(_.toInt).toList
   }
 
   /**
@@ -93,7 +92,7 @@ class WrappedConfig(config: Config) extends Logging {
    * @return
    */
   def getDoubleList(key: String): List[Double] = doTry {
-    config.getDoubleList(key).map(_.toDouble).toList
+    config.getDoubleList(key).asScala.map(_.toDouble).toList
   }
 
   /**
@@ -114,7 +113,7 @@ class WrappedConfig(config: Config) extends Logging {
     val value = config.getValue(key)
 
     def asList[A](v: ConfigValue)(f: ConfigValue => A): List[A] =
-      v.asInstanceOf[ConfigList].toList.map { e => f(e) }
+      v.asInstanceOf[ConfigList].asScala.map { e => f(e) }.toList
 
     def asInt(v: ConfigValue): Int =
       v.unwrapped().asInstanceOf[Number].intValue
@@ -136,7 +135,7 @@ class WrappedConfig(config: Config) extends Logging {
     val kind: ConfigValueType = value.valueType
 
     kind match {
-      case ConfigValueType.LIST => config.getStringList(key).toList.map(s => toAbsolutePath(s))
+      case ConfigValueType.LIST => config.getStringList(key).asScala.map(s => toAbsolutePath(s)).toList
       case ConfigValueType.NULL => Nil
       case _                    => List(toAbsolutePath(value.unwrapped().toString))
     }
@@ -148,7 +147,7 @@ class WrappedConfig(config: Config) extends Logging {
    * @return
    */
   def getObjectList(key: String): List[WrappedConfig] = doTry {
-    config.getObjectList(key).map { o => new WrappedConfig(o.toConfig()) }.toList
+    config.getObjectList(key).asScala.map { o => new WrappedConfig(o.toConfig()) }.toList
   }
 
   /**
