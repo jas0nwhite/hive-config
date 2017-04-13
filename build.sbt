@@ -4,7 +4,9 @@ version := "0.0.1"
 
 organization := "org.hnl"
 
-scalaVersion := "2.11.7"
+scalaVersion := "2.12.1"
+
+scalacOptions += "-target:jvm-1.8"
 
 /*
  * assembly options
@@ -14,15 +16,15 @@ mainClass in assembly := Some("org.hnl.hive.cfg.GenerateHiveConfig")
 
 libraryDependencies ++= {
   Seq(
-  	"org.clapper"                      %% "grizzled-scala"         % "1.4.0",
-  	"com.typesafe"                      % "config"                 % "1.3.0",
-  	"com.jsuereth"                     %% "scala-arm"              % "1.4",
+  	"org.clapper"                      %% "grizzled-scala"         % "4.2.0",
+  	"com.typesafe"                      % "config"                 % "1.3.1",
+  	"com.jsuereth"                     %% "scala-arm"              % "2.0",
 //  "net.liftweb"                      %% "lift-common"            % "2.6.3",
   	
-  	"org.clapper"                      %% "grizzled-slf4j"         % "1.0.2",
-  	"ch.qos.logback"                    % "logback-classic"        % "1.1.5",
+  	"org.clapper"                      %% "grizzled-slf4j"         % "1.3.0",
+  	"ch.qos.logback"                    % "logback-classic"        % "1.2.3",
   	
-    "org.scalatest"                    %% "scalatest"              % "2.2.6"                % "test"
+    "org.scalatest"                    %% "scalatest"              % "3.0.1"                % "test"
   )
 }
 

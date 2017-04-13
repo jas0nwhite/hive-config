@@ -6,12 +6,11 @@ import scala.collection.mutable.ListBuffer
 import scala.math.Ordered
 import scala.util.{ Failure, Success, Try }
 
-import org.hnl.hive.cfg.{ TreatmentConfig, Util }
+import org.hnl.hive.cfg.{ NamingUtil, TreatmentConfig, Util }
 import org.hnl.hive.cfg.matlab.Chem
 
 import grizzled.slf4j.Logging
 import resource.managed
-import org.hnl.hive.cfg.NamingUtil
 
 // scalastyle:off multiple.string.literals
 
@@ -112,7 +111,8 @@ class LabelCatalog(config: TreatmentConfig) extends Logging {
         writers.foreach { writer => writer(out) }
     }
 
-    result.either match {
+    // either.either is kooky -- maybe a bug in scala-arm 2.0?
+    result.either.either match {
       case Right(_) => info(s"created ${outFile.getAbsolutePath}")
       case Left(es) => es.foreach(e => error(s"writing ${outFile.getAbsolutePath}", e))
     }
@@ -209,7 +209,8 @@ class LabelCatalog(config: TreatmentConfig) extends Logging {
         lines.foreach { line => out.write(line.toCsvLine) }
     }
 
-    result.either match {
+    // either.either is kooky -- maybe a bug in scala-arm 2.0?
+    result.either.either match {
       case Right(lines) => debug(s"status: COMPLETE")
       case Left(es)     => es.foreach { e => error(s"processing '${file}'", e) }
     }

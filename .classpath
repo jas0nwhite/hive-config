@@ -3,18 +3,17 @@
   <classpathentry kind="src" path="src/main/resources"/>
   <classpathentry kind="src" path="src/test/scala"/>
   <classpathentry kind="con" path="org.scala-ide.sdt.launching.SCALA_CONTAINER"/>
-  <classpathentry sourcepath="/Users/jwhite/.ivy2/cache/org.clapper/grizzled-scala_2.11/srcs/grizzled-scala_2.11-1.4.0-sources.jar" kind="lib" path="/Users/jwhite/.ivy2/cache/org.clapper/grizzled-scala_2.11/jars/grizzled-scala_2.11-1.4.0.jar"/>
-  <classpathentry sourcepath="/Users/jwhite/.ivy2/cache/org.scala-lang.modules/scala-async_2.11/srcs/scala-async_2.11-0.9.1-sources.jar" kind="lib" path="/Users/jwhite/.ivy2/cache/org.scala-lang.modules/scala-async_2.11/bundles/scala-async_2.11-0.9.1.jar"/>
-  <classpathentry sourcepath="/Users/jwhite/.ivy2/cache/jline/jline/srcs/jline-2.6-sources.jar" kind="lib" path="/Users/jwhite/.ivy2/cache/jline/jline/jars/jline-2.6.jar"/>
-  <classpathentry sourcepath="/Users/jwhite/.ivy2/cache/com.typesafe/config/srcs/config-1.3.0-sources.jar" kind="lib" path="/Users/jwhite/.ivy2/cache/com.typesafe/config/bundles/config-1.3.0.jar"/>
-  <classpathentry sourcepath="/Users/jwhite/.ivy2/cache/com.jsuereth/scala-arm_2.11/srcs/scala-arm_2.11-1.4-sources.jar" kind="lib" path="/Users/jwhite/.ivy2/cache/com.jsuereth/scala-arm_2.11/jars/scala-arm_2.11-1.4.jar"/>
-  <classpathentry sourcepath="/Users/jwhite/.ivy2/cache/org.scala-lang.plugins/scala-continuations-library_2.11/srcs/scala-continuations-library_2.11-1.0.1-sources.jar" kind="lib" path="/Users/jwhite/.ivy2/cache/org.scala-lang.plugins/scala-continuations-library_2.11/bundles/scala-continuations-library_2.11-1.0.1.jar"/>
-  <classpathentry sourcepath="/Users/jwhite/.ivy2/cache/org.clapper/grizzled-slf4j_2.11/srcs/grizzled-slf4j_2.11-1.0.2-sources.jar" kind="lib" path="/Users/jwhite/.ivy2/cache/org.clapper/grizzled-slf4j_2.11/jars/grizzled-slf4j_2.11-1.0.2.jar"/>
-  <classpathentry sourcepath="/Users/jwhite/.ivy2/cache/ch.qos.logback/logback-classic/srcs/logback-classic-1.1.5-sources.jar" kind="lib" path="/Users/jwhite/.ivy2/cache/ch.qos.logback/logback-classic/jars/logback-classic-1.1.5.jar"/>
-  <classpathentry sourcepath="/Users/jwhite/.ivy2/cache/ch.qos.logback/logback-core/srcs/logback-core-1.1.5-sources.jar" kind="lib" path="/Users/jwhite/.ivy2/cache/ch.qos.logback/logback-core/jars/logback-core-1.1.5.jar"/>
-  <classpathentry sourcepath="/Users/jwhite/.ivy2/cache/org.slf4j/slf4j-api/srcs/slf4j-api-1.7.16-sources.jar" kind="lib" path="/Users/jwhite/.ivy2/cache/org.slf4j/slf4j-api/jars/slf4j-api-1.7.16.jar"/>
-  <classpathentry sourcepath="/Users/jwhite/.ivy2/cache/org.scalatest/scalatest_2.11/srcs/scalatest_2.11-2.2.6-sources.jar" kind="lib" path="/Users/jwhite/.ivy2/cache/org.scalatest/scalatest_2.11/bundles/scalatest_2.11-2.2.6.jar"/>
-  <classpathentry sourcepath="/Users/jwhite/.ivy2/cache/org.scala-lang.modules/scala-xml_2.11/srcs/scala-xml_2.11-1.0.2-sources.jar" kind="lib" path="/Users/jwhite/.ivy2/cache/org.scala-lang.modules/scala-xml_2.11/bundles/scala-xml_2.11-1.0.2.jar"/>
+  <classpathentry sourcepath="/Users/jwhite/.ivy2/cache/org.clapper/grizzled-scala_2.12/srcs/grizzled-scala_2.12-4.2.0-sources.jar" kind="lib" path="/Users/jwhite/.ivy2/cache/org.clapper/grizzled-scala_2.12/jars/grizzled-scala_2.12-4.2.0.jar"/>
+  <classpathentry sourcepath="/Users/jwhite/.ivy2/cache/com.typesafe/config/srcs/config-1.3.1-sources.jar" kind="lib" path="/Users/jwhite/.ivy2/cache/com.typesafe/config/bundles/config-1.3.1.jar"/>
+  <classpathentry sourcepath="/Users/jwhite/.ivy2/cache/com.jsuereth/scala-arm_2.12/srcs/scala-arm_2.12-2.0-sources.jar" kind="lib" path="/Users/jwhite/.ivy2/cache/com.jsuereth/scala-arm_2.12/jars/scala-arm_2.12-2.0.jar"/>
+  <classpathentry sourcepath="/Users/jwhite/.ivy2/cache/org.clapper/grizzled-slf4j_2.12/srcs/grizzled-slf4j_2.12-1.3.0-sources.jar" kind="lib" path="/Users/jwhite/.ivy2/cache/org.clapper/grizzled-slf4j_2.12/jars/grizzled-slf4j_2.12-1.3.0.jar"/>
+  <classpathentry sourcepath="/Users/jwhite/.ivy2/cache/ch.qos.logback/logback-classic/srcs/logback-classic-1.2.3-sources.jar" kind="lib" path="/Users/jwhite/.ivy2/cache/ch.qos.logback/logback-classic/jars/logback-classic-1.2.3.jar"/>
+  <classpathentry sourcepath="/Users/jwhite/.ivy2/cache/ch.qos.logback/logback-core/srcs/logback-core-1.2.3-sources.jar" kind="lib" path="/Users/jwhite/.ivy2/cache/ch.qos.logback/logback-core/jars/logback-core-1.2.3.jar"/>
+  <classpathentry sourcepath="/Users/jwhite/.ivy2/cache/org.slf4j/slf4j-api/srcs/slf4j-api-1.7.25-sources.jar" kind="lib" path="/Users/jwhite/.ivy2/cache/org.slf4j/slf4j-api/jars/slf4j-api-1.7.25.jar"/>
+  <classpathentry sourcepath="/Users/jwhite/.ivy2/cache/org.scalatest/scalatest_2.12/srcs/scalatest_2.12-3.0.1-sources.jar" kind="lib" path="/Users/jwhite/.ivy2/cache/org.scalatest/scalatest_2.12/bundles/scalatest_2.12-3.0.1.jar"/>
+  <classpathentry sourcepath="/Users/jwhite/.ivy2/cache/org.scalactic/scalactic_2.12/srcs/scalactic_2.12-3.0.1-sources.jar" kind="lib" path="/Users/jwhite/.ivy2/cache/org.scalactic/scalactic_2.12/bundles/scalactic_2.12-3.0.1.jar"/>
+  <classpathentry sourcepath="/Users/jwhite/.ivy2/cache/org.scala-lang.modules/scala-xml_2.12/srcs/scala-xml_2.12-1.0.5-sources.jar" kind="lib" path="/Users/jwhite/.ivy2/cache/org.scala-lang.modules/scala-xml_2.12/bundles/scala-xml_2.12-1.0.5.jar"/>
+  <classpathentry sourcepath="/Users/jwhite/.ivy2/cache/org.scala-lang.modules/scala-parser-combinators_2.12/srcs/scala-parser-combinators_2.12-1.0.4-sources.jar" kind="lib" path="/Users/jwhite/.ivy2/cache/org.scala-lang.modules/scala-parser-combinators_2.12/bundles/scala-parser-combinators_2.12-1.0.4.jar"/>
   <classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
   <classpathentry kind="output" path="bin"/>
 </classpath>
