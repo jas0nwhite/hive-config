@@ -19,7 +19,8 @@ libraryDependencies ++= {
   	"org.clapper"                      %% "grizzled-scala"         % "4.2.0",
   	"com.typesafe"                      % "config"                 % "1.3.1",
   	"com.jsuereth"                     %% "scala-arm"              % "2.0",
-//  "net.liftweb"                      %% "lift-common"            % "2.6.3",
+	"org.scodec"                       %% "scodec-stream"          % "1.0.1",
+	
   	
   	"org.clapper"                      %% "grizzled-slf4j"         % "1.3.0",
   	"ch.qos.logback"                    % "logback-classic"        % "1.2.3",
