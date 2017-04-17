@@ -14,9 +14,14 @@ import scala.language.implicitConversions
  *
  * @author Jason White
  */
-case class FileGUID(Data1: Long, Data2: Int, Data3: Int, Data4: Vector[Int]) {
+case class FileGUID(
+    Data1: Long,
+    Data2: Int,
+    Data3: Int,
+    Data4: Vector[Int]) {
   require(Data4.length == 8)
 }
+
 object FileGUID {
   implicit val codec: Codec[FileGUID] = {
     (
