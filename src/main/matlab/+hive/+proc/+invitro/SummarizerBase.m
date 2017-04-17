@@ -66,7 +66,9 @@ classdef (Abstract) SummarizerBase < hive.proc.ProcessorBase
                     end
                     
                     nSteps = size(y, 2);
-                    mu = arrayfun(@(ix) labs.labels{ix}(1, chemIx), 1:nSteps);
+                    stepIx = find(arrayfun(@(ix) size(labs.labels{ix}, 1) > 0, 1:nSteps));
+                    nSteps = length(stepIx);
+                    mu = arrayfun(@(ix) labs.labels{stepIx(ix)}(1, chemIx), 1:nSteps);
                     muList = sort(unique(mu));
                     nMus = numel(muList);
                     
