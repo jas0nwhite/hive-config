@@ -2,11 +2,14 @@
 !./make-config /data/hnl/iterate/results_103/100-full.conf
 
 %% init
+restoredefaultpath;
+clear RESTOREDEFAULTPATH_EXECUTED;
 clc;
 cfg = Config.init();
 
 addpath(fullfile(pwd, 'lib', 'glmnet_interface'));
 addpath(fullfile(pwd, 'testing'));
+gcp();
 
 
 %% import
