@@ -40,8 +40,11 @@ class ParserSpec extends WordSpec with Matchers with Inspectors {
       headers should have length (1)
       val header = headers(0)
 
-      header.uFileSignature shouldBe 0x32464241
-      System.out.println(headers(0))
+      header.uFileSignature shouldBe "ABF2"
+
+      import net.liftweb.json._
+      implicit val formats = DefaultFormats
+      println(Serialization.writePretty(header))
     }
   }
 }
