@@ -27,6 +27,7 @@ function generatePredictions(this, dsIx)
     chemical = testing.chemical; %#ok<NASGU>
     
     save(cvPredFile, 'predictions', 'labels', 'chemical');
+    hive.util.appendDatasetInfo(cvPredFile, name, id, setId, sourceId, this.treatment.name);
     
     fprintf('    %03d: DONE (%.3fs)\n', id, toc(t));
 end

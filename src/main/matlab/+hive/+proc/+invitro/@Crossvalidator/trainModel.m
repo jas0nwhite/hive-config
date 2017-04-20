@@ -31,6 +31,7 @@ function trainModel(this, dsIx)
         training.voltammograms, training.labels, alphaRange, this.trainingDebug); %#ok<NASGU>
     
     save(cvModelFile, 'CVerr');
+    hive.util.appendDatasetInfo(cvModelFile, name, id, setId, sourceId, this.treatment.name);
     
     fprintf('    %03d: DONE (%.3fs)\n', id, toc(t));
 end

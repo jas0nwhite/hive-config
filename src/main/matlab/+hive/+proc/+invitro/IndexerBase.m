@@ -82,6 +82,7 @@ classdef (Abstract) IndexerBase < hive.proc.ProcessorBase
                     medianChars, 3, 1.5 * this.epsilon); %#ok<NASGU>
                 
                 save(outfile, 'stepClusters', 'datasetCluster');
+                hive.util.appendDatasetInfo(cvTestFile, name, id, setIx, sourceIx, this.treatment.name);
                 
                 fprintf(' %0.3fs\n', toc(t));
             else

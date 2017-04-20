@@ -162,6 +162,7 @@ classdef (Abstract) SummarizerBase < hive.proc.ProcessorBase
                     end
                     
                     save(outFile, '-struct', 'summary');
+                    hive.util.appendDatasetInfo(outFile, name, id, setIx, sourceIx, this.treatment.name);
                 end
                 
             else
