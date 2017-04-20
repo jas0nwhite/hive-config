@@ -43,7 +43,7 @@ function analyzeDataset(this, dsIx)
     info = this.cfg.infoCatalog{setId}{sourceId, 2};
     probe = info.probeName;
     
-    if (~isempty(regexp(info.protocol, '_uncorrelated_', 'once')))
+    if (~isempty(regexp(info.protocol, '_(uncorrelated|RBV[^_]*)_', 'once')))
         vpsString = 'random burst';
     else
         voltage = 2;

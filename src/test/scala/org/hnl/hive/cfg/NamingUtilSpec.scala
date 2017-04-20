@@ -97,6 +97,17 @@ class NamingUtilSpec extends WordSpec with Matchers with Inspectors with OptionV
         probeDate("")
       )
 
+      val option4 = NamingUtil.datasetInfoFromName("2016_06_15_DA_RBV1_100k_97Hz_J_EL_2016_06_10")
+
+      option4 should not be (null)
+      option4.value should have(
+        dsDate("2016_06_15"),
+        dsClass("dopamine"),
+        dsProtocol("DA_RBV1_100k_97Hz"),
+        probeName("J_EL"),
+        probeDate("2016_06_10")
+      )
+
     }
 
   }
