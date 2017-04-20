@@ -57,6 +57,7 @@ function evaluateAllModels( this, setId )
     
     % save results
     save(cvPermuteFile, '-struct', 'results');
+    hive.util.appendDatasetInfo(cvPermuteFile, [], [], setId, [], this.treatment.name);
 
 end
 

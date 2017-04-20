@@ -79,6 +79,7 @@ function analyzeDataset(this, dsIx)
     close;
     
     save(cvStatsFile, '-struct', 'stats');
+    hive.util.appendDatasetInfo(cvStatsFile, name, id, setId, sourceId, this.treatment.name);
         
     fprintf('    %03d: DONE (%.3fs)\n', id, toc(t));
 end

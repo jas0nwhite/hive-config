@@ -131,6 +131,7 @@ function buildDataset(this, dsIx)
     test.ix = test.ix(arrayfun(@(c) ~isempty(c{:}), test.ix));
     
     save(cvTestFile, '-struct', 'test');
+    hive.util.appendDatasetInfo(cvTestFile, name, id, setId, sourceId, this.treatment.name);
     
     ix = horzcat(trainIx{:});
     train.n = numel(ix);
@@ -148,6 +149,7 @@ function buildDataset(this, dsIx)
     test.ix = train.ix(arrayfun(@(c) ~isempty(c{:}), train.ix));
     
     save(cvTrainFile, '-struct', 'train');
+    hive.util.appendDatasetInfo(cvTrainFile, name, id, setId, sourceId, this.treatment.name);
     
     fprintf('    %03d: DONE (%.3fs) %s\n', id, toc(t), jitterOutput);
 end

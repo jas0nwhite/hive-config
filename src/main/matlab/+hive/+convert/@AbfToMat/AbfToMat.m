@@ -13,6 +13,11 @@ classdef AbfToMat < hive.util.Logging
         chemLabels = nan(0);
         chemNames = {};
         labelFile
+        dsName
+        dsId
+        setId
+        sourceId
+        treatmentName
     end
     
     %
@@ -42,6 +47,14 @@ classdef AbfToMat < hive.util.Logging
             this.chemLabels = chemLabels;
             this.chemNames = chemNames;
             this.labelFile = labelFile;
+        end
+        
+        function this = withDatasetInfo(this, dsName, dsId, setId, sourceId, treatmentName)
+            this.dsName = dsName;
+            this.dsId = dsId;
+            this.setId = setId;
+            this.sourceId = sourceId;
+            this.treatmentName = treatmentName;
         end
         
     end
@@ -103,6 +116,11 @@ classdef AbfToMat < hive.util.Logging
             else
                 range = window;
             end
+        end
+        
+        function appendDatasetInfo(this, filename)
+            hive.util.appendDatasetInfo(filename, ...
+                this.dsName, this.dsId, this.setId, this.sourceId, this.treatmentName);
         end
         
         function results = readAbf(this, ix)
@@ -205,9 +223,11 @@ classdef AbfToMat < hive.util.Logging
             end
             
             save(this.outputFile, 'voltammograms');
+            this.appendDatasetInfo(this.outputFile);
             
             if sum(arrayfun(@(c) numel(c{:}), otherData)) > 0
                 save(this.otherFile, 'otherData', 'otherChannels');
+                this.appendDatasetInfo(this.otherFile);
             end
             
             % copy vars for save
@@ -222,6 +242,7 @@ classdef AbfToMat < hive.util.Logging
             results.recTime = recTime;
             
             save(this.metadataFile, '-struct', 'results');
+            this.appendDatasetInfo(this.metadataFile);
             
             results.status = hive.Status.Success;
         end
@@ -237,6 +258,7 @@ classdef AbfToMat < hive.util.Logging
             data.chemicals = this.chemNames; %#ok<STRNU>
             
             save(this.labelFile, '-struct', 'data');
+            this.appendDatasetInfo(this.labelFile);
             
             results.status = hive.Status.Success;
         end

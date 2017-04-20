@@ -47,6 +47,7 @@ classdef (Abstract) CharacterizerBase < hive.proc.ProcessorBase
                 end
                 
                 save(outfile, 'vgramChar');
+                hive.util.appendDatasetInfo(cvTestFile, name, id, setIx, sourceIx, this.treatment.name);
                 
                 fprintf(' %0.3fs\n', toc(t));
             else
