@@ -5,6 +5,7 @@ import scodec.bits._
 import scodec.codecs._
 import scodec.codecs.implicits._
 import scala.language.implicitConversions
+import shapeless._
 
 /**
  * Header
@@ -15,59 +16,62 @@ import scala.language.implicitConversions
  * @author Jason White
  */
 case class Header(
-    uFileSignature: String,
-    uFileVersionNumber: Long,
+  uFileSignature: String,
+  uFileVersionNumber: VersionNumber,
 
-    // After this point there is no need to be the same as the ABF 1 equivalent.
-    uFileInfoSize: Long,
+  // After this point there is no need to be the same as the ABF 1 equivalent.
+  uFileInfoSize: Long,
 
-    uActualEpisodes: Long,
-    uFileStartDate: Long,
-    uFileStartTimeMS: Long,
-    uStopwatchTime: Long,
-    nFileType: Int,
-    nDataFormat: Int,
-    nSimultaneousScan: Int,
-    nCRCEnable: Int,
-    uFileCRC: Long,
-    FileGUID: FileGUID,
-    uCreatorVersion: Long,
-    uCreatorNameIndex: Long,
-    uModifierVersion: Long,
-    uModifierNameIndex: Long,
-    uProtocolPathIndex: Long,
+  uActualEpisodes: Long,
+  uFileStartDate: Long,
+  uFileStartTimeMS: Long,
+  uStopwatchTime: Long,
+  nFileType: Int,
+  nDataFormat: Int,
+  nSimultaneousScan: Int,
+  nCRCEnable: Int,
+  uFileCRC: Long,
+  FileGUID: FileGUID,
+  uCreatorVersion: VersionNumber,
+  uCreatorNameIndex: Long,
+  uModifierVersion: VersionNumber,
+  uModifierNameIndex: Long,
+  uProtocolPathIndex: Long,
 
-    // New sections in ABF 2 - protocol stuff ...
-    ProtocolSection: Section, // the protocol
-    ADCSection: Section, // one for each ADC channel
-    DACSection: Section, // one for each DAC channel
-    EpochSection: Section, // one for each epoch
-    ADCPerDACSection: Section, // one for each ADC for each DAC
-    EpochPerDACSection: Section, // one for each epoch for each DAC
-    UserListSection: Section, // one for each user list
-    StatsRegionSection: Section, // one for each stats region
-    MathSection: Section,
-    StringsSection: Section,
+  // New sections in ABF 2 - protocol stuff ...
+  ProtocolSection: Section, // the protocol
+  ADCSection: Section, // one for each ADC channel
+  DACSection: Section, // one for each DAC channel
+  EpochSection: Section, // one for each epoch
+  ADCPerDACSection: Section, // one for each ADC for each DAC
+  EpochPerDACSection: Section, // one for each epoch for each DAC
+  UserListSection: Section, // one for each user list
+  StatsRegionSection: Section, // one for each stats region
+  MathSection: Section,
+  StringsSection: Section,
 
-    // ABF 1 sections ...
-    DataSection: Section, // Data
-    TagSection: Section, // Tags
-    ScopeSection: Section, // Scope config
-    DeltaSection: Section, // Deltas
-    VoiceTagSection: Section, // Voice Tags
-    SynchArraySection: Section, // Synch Array
-    AnnotationSection: Section, // Annotations
-    StatsSection: Section, // Stats config
-    sUnused: Vector[Byte] // char  sUnused[148]     // size = 512 bytes
-    ) {
-  require(sUnused.length == 148)
-}
+  // ABF 1 sections ...
+  DataSection: Section, // Data
+  TagSection: Section, // Tags
+  ScopeSection: Section, // Scope config
+  DeltaSection: Section, // Deltas
+  VoiceTagSection: Section, // Voice Tags
+  SynchArraySection: Section, // Synch Array
+  AnnotationSection: Section, // Annotations
+  StatsSection: Section // Stats config
+  // sUnused: Vector[Byte] // char  sUnused[148]     // size = 512 bytes
+  )
 
 object Header {
+  val size = 512;
+  val unused = 148;
+
+  val signature = "ABF2";
+
   implicit val codec: Codec[Header] = {
     (
       ("uFileSignature" | fixedSizeBytes(4, ascii)) ::
-      ("uFileVersionNumber" | uint32L) ::
+      ("uFileVersionNumber" | VersionNumber.codec) ::
 
       // After this point there is no need to be the same as the ABF 1 equivalent.
       ("uFileInfoSize" | uint32L) ::
@@ -82,9 +86,9 @@ object Header {
       ("nCRCEnable" | uint16L) ::
       ("uFileCRC" | uint32L) ::
       ("FileGUID" | FileGUID.codec) ::
-      ("uCreatorVersion" | uint32L) ::
+      ("uCreatorVersion" | VersionNumber.codec) ::
       ("uCreatorNameIndex" | uint32L) ::
-      ("uModifierVersion" | uint32L) ::
+      ("uModifierVersion" | VersionNumber.codec) ::
       ("uModifierNameIndex" | uint32L) ::
       ("uProtocolPathIndex" | uint32L) ::
 
@@ -109,7 +113,7 @@ object Header {
       ("SynchArraySection" | Section.codec) :: // Synch Array
       ("AnnotationSection" | Section.codec) :: // Annotations
       ("StatsSection" | Section.codec) :: // Stats config
-      ("sUnused" | vectorOfN(provide(148), byte)) // char  sUnused[148]     // size = 512 bytes
+      ("sUnused" | vectorOfN(provide(unused), byte).unit(Vector.fill(unused)(0))) // char  sUnused[148]     // size = 512 bytes
     ).as[Header]
   }
 
