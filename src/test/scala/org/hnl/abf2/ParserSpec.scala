@@ -11,6 +11,7 @@ import scodec.codecs._
 import scodec.codecs.implicits._
 import scodec.stream.{ decode => D, StreamDecoder }
 import scala.language.implicitConversions
+import scodec.stream.encode.StreamEncoder
 
 /**
  * ParserSpec
@@ -24,10 +25,7 @@ class ParserSpec extends WordSpec with Matchers with Inspectors {
 
   "ABF2 Parser" should {
 
-    val testFile = Paths.get(
-      "/Volumes/external/hnl/invitro_voltammetry",
-      "2017_03_09_5HT_uncorrelated_octaflow_bypass_100k_97Hz_V8",
-      "2017_03_09_5HT_run_0000.abf")
+    val testFile = Paths.get("dat", "2017_03_09_5HT_run_0000.abf")
 
     "parse header" in {
       val parser: StreamDecoder[Header] = D.once(Header.codec)
@@ -40,7 +38,12 @@ class ParserSpec extends WordSpec with Matchers with Inspectors {
       headers should have length (1)
       val header = headers(0)
 
-      header.uFileSignature shouldBe "ABF2"
+      header.uFileSignature shouldBe Header.signature
+      header.uFileInfoSize shouldBe Header.size
+
+      val bits = Header.codec.encode(header).require
+
+      bits.bytes.length shouldBe Header.size;
 
       import net.liftweb.json._
       implicit val formats = DefaultFormats
