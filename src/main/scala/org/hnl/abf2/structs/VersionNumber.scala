@@ -16,18 +16,20 @@ import shapeless.HNil
  * @author Jason White
  */
 case class VersionNumber(
-  build: Int,
-  inc: Int,
-  minor: Int,
-  major: Int)
+  build: Short,
+  inc: Short,
+  minor: Short,
+  major: Short)
 
-object VersionNumber {
+object VersionNumber extends StructDef[VersionNumber] {
+  val size = 4
+
   implicit val codec: Codec[VersionNumber] = {
     (
-      ("build" | uint8) ::
-      ("inc" | uint8) ::
-      ("minor" | uint8) ::
-      ("major" | uint8)
+      ("build" | ushort8) ::
+      ("inc" | ushort8) ::
+      ("minor" | ushort8) ::
+      ("major" | ushort8)
     ).as[VersionNumber]
   }
 

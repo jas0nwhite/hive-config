@@ -26,10 +26,10 @@ case class Header(
   uFileStartDate: Long,
   uFileStartTimeMS: Long,
   uStopwatchTime: Long,
-  nFileType: Int,
-  nDataFormat: Int,
-  nSimultaneousScan: Int,
-  nCRCEnable: Int,
+  nFileType: Short,
+  nDataFormat: Short,
+  nSimultaneousScan: Short,
+  nCRCEnable: Short,
   uFileCRC: Long,
   FileGUID: FileGUID,
   uCreatorVersion: VersionNumber,
@@ -59,61 +59,61 @@ case class Header(
   SynchArraySection: Section, // Synch Array
   AnnotationSection: Section, // Annotations
   StatsSection: Section // Stats config
-  // sUnused: Vector[Byte] // char  sUnused[148]     // size = 512 bytes
+  // sUnused: Vector[Byte]     // size = 512 bytes
   )
 
-object Header {
+object Header extends StructDef[Header] {
   val size = 512;
-  val unused = 148;
 
   val signature = "ABF2";
 
   implicit val codec: Codec[Header] = {
     (
-      ("uFileSignature" | fixedSizeBytes(4, ascii)) ::
-      ("uFileVersionNumber" | VersionNumber.codec) ::
+      /* unsigned int */ ("uFileSignature" | fixedSizeBytes(4, ascii)) ::
+      /* unsigned int */ ("uFileVersionNumber" | VersionNumber.codec) ::
 
       // After this point there is no need to be the same as the ABF 1 equivalent.
-      ("uFileInfoSize" | uint32L) ::
+      /* unsigned int */ ("uFileInfoSize" | uint32L) ::
 
-      ("uActualEpisodes" | uint32L) ::
-      ("uFileStartDate" | uint32L) ::
-      ("uFileStartTimeMS" | uint32L) ::
-      ("uStopwatchTime" | uint32L) ::
-      ("nFileType" | uint16L) ::
-      ("nDataFormat" | uint16L) ::
-      ("nSimultaneousScan" | uint16L) ::
-      ("nCRCEnable" | uint16L) ::
-      ("uFileCRC" | uint32L) ::
-      ("FileGUID" | FileGUID.codec) ::
-      ("uCreatorVersion" | VersionNumber.codec) ::
-      ("uCreatorNameIndex" | uint32L) ::
-      ("uModifierVersion" | VersionNumber.codec) ::
-      ("uModifierNameIndex" | uint32L) ::
-      ("uProtocolPathIndex" | uint32L) ::
+      /* unsigned int */ ("uActualEpisodes" | uint32L) ::
+      /* unsigned int */ ("uFileStartDate" | uint32L) ::
+      /* unsigned int */ ("uFileStartTimeMS" | uint32L) ::
+      /* unsigned int */ ("uStopwatchTime" | uint32L) ::
+      /* short */ ("nFileType" | short16L) ::
+      /* short */ ("nDataFormat" | short16L) ::
+      /* short */ ("nSimultaneousScan" | short16L) ::
+      /* short */ ("nCRCEnable" | short16L) ::
+      /* unsigned int */ ("uFileCRC" | uint32L) ::
+      /* MYGUID */ ("FileGUID" | FileGUID.codec) ::
+      /* unsigned int */ ("uCreatorVersion" | VersionNumber.codec) ::
+      /* unsigned int */ ("uCreatorNameIndex" | uint32L) ::
+      /* unsigned int */ ("uModifierVersion" | VersionNumber.codec) ::
+      /* unsigned int */ ("uModifierNameIndex" | uint32L) ::
+      /* unsigned int */ ("uProtocolPathIndex" | uint32L) ::
 
       // New sections in ABF 2 - protocol stuff ...
-      ("ProtocolSection" | Section.codec) :: // the protocol
-      ("ADCSection" | Section.codec) :: // one for each ADC channel
-      ("DACSection" | Section.codec) :: // one for each DAC channel
-      ("EpochSection" | Section.codec) :: // one for each epoch
-      ("ADCPerDACSection" | Section.codec) :: // one for each ADC for each DAC
-      ("EpochPerDACSection" | Section.codec) :: // one for each epoch for each DAC
-      ("UserListSection" | Section.codec) :: // one for each user list
-      ("StatsRegionSection" | Section.codec) :: // one for each stats region
-      ("MathSection" | Section.codec) ::
-      ("StringsSection" | Section.codec) ::
+      /* ABF_Section */ ("ProtocolSection" | Section.codec) ::
+      /* ABF_Section */ ("ADCSection" | Section.codec) ::
+      /* ABF_Section */ ("DACSection" | Section.codec) ::
+      /* ABF_Section */ ("EpochSection" | Section.codec) ::
+      /* ABF_Section */ ("ADCPerDACSection" | Section.codec) ::
+      /* ABF_Section */ ("EpochPerDACSection" | Section.codec) ::
+      /* ABF_Section */ ("UserListSection" | Section.codec) ::
+      /* ABF_Section */ ("StatsRegionSection" | Section.codec) ::
+      /* ABF_Section */ ("MathSection" | Section.codec) ::
+      /* ABF_Section */ ("StringsSection" | Section.codec) ::
 
       // ABF 1 sections ...
-      ("DataSection" | Section.codec) :: // Data
-      ("TagSection" | Section.codec) :: // Tags
-      ("ScopeSection" | Section.codec) :: // Scope config
-      ("DeltaSection" | Section.codec) :: // Deltas
-      ("VoiceTagSection" | Section.codec) :: // Voice Tags
-      ("SynchArraySection" | Section.codec) :: // Synch Array
-      ("AnnotationSection" | Section.codec) :: // Annotations
-      ("StatsSection" | Section.codec) :: // Stats config
-      ("sUnused" | vectorOfN(provide(unused), byte).unit(Vector.fill(unused)(0))) // char  sUnused[148]     // size = 512 bytes
+      /* ABF_Section */ ("DataSection" | Section.codec) ::
+      /* ABF_Section */ ("TagSection" | Section.codec) ::
+      /* ABF_Section */ ("ScopeSection" | Section.codec) ::
+      /* ABF_Section */ ("DeltaSection" | Section.codec) ::
+      /* ABF_Section */ ("VoiceTagSection" | Section.codec) ::
+      /* ABF_Section */ ("SynchArraySection" | Section.codec) ::
+      /* ABF_Section */ ("AnnotationSection" | Section.codec) ::
+      /* ABF_Section */ ("StatsSection" | Section.codec) ::
+
+      /* char[148] */ ("sUnused" | vectorOfN(provide(148), byte).unit(Vector.fill(148)(0)))
     ).as[Header]
   }
 

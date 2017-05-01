@@ -18,17 +18,19 @@ case class FileGUID(
     Data1: Long,
     Data2: Int,
     Data3: Int,
-    Data4: Vector[Int]) {
+    Data4: Vector[Short]) {
   require(Data4.length == 8)
 }
 
-object FileGUID {
+object FileGUID extends StructDef[FileGUID] {
+  val size = 16
+
   implicit val codec: Codec[FileGUID] = {
     (
-      ("Data1" | uint32L) ::
-      ("Data2" | uint16L) ::
-      ("Data3" | uint16L) ::
-      ("Data4" | vectorOfN(provide(8), uint8))
+      /* unsigned ABFLONG */ ("Data1" | uint32L) ::
+      /* unsigned short */ ("Data2" | uint16L) ::
+      /* unsigned short */ ("Data3" | uint16L) ::
+      /* unsigned char[8] */ ("Data4" | vectorOfN(provide(8), ushort8))
     ).as[FileGUID]
   }
 }
