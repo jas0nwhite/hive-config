@@ -20,12 +20,14 @@ case class Section(
   llNumEntries: Long // number of entries in this section
   )
 
-object Section {
+object Section extends StructDef[Section] {
+  val size = 16
+
   implicit val codec: Codec[Section] = {
     (
-      ("uBlockIndex" | uint32L) ::
-      ("uBytes" | uint32L) ::
-      ("llNumEntries" | longL(64))
+      /* unsigned int */ ("uBlockIndex" | uint32L) ::
+      /* unsigned int */ ("uBytes" | uint32L) ::
+      /* long long */ ("llNumEntries" | longL(64))
     ).as[Section]
   }
 }
