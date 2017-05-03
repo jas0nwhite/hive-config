@@ -1,17 +1,13 @@
 package org.hnl.abf2
 
-import org.hnl.abf2.structs._
-
-import org.scalatest._
 import java.nio.file.Paths
 
-import scodec._
-import scodec.bits._
-import scodec.codecs._
-import scodec.codecs.implicits._
-import scodec.stream.{ decode => D, StreamDecoder }
 import scala.language.implicitConversions
-import scodec.stream.encode.StreamEncoder
+
+import org.hnl.abf2.structs._
+import org.scalatest._
+
+import scodec.stream.{ StreamDecoder, decode => D }
 
 /**
  * ParserSpec
@@ -23,31 +19,59 @@ import scodec.stream.encode.StreamEncoder
  */
 class ParserSpec extends WordSpec with Matchers with Inspectors {
 
-  "ABF2 Parser" should {
+  "ABF2 codecs" when {
 
-    val testFile = Paths.get("dat", "2017_03_09_5HT_run_0000.abf")
+    "decoding from binary file" should {
 
-    "parse header" in {
-      val parser: StreamDecoder[Header] = D.once(Header.codec)
+      val testFile = Paths.get("dat", "2017_03_09_5HT_run_0000.abf")
+      val abfBlockSize = 512;
 
-      val stream = parser.decodeMmap(new java.io.FileInputStream(testFile.toFile).getChannel, 512)
+      "parse header" in {
+        val parser: StreamDecoder[Header] = D.once(Header.codec)
 
-      val headers = stream.runLog.unsafeRun()
+        val stream = parser.decodeMmap(new java.io.FileInputStream(testFile.toFile).getChannel, abfBlockSize)
 
-      headers should not be empty
-      headers should have length (1)
-      val header = headers(0)
+        val headers: Vector[Header] = stream.runLog.unsafeRun()
 
-      header.uFileSignature shouldBe Header.signature
-      header.uFileInfoSize shouldBe Header.size
+        headers should not be empty
+        headers should have length (1)
+        val header = headers(0)
 
-      val bits = Header.codec.encode(header).require
+        header.uFileSignature shouldBe Header.signature
+        header.uFileInfoSize shouldBe Header.size
 
-      bits.bytes.length shouldBe Header.size;
+        val bits = Header.codec.encode(header).require
 
-      import net.liftweb.json._
-      implicit val formats = DefaultFormats
-      println(Serialization.writePretty(header))
-    }
+        bits.bytes.length shouldBe Header.size
+
+        import net.liftweb.json._
+        implicit val formats = DefaultFormats
+        println(Serialization.writePretty(header))
+      }
+
+      "parse protocol info" in {
+        val parser: StreamDecoder[ProtocolInfo] = D.once(Header.codec) flatMap { hdr =>
+          D.advance((hdr.ProtocolSection.uBlockIndex - 1) * 8 * abfBlockSize) ++
+            D.once(ProtocolInfo.codec)
+        }
+
+        val stream = parser.decodeMmap(new java.io.FileInputStream(testFile.toFile).getChannel, abfBlockSize)
+
+        val protocols: Vector[ProtocolInfo] = stream.runLog.unsafeRun()
+
+        protocols should not be empty
+        protocols should have length (1)
+        val protocol = protocols(0)
+
+        protocol.bEnableFileCompression shouldBe false
+
+        val bits = ProtocolInfo.codec.encode(protocol).require
+
+        bits.bytes.length shouldBe ProtocolInfo.size
+
+        import net.liftweb.json._
+        implicit val formats = DefaultFormats
+        println(Serialization.writePretty(protocol))
+      }
   }
 }
