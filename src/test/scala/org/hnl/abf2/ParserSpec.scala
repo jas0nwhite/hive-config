@@ -73,5 +73,26 @@ class ParserSpec extends WordSpec with Matchers with Inspectors {
         implicit val formats = DefaultFormats
         println(Serialization.writePretty(protocol))
       }
+
+      "parse strings" in {
+        val parser: StreamDecoder[Strings] = D.once(Header.codec) flatMap { hdr =>
+          D.advance((hdr.StringsSection.uBlockIndex - 1) * 8 * abfBlockSize) ++
+            D.once(Strings.codec(hdr.StringsSection.uBytes))
+        }
+
+        val stream = parser.decodeMmap(new java.io.FileInputStream(testFile.toFile).getChannel, abfBlockSize)
+
+        val stringsList: Vector[Strings] = stream.runLog.unsafeRun()
+
+        stringsList should not be empty
+        stringsList should have length (1)
+
+        val strings = stringsList(0)
+
+        strings.values should not be empty
+        strings.values should contain("Clampex")
+
+        println(strings.values)
+      }
   }
 }
