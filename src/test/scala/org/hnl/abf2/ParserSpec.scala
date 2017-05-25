@@ -94,5 +94,62 @@ class ParserSpec extends WordSpec with Matchers with Inspectors {
 
         println(strings.values)
       }
+
+      "parse ADC info" in {
+        import scodec.codecs._
+
+        val parser: StreamDecoder[Vector[ADCInfo]] = D.once(Header.codec) flatMap { hdr =>
+          D.advance((hdr.ADCSection.uBlockIndex - 1) * 8 * abfBlockSize) ++
+            D.once(vectorOfN(provide(hdr.ADCSection.llNumEntries.toInt), ADCInfo.codec))
+        }
+
+        val stream = parser.decodeMmap(new java.io.FileInputStream(testFile.toFile).getChannel, abfBlockSize)
+
+        val adcList: Vector[Vector[ADCInfo]] = stream.runLog.unsafeRun()
+
+        adcList should not be empty
+        adcList should have length (1)
+        val adcs = adcList(0)
+
+        adcs should not be empty
+        adcs should have length (2)
+        val adc0 = adcs(0)
+
+        adc0.nADCNum shouldBe 0
+        adc0.nTelegraphEnable shouldBe 1
+
+        import net.liftweb.json._
+        implicit val formats = DefaultFormats
+        println(Serialization.writePretty(adcs))
+      }
+
+      "parse DAC info" in {
+        import scodec.codecs._
+
+        val parser: StreamDecoder[Vector[DACInfo]] = D.once(Header.codec) flatMap { hdr =>
+          D.advance((hdr.DACSection.uBlockIndex - 1) * 8 * abfBlockSize) ++
+            D.once(vectorOfN(provide(hdr.DACSection.llNumEntries.toInt), DACInfo.codec))
+        }
+
+        val stream = parser.decodeMmap(new java.io.FileInputStream(testFile.toFile).getChannel, abfBlockSize)
+
+        val dacList: Vector[Vector[DACInfo]] = stream.runLog.unsafeRun()
+
+        dacList should not be empty
+        dacList should have length (1)
+        val dacs = dacList(0)
+
+        dacs should not be empty
+        dacs should have length (8)
+        val dac0 = dacs(0)
+
+        dac0.nDACNum shouldBe 0
+        dac0.nTelegraphDACScaleFactorEnable shouldBe 1
+
+        import net.liftweb.json._
+        implicit val formats = DefaultFormats
+        println(Serialization.writePretty(dacs))
+      }
+    }
   }
 }
