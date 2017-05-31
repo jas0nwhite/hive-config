@@ -44,7 +44,8 @@ class ParserSpec extends WordSpec with Matchers with Inspectors {
 
         bits.bytes.length shouldBe Header.size
 
-        import net.liftweb.json._
+        import org.json4s._
+        import org.json4s.native.Serialization
         implicit val formats = DefaultFormats
         println(Serialization.writePretty(header))
       }
@@ -65,12 +66,16 @@ class ParserSpec extends WordSpec with Matchers with Inspectors {
 
         protocol.bEnableFileCompression shouldBe false
 
+        import org.hnl.abf2.values.OperationMode
+        protocol.OperationMode shouldBe OperationMode.ABF_WAVEFORMFILE
+
         val bits = ProtocolInfo.codec.encode(protocol).require
 
         bits.bytes.length shouldBe ProtocolInfo.size
 
-        import net.liftweb.json._
-        implicit val formats = DefaultFormats
+        import org.json4s._
+        import org.json4s.native.Serialization
+        implicit val formats = DefaultFormats + OperationMode.format
         println(Serialization.writePretty(protocol))
       }
 
@@ -118,7 +123,8 @@ class ParserSpec extends WordSpec with Matchers with Inspectors {
         adc0.nADCNum shouldBe 0
         adc0.nTelegraphEnable shouldBe 1
 
-        import net.liftweb.json._
+        import org.json4s._
+        import org.json4s.native.Serialization
         implicit val formats = DefaultFormats
         println(Serialization.writePretty(adcs))
       }
@@ -146,7 +152,8 @@ class ParserSpec extends WordSpec with Matchers with Inspectors {
         dac0.nDACNum shouldBe 0
         dac0.nTelegraphDACScaleFactorEnable shouldBe 1
 
-        import net.liftweb.json._
+        import org.json4s._
+        import org.json4s.native.Serialization
         implicit val formats = DefaultFormats
         println(Serialization.writePretty(dacs))
       }

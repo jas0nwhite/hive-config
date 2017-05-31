@@ -5,6 +5,7 @@ import scodec.bits._
 import scodec.codecs._
 import scodec.codecs.implicits._
 import scala.language.implicitConversions
+import org.hnl.abf2.values.OperationMode
 
 /**
  * ProtocolInfo
@@ -15,7 +16,7 @@ import scala.language.implicitConversions
  * @author Jason White
  */
 case class ProtocolInfo(
-  nOperationMode: Short,
+  OperationMode: OperationMode,
   fADCSequenceInterval: Float,
   bEnableFileCompression: Boolean,
   // sUnused1: Vector[Byte],
@@ -104,7 +105,7 @@ object ProtocolInfo extends StructDef[ProtocolInfo] {
 
   implicit val codec: Codec[ProtocolInfo] = {
     (
-      /* short */ ("nOperationMode" | short16L) ::
+      /* short */ ("OperationMode" | OperationMode.codec) ::
       /* float */ ("fADCSequenceInterval" | floatL) ::
       /* bool */ ("bEnableFileCompression" | bool(8)) ::
       /* char[3] */ ("sUnused1" | vectorOfN(provide(3), byte).unit(Vector.fill(3)(0))) ::

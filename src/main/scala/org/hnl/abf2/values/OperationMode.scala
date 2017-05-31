@@ -1,10 +1,11 @@
 package org.hnl.abf2.values
 
+import enumeratum.values._
+
 import scodec._
 import scodec.bits._
 import scodec.codecs._
 import scala.language.implicitConversions
-import scala.collection.Seq
 
 /**
  * OperationMode
@@ -14,27 +15,20 @@ import scala.collection.Seq
  *
  * @author Jason White
  */
-object OperationMode {
+sealed abstract class OperationMode(val value: Short, val description: String) extends ShortEnumEntry with EnumDescription
 
-  case class Value(val id: Int, val name: String)
+case object OperationMode extends ShortEnum[OperationMode] {
 
-  val ABF_VARLENEVENTS = Value(1, "ABF_VARLENEVENTS")
-  val ABF_FIXLENEVENTS = Value(2, "ABF_FIXLENEVENTS / ABF_LOSSFREEOSC") // (ABF_FIXLENEVENTS == ABF_LOSSFREEOSC)
-  // val ABF_LOSSFREEOSC extends Value(2, "ABF_LOSSFREEOSC")
-  val ABF_GAPFREEFILE = Value(3, "ABF_GAPFREEFILE")
-  val ABF_HIGHSPEEDOSC = Value(4, "ABF_HIGHSPEEDOSC")
-  val ABF_WAVEFORMFILE = Value(5, "ABF_WAVEFORMFILE")
+  case object ABF_VARLENEVENTS extends OperationMode(1, "ABF_VARLENEVENTS")
+  case object ABF_FIXLENEVENTS extends OperationMode(2, "ABF_FIXLENEVENTS / ABF_LOSSFREEOSC") // (ABF_FIXLENEVENTS == ABF_LOSSFREEOSC)
+  // case object ABF_LOSSFREEOSC extends OperationMode(2, "ABF_LOSSFREEOSC")
+  case object ABF_GAPFREEFILE extends OperationMode(3, "ABF_GAPFREEFILE")
+  case object ABF_HIGHSPEEDOSC extends OperationMode(4, "ABF_HIGHSPEEDOSC")
+  case object ABF_WAVEFORMFILE extends OperationMode(5, "ABF_WAVEFORMFILE")
 
-  val values = Seq(
-    ABF_VARLENEVENTS,
-    ABF_FIXLENEVENTS,
-    ABF_GAPFREEFILE,
-    ABF_HIGHSPEEDOSC,
-    ABF_WAVEFORMFILE
-  )
+  val values = findValues
 
-  val x = OperationMode.values.map(v => (v, v.id))
+  implicit val codec = Serialization.codec(OperationMode)
 
-  implicit val codec: Codec[OperationMode.Value] =
-    mappedEnum(int16L, OperationMode.values.map(v => (v, v.id)).toMap)
+  implicit val format = Serialization.serializer(OperationMode)
 }

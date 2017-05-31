@@ -20,7 +20,8 @@ libraryDependencies ++= {
   	"com.typesafe"                      % "config"                 % "1.3.1",
   	"com.jsuereth"                     %% "scala-arm"              % "2.0",
 	"org.scodec"                       %% "scodec-stream"          % "1.0.1",
-	"net.liftweb"                      %% "lift-json"              % "3.0.1",
+	"org.json4s"                       %% "json4s-native"          % "3.5.2",
+	"com.beachape"                     %% "enumeratum-json4s"      % "1.5.13",
   	
   	"org.clapper"                      %% "grizzled-slf4j"         % "1.3.0",
   	"ch.qos.logback"                    % "logback-classic"        % "1.2.3",
