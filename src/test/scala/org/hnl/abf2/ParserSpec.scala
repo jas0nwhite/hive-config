@@ -4,6 +4,7 @@ import java.nio.file.Paths
 
 import scala.language.implicitConversions
 
+import org.hnl.abf2.values._
 import org.hnl.abf2.structs._
 import org.scalatest._
 
@@ -24,12 +25,11 @@ class ParserSpec extends WordSpec with Matchers with Inspectors {
     "decoding from binary file" should {
 
       val testFile = Paths.get("dat", "2017_03_09_5HT_run_0000.abf")
-      val abfBlockSize = 512;
 
       "parse header" in {
         val parser: StreamDecoder[Header] = D.once(Header.codec)
 
-        val stream = parser.decodeMmap(new java.io.FileInputStream(testFile.toFile).getChannel, abfBlockSize)
+        val stream = parser.decodeMmap(new java.io.FileInputStream(testFile.toFile).getChannel, ABF_BLOCKSIZE)
 
         val headers: Vector[Header] = stream.runLog.unsafeRun()
 
@@ -52,11 +52,11 @@ class ParserSpec extends WordSpec with Matchers with Inspectors {
 
       "parse protocol info" in {
         val parser: StreamDecoder[ProtocolInfo] = D.once(Header.codec) flatMap { hdr =>
-          D.advance((hdr.ProtocolSection.uBlockIndex - 1) * 8 * abfBlockSize) ++
+          D.advance((hdr.ProtocolSection.uBlockIndex - 1) * ABF_BLOCKBYTES) ++
             D.once(ProtocolInfo.codec)
         }
 
-        val stream = parser.decodeMmap(new java.io.FileInputStream(testFile.toFile).getChannel, abfBlockSize)
+        val stream = parser.decodeMmap(new java.io.FileInputStream(testFile.toFile).getChannel, ABF_BLOCKSIZE)
 
         val protocols: Vector[ProtocolInfo] = stream.runLog.unsafeRun()
 
@@ -81,11 +81,11 @@ class ParserSpec extends WordSpec with Matchers with Inspectors {
 
       "parse strings" in {
         val parser: StreamDecoder[Strings] = D.once(Header.codec) flatMap { hdr =>
-          D.advance((hdr.StringsSection.uBlockIndex - 1) * 8 * abfBlockSize) ++
+          D.advance((hdr.StringsSection.uBlockIndex - 1) * ABF_BLOCKBYTES) ++
             D.once(Strings.codec(hdr.StringsSection.uBytes))
         }
 
-        val stream = parser.decodeMmap(new java.io.FileInputStream(testFile.toFile).getChannel, abfBlockSize)
+        val stream = parser.decodeMmap(new java.io.FileInputStream(testFile.toFile).getChannel, ABF_BLOCKBYTES)
 
         val stringsList: Vector[Strings] = stream.runLog.unsafeRun()
 
@@ -104,11 +104,11 @@ class ParserSpec extends WordSpec with Matchers with Inspectors {
         import scodec.codecs._
 
         val parser: StreamDecoder[Vector[ADCInfo]] = D.once(Header.codec) flatMap { hdr =>
-          D.advance((hdr.ADCSection.uBlockIndex - 1) * 8 * abfBlockSize) ++
+          D.advance((hdr.ADCSection.uBlockIndex - 1) * ABF_BLOCKBYTES) ++
             D.once(vectorOfN(provide(hdr.ADCSection.llNumEntries.toInt), ADCInfo.codec))
         }
 
-        val stream = parser.decodeMmap(new java.io.FileInputStream(testFile.toFile).getChannel, abfBlockSize)
+        val stream = parser.decodeMmap(new java.io.FileInputStream(testFile.toFile).getChannel, ABF_BLOCKBYTES)
 
         val adcList: Vector[Vector[ADCInfo]] = stream.runLog.unsafeRun()
 
@@ -133,11 +133,11 @@ class ParserSpec extends WordSpec with Matchers with Inspectors {
         import scodec.codecs._
 
         val parser: StreamDecoder[Vector[DACInfo]] = D.once(Header.codec) flatMap { hdr =>
-          D.advance((hdr.DACSection.uBlockIndex - 1) * 8 * abfBlockSize) ++
+          D.advance((hdr.DACSection.uBlockIndex - 1) * ABF_BLOCKBYTES) ++
             D.once(vectorOfN(provide(hdr.DACSection.llNumEntries.toInt), DACInfo.codec))
         }
 
-        val stream = parser.decodeMmap(new java.io.FileInputStream(testFile.toFile).getChannel, abfBlockSize)
+        val stream = parser.decodeMmap(new java.io.FileInputStream(testFile.toFile).getChannel, ABF_BLOCKBYTES)
 
         val dacList: Vector[Vector[DACInfo]] = stream.runLog.unsafeRun()
 
