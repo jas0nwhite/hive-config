@@ -18,3 +18,12 @@ src/main/matlab/testing/figs
 src/main/matlab/testing/jae
 data
 2017_03_09_5HT_run_0000.abf
+src/main/resources/abfload.m
+src/main/resources/axon.h
+src/main/resources/axon_defs.h
+src/main/resources/axon_structs.h
+src/main/resources/caseclass.scala.txt
+src/main/resources/h2caseclass.sed
+src/main/resources/h2scodec.sed
+src/main/resources/scodec.scala.txt
+src/test/scala/testing.sc
