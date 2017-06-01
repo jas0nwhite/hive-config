@@ -1,4 +1,4 @@
-function fig = plotPerformance3(P)
+function [fig, ax1, ax2, ax3] = plotPerformance3(P)
 %PLOTPERFORMANCE3 Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -13,7 +13,7 @@ function fig = plotPerformance3(P)
     % PERFORMANCE
     %
     fig = figure;
-    subplot(3, 2, 1:4);
+    ax1 = subplot(3, 2, 1:4);
     hold on;
     title(sprintf('performance  |  r^2 = %0.4f  |  RMSE = %0.1f nM',...
         P.Summary.Fit.Rsquared.Ordinary, P.Summary.Fit.RMSE));
@@ -23,6 +23,10 @@ function fig = plotPerformance3(P)
     xlim([P.Xmin - 200, P.Xmax + 200]);
     ylim([P.Xmin - 200, P.Xmax + 200]);
     
+    h = refline(1, 0);
+    h.Color = colors(2, :);
+    h.LineStyle = '--';
+    
     h = refline(P.Summary.Fit.Coefficients.Estimate(2), P.Summary.Fit.Coefficients.Estimate(1));
     h.Color = colors(7, :);
     h.LineStyle = '--';
@@ -31,6 +35,7 @@ function fig = plotPerformance3(P)
     
     legend(...
         {
+        'y = x'
         sprintf('fit: y = %0.4fx', P.Summary.Fit.Coefficients.Estimate(2))
         'mean prediction \pm \sigma'
         },...
@@ -43,7 +48,7 @@ function fig = plotPerformance3(P)
     %
     % RMSE
     %
-    subplot(3, 2, 5);
+    ax2 = subplot(3, 2, 5);
     hold on;
     title(sprintf('RMSE = %0.1f nM', rms(P.Noise)));
     xlabel('label (nM)');
@@ -73,7 +78,7 @@ function fig = plotPerformance3(P)
     %
     % SNR
     %
-    subplot(3, 2, 6);
+    ax3 = subplot(3, 2, 6);
     hold on;
     title(sprintf('SNR = %0.1f dB', snr(P.Y, P.Noise)));
     xlabel('label (nM)');
