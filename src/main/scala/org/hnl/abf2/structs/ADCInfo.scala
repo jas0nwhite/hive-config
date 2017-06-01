@@ -48,8 +48,7 @@ case class ADCInfo(
   nStatsChannelPolarity: Short,
 
   lADCChannelNameIndex: Int,
-  lADCUnitsIndex: Int,
-
+  lADCUnitsIndex: Int //
   // sUnused: Vector[Byte],         // size = 128 bytes
   )
 

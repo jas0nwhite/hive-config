@@ -2,11 +2,6 @@ package org.hnl.abf2.values
 
 import enumeratum.values._
 
-import scodec._
-import scodec.bits._
-import scodec.codecs._
-import scala.language.implicitConversions
-
 /**
  * OperationMode
  * <p>
@@ -28,7 +23,7 @@ case object OperationMode extends ShortEnum[OperationMode] {
 
   val values = findValues
 
-  implicit val codec = Serialization.codec(OperationMode)
+  val codec = Serialization.codec(OperationMode)
 
-  implicit val format = Serialization.serializer(OperationMode)
+  val format = Serialization.serializer(OperationMode)
 }
