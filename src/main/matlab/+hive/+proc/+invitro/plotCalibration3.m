@@ -42,27 +42,27 @@ function [ fig ] = plotCalibration3( time, predictions, labels, stepIx, chems, m
         xlabel('samples');
         ylabel(muLabel);
         
-        plot(X, Y(:, chemIx), '.', 'Color', colors(chemIx, :), 'MarkerSize', 10);
+        hp = plot(X, Y(:, chemIx), '.', 'Color', colors(chemIx, :), 'MarkerSize', 10);
         for ix = 1:nSteps
             selectIx = stepIx{ix};
             stepX = [min(X(selectIx)), max(X(selectIx))];
             stepY = [L(selectIx(1), chemIx), L(selectIx(1), chemIx)];
-            plot(stepX, stepY, 'Color', labColor, 'LineWidth', 1);
+            ha = plot(stepX, stepY, 'Color', labColor, 'LineWidth', 1);
         end
         
         axis tight;
         xl = xlim();
-        yl = [muMin, muMax];
+        yl = [min([muMin; Y(:, chemIx)]), max([muMax; Y(:, chemIx)])];
         xtwix = diff(xl) / 20;
         ytwix = diff(yl) / 20;
-        
-        legend({'predicted'; 'actual'}, 'Location', 'best');
         
         barX = (0:14) + 15*xtwix;
         barY = repmat(yl(1) - 2*ytwix, size(barX)); % + 2*ytwix;
         plot(barX, barY, 'k', 'LineWidth', 2);
         
         text(mean(barX), min(barY) + ytwix, '15s', 'HorizontalAlignment', 'Center', 'FontSize', 10);
+        
+        legend([hp, ha], {'predicted'; 'actual'}, 'Location', 'best');
         
         set(gca,'xtick',[]);
         xlim(xl + [-xtwix, +xtwix]);
@@ -84,7 +84,7 @@ function [ fig ] = plotCalibration3( time, predictions, labels, stepIx, chems, m
     
     grid on;
     xl = [muMin, muMax];
-    yl = [0, max(stats.predRmse(:))];
+    yl = [min(stats.predRmse(:)), max(stats.predRmse(:))];
     xtwix = diff(xl) / 20;
     ytwix = diff(yl) / 20;
     xlim(xl + [-xtwix, +xtwix]);
@@ -115,7 +115,7 @@ function [ fig ] = plotCalibration3( time, predictions, labels, stepIx, chems, m
     
     grid on;
     xl = [muMin, muMax];
-    yl = [0, max(stats.predSnr(:))];
+    yl = [min([0; stats.predSnr(:)]), max([0; stats.predSnr(:)])];
     xtwix = diff(xl) / 20;
     ytwix = diff(yl) / 20;
     xlim(xl + [-xtwix, +xtwix]);
