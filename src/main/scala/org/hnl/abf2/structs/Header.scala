@@ -6,6 +6,7 @@ import scodec.codecs._
 import scodec.codecs.implicits._
 import scala.language.implicitConversions
 import shapeless._
+import org.hnl.abf2.values._
 
 /**
  * Header
@@ -26,7 +27,7 @@ case class Header(
   uFileStartDate: Long,
   uFileStartTimeMS: Long,
   uStopwatchTime: Long,
-  nFileType: Short,
+  nFileType: FileType,
   nDataFormat: Short,
   nSimultaneousScan: Short,
   nCRCEnable: Short,
@@ -79,7 +80,7 @@ object Header extends StructDef[Header] {
       /* unsigned int */ ("uFileStartDate" | uint32L) ::
       /* unsigned int */ ("uFileStartTimeMS" | uint32L) ::
       /* unsigned int */ ("uStopwatchTime" | uint32L) ::
-      /* short */ ("nFileType" | short16L) ::
+      /* short */ ("nFileType" | FileType.codec) ::
       /* short */ ("nDataFormat" | short16L) ::
       /* short */ ("nSimultaneousScan" | short16L) ::
       /* short */ ("nCRCEnable" | short16L) ::

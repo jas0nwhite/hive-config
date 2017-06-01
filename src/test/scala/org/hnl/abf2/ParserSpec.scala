@@ -46,7 +46,7 @@ class ParserSpec extends WordSpec with Matchers with Inspectors {
 
         import org.json4s._
         import org.json4s.native.Serialization
-        implicit val formats = DefaultFormats
+        implicit val formats = DefaultFormats + FileType.format
         println(Serialization.writePretty(header))
       }
 
