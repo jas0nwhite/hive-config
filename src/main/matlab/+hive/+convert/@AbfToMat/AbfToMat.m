@@ -18,6 +18,7 @@ classdef AbfToMat < hive.util.Logging
         setId
         sourceId
         treatmentName
+        jitterCorrector = []
     end
     
     %
@@ -57,6 +58,9 @@ classdef AbfToMat < hive.util.Logging
             this.treatmentName = treatmentName;
         end
         
+        function this = withJitterCorrector(this, object)
+            this.jitterCorrector = object;
+        end
     end
     
     %
@@ -166,6 +170,13 @@ classdef AbfToMat < hive.util.Logging
             
             data = data(sampWindow, sweepWindow);
             
+             % detect jitter
+             if isobject(this.jitterCorrector)
+                 jitterIx = this.jitterCorrector.findJitter(data);
+             else
+                 jitterIx = [];
+             end
+            
             sampleFreq = 1/sampInterval;
             sweepFreq = 1/sweepInterval;
             
@@ -177,7 +188,8 @@ classdef AbfToMat < hive.util.Logging
             results.sampleWindow = sampWindow;
             results.sweepWindow = sweepWindow;
             results.otherData = otherData;
-            results.otherChannels = otherChannels;            
+            results.otherChannels = otherChannels;
+            results.jitterIx = jitterIx;
         end
         
         function results = doConvertData(this)
@@ -203,7 +215,7 @@ classdef AbfToMat < hive.util.Logging
             sweepIx = cell(nFiles, 1);
             otherData = cell(nFiles, 1);
             otherChannels = cell(nFiles, 1);
-            
+            jitterIx = cell(nFiles, 1);
             
             % read files
             for ix = 1:nFiles                
@@ -217,6 +229,7 @@ classdef AbfToMat < hive.util.Logging
                 sweepIx{ix} = abf.sweepWindow;
                 otherData{ix} = abf.otherData;
                 otherChannels{ix} = abf.otherChannels;
+                jitterIx{ix} = abf.jitterIx;
                 
                 [nSamples(ix), nSweeps(ix)] = size(voltammograms{ix});
                 recTime(ix) = diff(headers{ix}.recTime);
@@ -240,6 +253,7 @@ classdef AbfToMat < hive.util.Logging
             results.sweepIx = sweepIx;
             results.files = this.inputFiles;
             results.recTime = recTime;
+            results.jitterIx = jitterIx;
             
             save(this.metadataFile, '-struct', 'results');
             this.appendDatasetInfo(this.metadataFile);

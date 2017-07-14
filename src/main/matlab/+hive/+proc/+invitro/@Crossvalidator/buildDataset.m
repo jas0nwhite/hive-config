@@ -8,6 +8,7 @@ function buildDataset(this, dsIx)
     importDir = fullfile(this.cfg.getSetValue(this.cfg.importPathList, setId), name);
     labelFile = fullfile(importDir, this.cfg.labelFile);
     vgramFile = fullfile(importDir, this.cfg.vgramFile);
+    metaFile = fullfile(importDir, this.cfg.metaFile);
     
     resultDir = fullfile(this.testCfg.getSetValue(this.testCfg.resultPathList, setId), name);
     cvTestFile = fullfile(resultDir, 'cv-testing.mat');
@@ -41,6 +42,8 @@ function buildDataset(this, dsIx)
     dat = load(vgramFile);
     all.voltammograms = dat.voltammograms(stepIx);
     
+    clear dat;
+    
     % BUILD A MASTER INDEX
     nSteps = size(all.voltammograms, 1);
     
@@ -52,23 +55,25 @@ function buildDataset(this, dsIx)
         offset = max(all.sweepNumber{ix});
     end 
     
-    % CLEAN JITTERED DATA IF NECESSARY
-    jitterOutput = '';
-    if isobject(this.jitterCorrector)
-        all.voltammograms = arrayfun(@(s) this.jitterCorrector.removeJitter(all.voltammograms{s}), 1:nSteps,...
-            'UniformOutput', false);
+    % REMOVE JITTERED SAMPLES IF REQUESTED
+    if this.removeJitter
+        metadata = load(metaFile);
+        jitterIx = metadata.jitterIx(stepIx);
         
-        ixRemoved = arrayfun(@(s) isnan(all.voltammograms{s}(1, :)), 1:nSteps, 'UniformOutput', false);
-        nRemoved = sum(arrayfun(@(s) sum(ixRemoved{s}), 1:nSteps));
-        
-        all.voltammograms = arrayfun(@(s) all.voltammograms{s}(:, ~ixRemoved{s}), (1:nSteps)', 'UniformOutput', false);
-        all.labels = arrayfun(@(s) all.labels{s}(~ixRemoved{s}, :), (1:nSteps)', 'UniformOutput', false);
-        all.sweepNumber = arrayfun(@(s) all.sweepNumber{s}(~ixRemoved{s}), (1:nSteps)', 'UniformOutput', false);
+        nRemoved = 0;
+        for ix = 1:nSteps
+            ixToRemove = jitterIx{ix};
+            nRemoved = nRemoved + length(ixToRemove);
+            
+            all.sweepNumber{ix}(ixToRemove) = [];
+            all.labels{ix}(ixToRemove, :) = [];
+            all.voltammograms{ix}(:, ixToRemove) = [];
+        end
         
         jitterOutput = sprintf('[-%d jitter]', nRemoved);
+    else
+        jitterOutput = '';
     end
-    
-    clear dat;
     
     % FIND TARGET ANALYTES
     muVals = vertcat(all.labels{:});
