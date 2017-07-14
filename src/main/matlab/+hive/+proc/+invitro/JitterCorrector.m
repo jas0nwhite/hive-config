@@ -24,7 +24,7 @@ classdef JitterCorrector
             this.jitterRemoveOffsets = vec;
         end
         
-        function clean = removeJitter(this, voltammograms)
+        function ixToRemove = findJitter(this, voltammograms)
             nVgrams = size(voltammograms, 2);
             
             % find lags with respect to median voltammogram
@@ -39,13 +39,9 @@ classdef JitterCorrector
             
             % keep array indices in bounds
             ixToRemove = ixToRemove(ixToRemove >= 1 & ixToRemove <= nVgrams);
-            
-            % return cleaned copy of voltammograms
-            clean = voltammograms;
-            clean(:, ixToRemove) = nan;
         end
         
-        function lags = getLags(this, voltammograms)
+        function lags = getLags(this, voltammograms)            
             nVgrams = size(voltammograms, 2);
             medianVgram = median(voltammograms, 2);
             
@@ -61,7 +57,16 @@ classdef JitterCorrector
             nSteps = 2 * this.maxLag + 1;
             
             % comparison window
-            winSize = length(this.examWindow);
+            winSize = min(...
+                max(...
+                    1, ...
+                    min(...
+                        length(x) - nSteps,...
+                        length(y) - nSteps...
+                        )...
+                    ),...
+                length(this.examWindow)...
+                );
             
             distances = nan(nSteps, 1);
             

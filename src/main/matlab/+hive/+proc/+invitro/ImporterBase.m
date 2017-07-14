@@ -5,6 +5,7 @@ classdef (Abstract) ImporterBase < hive.proc.ProcessorBase
     properties (Access = protected)
         labels
         vgramChannel = 'FSCV_1'
+        jitterCorrector = []
     end
     
     %
@@ -13,6 +14,10 @@ classdef (Abstract) ImporterBase < hive.proc.ProcessorBase
     methods
         function this = withVgramChannel(this, channel)
             this.vgramChannel = channel;
+        end
+        
+        function this = withJitterCorrector(this, object)
+            this.jitterCorrector = object;
         end
         
         function this = purgeExcludedData(this)
@@ -70,6 +75,7 @@ classdef (Abstract) ImporterBase < hive.proc.ProcessorBase
                 .withOverwrite(this.overwrite)...
                 .withLabels(abfLabels, abfChemNames, labelFile)...
                 .withDatasetInfo(name, id, setIx, sourceIx, this.treatment.name)...
+                .withJitterCorrector(this.jitterCorrector)...
                 .convert;
             
             fprintf('%s (%.3fs)\n', char(status), toc(t));
