@@ -68,7 +68,6 @@ function summarize(this)
         rmse = doCalc(@(c, i) rms(noise(ix{c}{i}, c)));
         snrdb = doCalc(@(c, i) snr(signal(ix{c}{i}, c), noise(ix{c}{i}, c)));
         
-        
         %
         % TASK SPECIFIC
         %
@@ -138,6 +137,7 @@ function summarize(this)
         
         
         % performance: DA
+        P.N = n(1);
         P.X = truth(:, 1);
         P.Y = signal(:, 1);
         P.Noise = noise(:, 1);
@@ -154,6 +154,12 @@ function summarize(this)
         P.Summary.Ysnr = snrdb{1};
         P.Summary.Yrmse = rmse{1};
         
+        [~, name, ~] = fileparts(figDir);
+        fid = fopen(fullfile(figDir, 'performance-DA.txt'), 'w');
+        txt = hive.proc.invitro.logPerformance(name, P);
+        fprintf(fid, '%s', txt);
+        fclose(fid);
+        
         fig = hive.proc.invitro.plotPerformance3(P);
         
         savefig(fig, fullfile(figDir, 'performance-DA.fig'));
@@ -166,6 +172,7 @@ function summarize(this)
         
         
         % performance: 5-HT
+        P.N = n(2);
         P.X = truth(:, 2);
         P.Y = signal(:, 2);
         P.Noise = noise(:, 2);
@@ -181,6 +188,11 @@ function summarize(this)
         P.Summary.Ysd = sd{2};
         P.Summary.Ysnr = snrdb{2};
         P.Summary.Yrmse = rmse{2};
+        
+        fid = fopen(fullfile(figDir, 'performance-5HT.txt'), 'w');
+        txt = hive.proc.invitro.logPerformance(name, P);
+        fprintf(fid, '%s', txt);
+        fclose(fid);
         
         fig = hive.proc.invitro.plotPerformance3(P);
         
