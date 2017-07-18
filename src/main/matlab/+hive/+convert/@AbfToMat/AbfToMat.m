@@ -161,21 +161,36 @@ classdef AbfToMat < hive.util.Logging
                 sweepWindow = sweepStartIx:sweepEndIx;
             end
             
-            % extract the data
+            % extract the sweeps
+            data = data(:, sweepWindow);
+            
+            % TODO: FIX THIS HACK
+            switch round(1/sweepInterval)
+                case 10
+                    jitterWindow = 160:1159;
+                case 97
+                    jitterWindow = 16:1015;
+                case 242
+                    jitterWindow = 16:1015;
+                otherwise
+                    error('HACK: nhandled sweep frequency %0.2f', 1/sweepInterval);
+            end
+            
+            % detect jitter
+            if isobject(this.jitterCorrector)
+                jitterIx = this.jitterCorrector.findJitter(data(jitterWindow, :));
+            else
+                jitterIx = [];
+            end
+            
+            % extract the samples
             if sum(isnan(this.sampleWindow)) > 0
                 sampWindow = 1:size(data, 1);
             else
                 sampWindow = this.sampleWindow;
             end
             
-            data = data(sampWindow, sweepWindow);
-            
-             % detect jitter
-             if isobject(this.jitterCorrector)
-                 jitterIx = this.jitterCorrector.findJitter(data);
-             else
-                 jitterIx = [];
-             end
+            data = data(sampWindow, :);
             
             sampleFreq = 1/sampInterval;
             sweepFreq = 1/sweepInterval;
