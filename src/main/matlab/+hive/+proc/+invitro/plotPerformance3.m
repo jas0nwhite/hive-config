@@ -68,7 +68,7 @@ function [fig, ax1, ax2, ax3] = plotPerformance3(P)
         h.Color = colors(7, :);
         h.LineStyle = '--';
         
-        plot(P.Summary.X, P.Summary.Yrmse, '.', 'Color', colors(1, :), 'MarkerSize', 15);
+        plot(P.Summary.X, P.Summary.Yrmse, '.', 'Color', colors(1, :), 'MarkerSize', 25);
     end
     
     grid on;
@@ -101,7 +101,7 @@ function [fig, ax1, ax2, ax3] = plotPerformance3(P)
         h.Color = colors(7, :);
         h.LineStyle = '--';
         
-        plot(P.Summary.X, P.Summary.Ysnr, '.', 'Color', colors(1, :), 'MarkerSize', 15);
+        plot(P.Summary.X, P.Summary.Ysnr, '.', 'Color', colors(1, :), 'MarkerSize', 25);
     end
     
     grid on;
