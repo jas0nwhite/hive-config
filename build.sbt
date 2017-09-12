@@ -4,7 +4,7 @@ version := "0.0.1"
 
 organization := "org.hnl"
 
-scalaVersion := "2.12.1"
+scalaVersion := "2.12.3"
 
 scalacOptions += "-target:jvm-1.8"
 
