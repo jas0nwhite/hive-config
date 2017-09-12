@@ -21,6 +21,7 @@ class NamingUtilSpec extends WordSpec with Matchers with Inspectors with OptionV
       val option1 = NamingUtil.datasetInfoFromName("2015_07_14_dopamine_A_EL_2015_07_07")
 
       option1 should not be (null)
+      option1 shouldBe defined
       option1.value should have(
         dsDate("2015_07_14"),
         dsClass("dopamine"),
@@ -32,6 +33,7 @@ class NamingUtilSpec extends WordSpec with Matchers with Inspectors with OptionV
       val option2 = NamingUtil.datasetInfoFromName("2015_10_27_dopamine_am_KK_2013_07_29")
 
       option2 should not be (null)
+      option2 shouldBe defined
       option2.value should have(
         dsDate("2015_10_27"),
         dsClass("dopamine"),
@@ -43,6 +45,7 @@ class NamingUtilSpec extends WordSpec with Matchers with Inspectors with OptionV
       val option3 = NamingUtil.datasetInfoFromName("2015_11_12_pH_HLH_pm3_KK_2013_07_29")
 
       option3 should not be (null)
+      option3 shouldBe defined
       option3.value should have(
         dsDate("2015_11_12"),
         dsClass("pH"),
@@ -54,6 +57,7 @@ class NamingUtilSpec extends WordSpec with Matchers with Inspectors with OptionV
       val option4 = NamingUtil.datasetInfoFromName("2017_03_09_5HT_uncorrelated_octaflow_bypass_100k_97Hz_V8")
 
       option4 should not be (null)
+      option4 shouldBe defined
       option4.value should have(
         dsDate("2017_03_09"),
         dsClass("serotonin"),
@@ -67,6 +71,7 @@ class NamingUtilSpec extends WordSpec with Matchers with Inspectors with OptionV
       val option1 = NamingUtil.datasetInfoFromName("2016_06_15_5HT_uncorrelated_100k_97Hz_A")
 
       option1 should not be (null)
+      option1 shouldBe defined
       option1.value should have(
         dsDate("2016_06_15"),
         dsClass("serotonin"),
@@ -78,6 +83,7 @@ class NamingUtilSpec extends WordSpec with Matchers with Inspectors with OptionV
       val option2 = NamingUtil.datasetInfoFromName("2017_03_09_5HT_uncorrelated_octaflow_bypass_100k_97Hz_V8")
 
       option2 should not be (null)
+      option2 shouldBe defined
       option2.value should have(
         dsDate("2017_03_09"),
         dsClass("serotonin"),
@@ -89,6 +95,7 @@ class NamingUtilSpec extends WordSpec with Matchers with Inspectors with OptionV
       val option3 = NamingUtil.datasetInfoFromName("2017_03_27_DA_uncorrelated_octaflow_100k_97Hz_S8")
 
       option3 should not be (null)
+      option3 shouldBe defined
       option3.value should have(
         dsDate("2017_03_27"),
         dsClass("dopamine"),
@@ -100,12 +107,52 @@ class NamingUtilSpec extends WordSpec with Matchers with Inspectors with OptionV
       val option4 = NamingUtil.datasetInfoFromName("2016_06_15_DA_RBV1_100k_97Hz_J_EL_2016_06_10")
 
       option4 should not be (null)
+      option4 shouldBe defined
       option4.value should have(
         dsDate("2016_06_15"),
         dsClass("dopamine"),
         dsProtocol("DA_RBV1_100k_97Hz"),
         probeName("J_EL"),
         probeDate("2016_06_10")
+      )
+
+    }
+
+    "parse three-transmitter dataset names" in {
+      val option1 = NamingUtil.datasetInfoFromName("2017_06_22_DA_5HT_NE_octaflow_400Vs_10Hz_X1_2017_01_01")
+
+      option1 should not be (null)
+      option1 shouldBe defined
+      option1.value should have(
+        dsDate("2017_06_22"),
+        dsClass("mixture"),
+        dsProtocol("DA_5HT_NE_octaflow_400Vs_10Hz"),
+        probeName("X1"),
+        probeDate("2017_01_01")
+      )
+
+      val option2 = NamingUtil.datasetInfoFromName("2017_06_22_DA_5HT_NE_octaflow_400Vs_10Hz_X1")
+
+      option2 should not be (null)
+      option2 shouldBe defined
+      option2.value should have(
+        dsDate("2017_06_22"),
+        dsClass("mixture"),
+        dsProtocol("DA_5HT_NE_octaflow_400Vs_10Hz"),
+        probeName("X1"),
+        probeDate("")
+      )
+
+      val option3 = NamingUtil.datasetInfoFromName("2017_06_22_DA_5HT_NE_octaflow_400Vs_10Hz")
+
+      option3 should not be (null)
+      option3 shouldBe defined
+      option3.value should have(
+        dsDate("2017_06_22"),
+        dsClass("mixture"),
+        dsProtocol("DA_5HT_NE_octaflow_400Vs_10Hz"),
+        probeName(""),
+        probeDate("")
       )
 
     }
