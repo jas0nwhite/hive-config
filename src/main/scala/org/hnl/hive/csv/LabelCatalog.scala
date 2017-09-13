@@ -49,6 +49,7 @@ class LabelCatalog(config: TreatmentConfig) extends Logging {
   protected val chemicals = Chem.getChemList(config)
   protected val chemCols = chemicals.sorted.map(_.colName)
   protected val chemVars = chemicals.sorted.map(_.prefix)
+  protected val chemZeros = chemicals.sorted.map(_.neutral)
 
   protected val variables =
     "datasetId" :: "fileId" :: chemVars ::: ("onset" :: "offset" :: "exclude" :: "notes" :: "file" :: "probe" :: Nil)
@@ -180,6 +181,8 @@ class LabelCatalog(config: TreatmentConfig) extends Logging {
         val excludeIx = ixs.remove(0)
         val notesIx = ixs.remove(0)
 
+        debug(s"coIx  : ${concentrationIxs.mkString(",")}")
+
         // gather the lines
         val lines = for {
           line <- csvLines
@@ -191,7 +194,9 @@ class LabelCatalog(config: TreatmentConfig) extends Logging {
 
           // extract fields
           fileId = vals(fileIdIx).toInt
-          concentrations = concentrationIxs.map(i => vals(i).toDouble)
+          concentrations = concentrationIxs.zipWithIndex.map({
+            case (i, ix) => if (i >= 0) vals(i).toDouble else chemicals.sorted.apply(ix).neutral
+          })
           onset = vals(onsetIx).toDouble
           offset = vals(offsetIx).toDouble
           exclude = vals(excludeIx).toBoolean

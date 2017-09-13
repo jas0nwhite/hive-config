@@ -164,6 +164,8 @@ classdef AbfToMat < hive.util.Logging
             % extract the sweeps
             data = data(:, sweepWindow);
             
+            % detect jitter
+            if isobject(this.jitterCorrector)
             % TODO: FIX THIS HACK
             switch round(1/sweepInterval)
                 case 10
@@ -176,8 +178,6 @@ classdef AbfToMat < hive.util.Logging
                     error('HACK: nhandled sweep frequency %0.2f', 1/sweepInterval);
             end
             
-            % detect jitter
-            if isobject(this.jitterCorrector)
                 jitterIx = this.jitterCorrector.findJitter(data(jitterWindow, :));
             else
                 jitterIx = [];
@@ -190,10 +190,26 @@ classdef AbfToMat < hive.util.Logging
                 sampWindow = this.sampleWindow;
             end
             
+            try
             data = data(sampWindow, :);
+            catch ME
+                if strcmp(ME.identifier, 'MATLAB:badsubscript')
+                    this.warn( ...
+                    'BadSampleWindow', ...
+                    'sample window [%d:%d] exceeds data dimensions [%d]', ...
+                    min(sampWindow), max(sampWindow), size(data, 1));
+                end
+            end
             
             sampleFreq = 1/sampInterval;
+            
+            if isempty(sweepInterval)
+                % single sweep
+                sweepFreq = NaN;
+            else
+                % multiple sweep
             sweepFreq = 1/sweepInterval;
+            end
             
             % return results
             results.data = data;
