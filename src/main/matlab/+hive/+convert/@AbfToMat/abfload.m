@@ -641,9 +641,14 @@ switch h.nOperationMode
     startPt=0;
     h.dataPts=h.lActualAcqLength;
     h.dataPtsPerChan=h.dataPts/h.nADCNumChannels;
-   if rem(h.dataPts,h.nADCNumChannels)>0 || rem(h.dataPtsPerChan,h.lActualEpisodes)>0
+    if rem(h.dataPts,h.nADCNumChannels)>0
       fclose(fid);
       error('number of data points not OK');
+    end
+    if rem(h.dataPtsPerChan,h.lActualEpisodes)>0
+      warning('HIVE:abfload', 'adjusting dataPtsPerChan to discard extra datapoints.')
+      h.dataPtsPerChan = h.lActualEpisodes * h.sweepLengthInPts;
+      h.dataPts = h.dataPtsPerChan * h.nADCNumChannels;
     end
     % temporary helper var
     dataPtsPerSweep=h.sweepLengthInPts*h.nADCNumChannels;

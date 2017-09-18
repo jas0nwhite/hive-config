@@ -131,7 +131,12 @@ classdef AbfToMat < hive.util.Logging
             abfFile = this.inputFiles{ix};
             
             % load the data from the ABF file
-            [raw, sampInterval, header] = hive.convert.AbfToMat.abfload(abfFile);
+            try
+                [raw, sampInterval, header] = hive.convert.AbfToMat.abfload(abfFile);
+            catch ME
+                fprintf('\n***\n*** ERROR processing file %s\n***\n', abfFile);
+                rethrow(ME);
+            end
             
             % find the channel index
             vgramChannelIx = arrayfun(@(s) strcmpi(s, this.vgramChannel), header.recChNames);
@@ -166,18 +171,18 @@ classdef AbfToMat < hive.util.Logging
             
             % detect jitter
             if isobject(this.jitterCorrector)
-            % TODO: FIX THIS HACK
-            switch round(1/sweepInterval)
-                case 10
-                    jitterWindow = 160:1159;
-                case 97
-                    jitterWindow = 16:1015;
-                case 242
-                    jitterWindow = 16:1015;
-                otherwise
-                    error('HACK: nhandled sweep frequency %0.2f', 1/sweepInterval);
-            end
-            
+                % TODO: FIX THIS HACK
+                switch round(1/sweepInterval)
+                    case 10
+                        jitterWindow = 160:1159;
+                    case 97
+                        jitterWindow = 16:1015;
+                    case 242
+                        jitterWindow = 16:1015;
+                    otherwise
+                        error('HACK: nhandled sweep frequency %0.2f', 1/sweepInterval);
+                end
+                
                 jitterIx = this.jitterCorrector.findJitter(data(jitterWindow, :));
             else
                 jitterIx = [];
@@ -191,7 +196,7 @@ classdef AbfToMat < hive.util.Logging
             end
             
             try
-            data = data(sampWindow, :);
+                data = data(sampWindow, :);
             catch ME
                 if strcmp(ME.identifier, 'MATLAB:badsubscript')
                     this.warn( ...
@@ -208,7 +213,7 @@ classdef AbfToMat < hive.util.Logging
                 sweepFreq = NaN;
             else
                 % multiple sweep
-            sweepFreq = 1/sweepInterval;
+                sweepFreq = 1/sweepInterval;
             end
             
             % return results
