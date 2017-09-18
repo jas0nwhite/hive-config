@@ -12,8 +12,9 @@ function analyzeDataset(this, dsIx)
     cvStatsFile = fullfile(resultDir, 'cv-stats.mat');
     cvTestFile = fullfile(resultDir, 'cv-testing.mat');
     cvPredFile = fullfile(resultDir, 'cv-predictions.mat');
+    cvPlotFile = fullfile(resultDir, 'cv-plot.mat');
     
-    if ~this.overwrite && exist(cvStatsFile, 'file')
+    if ~this.overwrite && exist(cvPlotFile, 'file')
         fprintf('    %03d: SKIP (%.3fs)\n', id, toc(t));
         return
     end
@@ -58,9 +59,11 @@ function analyzeDataset(this, dsIx)
         vpsString = sprintf('%s (shuffled)', vpsString);
     end
     
-    suptitle(sprintf('probe %s  |  %s @ %dHz\n\\fontsize{8}%s  |  dataset %03d  |  set %02d  |  source %03d',...
+    subtitle = sprintf('probe %s  |  %s @ %dHz\n\\fontsize{8}%s  |  dataset %03d  |  set %02d  |  source %03d',...
         strrep(regexprep(probe, '[_]+', '_'), '_', '\_'), vpsString, fSweep,...
-        strrep(info.protocol, '_', '\_'), dsIx, setId, sourceId));
+        strrep(info.protocol, '_', '\_'), dsIx, setId, sourceId);
+    
+    suptitle(subtitle);
     
     
     % SAVE
@@ -79,7 +82,11 @@ function analyzeDataset(this, dsIx)
     close;
     
     save(cvStatsFile, '-struct', 'stats');
+    
     hive.util.appendDatasetInfo(cvStatsFile, name, id, setId, sourceId, this.treatment.name);
+    
+    save(fullfile(resultDir, 'cv-plot.mat'), ...
+        'time', 'stepIx', 'muRange', 'cvPredFile', 'cvStatsFile');
         
     fprintf('    %03d: DONE (%.3fs)\n', id, toc(t));
 end
