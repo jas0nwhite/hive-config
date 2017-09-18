@@ -14,7 +14,7 @@ function results = evaluateModels(this, setId, sourceId)
     
     load(cvModelFile);
     
-    if ndims(CVerr.glmnet_fit.beta) == 2 %#ok<ISMAT>
+    if ~iscell(CVerr.glmnet_fit.beta)
         nAnalytes = 1;
     else
         nAnalytes = size(CVerr.glmnet_fit.beta, 2);
