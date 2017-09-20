@@ -39,7 +39,7 @@ function [ fig ] = plotCalibration3( time, predictions, labels, stepIx, chems, m
         subplot(rows, cols, [col, col + 1, nextRow + col, nextRow + col + 1])
         hold on;
         title(chem.label);
-        xlabel('samples');
+        xlabel('time');
         ylabel(muLabel);
         
         hp = plot(X, Y(:, chemIx), '.', 'Color', colors(chemIx, :), 'MarkerSize', 10);
@@ -52,7 +52,8 @@ function [ fig ] = plotCalibration3( time, predictions, labels, stepIx, chems, m
         
         axis tight;
         xl = xlim();
-        yl = [min([muMin; Y(:, chemIx)]), max([muMax; Y(:, chemIx)])];
+        yq = quantile(Y(:, chemIx), 20);
+        yl = [min([muMin; yq(1)]), max([muMax; yq(20)])];
         xtwix = diff(xl) / 20;
         ytwix = diff(yl) / 20;
         

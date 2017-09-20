@@ -28,58 +28,72 @@ function analyzeDataset(this, dsIx)
     stepIx = testing.ix;    
     predictions = cv.predictions;
     labels = cv.labels;
-    stats = hive.proc.invitro.calcStepStats(stepIx, predictions, labels);
+    chems = cv.chemical;
+    stats = hive.proc.invitro.calcStepStats(stepIx, predictions, labels, chems);
     
     
     % PLOT
     time = (testing.sweepNumber - 1) / metadata.sweepFreq(1);
     muRange = [this.muMin, this.muMax];
-    chems = cv.chemical; 
-    hive.proc.invitro.plotCalibration3(time, predictions, labels, stepIx, chems, muRange, stats);
+    
+    for plotIx = 1:numel(chems)
+        hive.proc.invitro.multiPlotCalibration3(time, predictions, labels, stepIx, chems, muRange, stats, plotIx);
+
+
+        % DECORATE
+        fSample = round(metadata.sampleFreq(1), 0);
+        fSweep = round(metadata.sweepFreq(1), 0);
+        info = this.cfg.infoCatalog{setId}{sourceId, 2};
+        probe = info.probeName;
         
-    
-    % DECORATE
-    fSample = round(metadata.sampleFreq(1), 0);
-    fSweep = round(metadata.sweepFreq(1), 0);
-    info = this.cfg.infoCatalog{setId}{sourceId, 2};
-    probe = info.probeName;
-    
-    if (~isempty(regexp(info.protocol, '_(uncorrelated|RBV[^_]*)_', 'once')))
-        vpsString = 'random burst';
-    else
-        voltage = 2;
-        sampleIx = this.cfg.getSetValue(this.cfg.vgramWindowList, setId);
-        sampleRange = round(max(sampleIx) - min(sampleIx), -3);
-        seconds = sampleRange / fSample;
-        vps = round(voltage * 2 / seconds);
-        vpsString = sprintf('%dV/s', vps);
+        if isempty(probe)
+            probe = info.acqDate;
+        end
+
+        if (~isempty(regexp(info.protocol, '_(uncorrelated|RBV[^_]*)_', 'once')))
+            vpsString = 'random burst';
+        else
+            voltage = 2;
+            sampleIx = this.cfg.getSetValue(this.cfg.vgramWindowList, setId);
+            sampleRange = round(max(sampleIx) - min(sampleIx), -3);
+            seconds = sampleRange / fSample;
+            vps = round(voltage * 2 / seconds);
+            vpsString = sprintf('%dV/s', vps);
+        end
+
+        if (~isempty(regexp(resultDir, '-shuffled', 'once')))
+            vpsString = sprintf('%s (shuffled)', vpsString);
+        end
+
+        subtitle = sprintf('probe %s  |  %s @ %dHz\n\\fontsize{8}%s  |  dataset %03d  |  set %02d  |  source %03d',...
+            strrep(regexprep(probe, '[_]+', '_'), '_', '\_'), vpsString, fSweep,...
+            strrep(info.protocol, '_', '\_'), dsIx, setId, sourceId);
+
+        suptitle(subtitle);
+
+
+        % SAVE
+        if (numel(chems) > 1)
+            filebase = sprintf('cv-plot-%s', Chem.get(chems{plotIx}).prefix);
+        else
+            filebase = 'cv-plot';
+        end
+        
+        savefig(gcf, fullfile(resultDir, [filebase '.fig']));
+
+        s = hgexport('readstyle', 'png-4MP');
+        s.Format = 'png';
+        s.Height = 9;
+        s.Width = 12;
+        s.Resolution = 200;
+        hgexport(gcf, fullfile(resultDir, [filebase '.png']), s);
+
+        s.Format = 'eps';
+        hgexport(gcf, fullfile(resultDir, [filebase '.eps']), s);
+
+        close;
     end
     
-    if (~isempty(regexp(resultDir, '-shuffled', 'once')))
-        vpsString = sprintf('%s (shuffled)', vpsString);
-    end
-    
-    subtitle = sprintf('probe %s  |  %s @ %dHz\n\\fontsize{8}%s  |  dataset %03d  |  set %02d  |  source %03d',...
-        strrep(regexprep(probe, '[_]+', '_'), '_', '\_'), vpsString, fSweep,...
-        strrep(info.protocol, '_', '\_'), dsIx, setId, sourceId);
-    
-    suptitle(subtitle);
-    
-    
-    % SAVE
-    savefig(gcf, fullfile(resultDir, 'cv-plot.fig'));
-    
-    s = hgexport('readstyle', 'png-4MP');
-    s.Format = 'png';
-    s.Height = 9;
-    s.Width = 12;
-    s.Resolution = 200;
-    hgexport(gcf, fullfile(resultDir, 'cv-plot.png'), s);
-    
-    s.Format = 'eps';
-    hgexport(gcf, fullfile(resultDir, 'cv-plot.eps'), s);
-    
-    close;
     
     save(cvStatsFile, '-struct', 'stats');
     
