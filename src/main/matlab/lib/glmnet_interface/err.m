@@ -9,6 +9,8 @@ else
     switch family
         case 'gaussian'
             output = err_elnet(n,maxit,pmax);
+        case 'mgaussian'
+            output = err_elnet(n,maxit,pmax);
         case 'binomial'
             output = err_lognet(n,maxit,pmax);
         case 'multinomial'
