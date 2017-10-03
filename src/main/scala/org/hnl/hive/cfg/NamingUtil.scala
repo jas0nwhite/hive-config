@@ -50,7 +50,7 @@ object NamingUtil extends Logging {
   val norepiP = s"""(?:norepinephrine|NE)${fastq}${uncorrq}"""
   val phP = s"""pH_[LH]{3}${fastq}${altq}${uncorrq}"""
   val randomP = """(?:increased_|decreased_)?random_high_(?:DA|5HT)(?:_[0-9])?"""
-  val threeXP = s"""DA_5HT_NE${octaflowq}${fastq}"""
+  val threeXP = s"""DA_5HT_NE${octaflowq}${fastq}${uncorrq}"""
 
   val pH = new Regex(s"""(${dateP})_(${phP})_(${nameP})_?(${dateP})?""")
   val dopamine = new Regex(s"""(${dateP})_(${dopamineP})_(${nameP})_?(${dateP})?""")
