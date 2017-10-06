@@ -166,6 +166,32 @@ classdef AbfToMat < hive.util.Logging
                 sweepWindow = sweepStartIx:sweepEndIx;
             end
             
+            
+            %
+            % TODO: clean this up
+            %
+            
+            % find the most stable region of the file
+            [sweepWindow, excludeIx, r, q, fig] = hive.proc.invitro.findStableSection(data, sweepWindow);
+            
+            % annotate the plot
+            [dirName, filename, ~] = fileparts(abfFile);
+            [~, dirName, ~] = fileparts(dirName);
+            ax = findobj(fig, 'type', 'axes', 'Tag', '');
+            title(ax, {
+                strrep(dirName, '_', '\_')
+                strrep(filename, '_', '\_')
+                });
+            
+            % save the plot in the output directory
+            s = hgexport('readstyle', 'PNG-4MP');
+            s.Format = 'png';
+            [outDir, ~, ~] = fileparts(this.outputFile);
+            hgexport(fig, fullfile(outDir, [filename '.png']), s);
+            close(fig);
+
+            
+            
             % extract the sweeps
             data = data(:, sweepWindow);
             
@@ -185,7 +211,7 @@ classdef AbfToMat < hive.util.Logging
                 
                 jitterIx = this.jitterCorrector.findJitter(data(jitterWindow, :));
             else
-                jitterIx = [];
+                jitterIx = excludeIx;
             end
             
             % extract the samples
@@ -226,6 +252,8 @@ classdef AbfToMat < hive.util.Logging
             results.otherData = otherData;
             results.otherChannels = otherChannels;
             results.jitterIx = jitterIx;
+            results.sweepWindowCorrCoef = r;
+            results.sweepWindowQuality = q;            
         end
         
         function results = doConvertData(this)
@@ -252,6 +280,8 @@ classdef AbfToMat < hive.util.Logging
             otherData = cell(nFiles, 1);
             otherChannels = cell(nFiles, 1);
             jitterIx = cell(nFiles, 1);
+            sweepWindowCorrCoef = cell(nFiles, 1);
+            sweepWindowQuality = cell(nFiles, 1);
             
             % read files
             for ix = 1:nFiles                
@@ -290,6 +320,8 @@ classdef AbfToMat < hive.util.Logging
             results.files = this.inputFiles;
             results.recTime = recTime;
             results.jitterIx = jitterIx;
+            results.sweepWindowCorrCoef = sweepWindowCorrCoef;
+            results.sweepWindowQuality = sweepWindowQuality;
             
             save(this.metadataFile, '-struct', 'results');
             this.appendDatasetInfo(this.metadataFile);
