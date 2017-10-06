@@ -30,6 +30,24 @@ classdef (Abstract) ImporterBase < hive.proc.ProcessorBase
     %
     methods (Access = protected)
         
+        function processSet(this, setIx)
+            nSources = size(this.cfg.sourceCatalog{setIx}, 1);
+            
+            this.displayProcessSetHeader(setIx, nSources);
+            
+            args = this.getArgsForProcessSource(setIx);
+            
+%             if this.doParfor
+%                 parfor sourceIx = 1:nSources
+%                     this.processSource(setIx, sourceIx, args{:}) %#ok<PFBNS>
+%                 end
+%             else
+                for sourceIx = 1:nSources
+                    this.processSource(setIx, sourceIx, args{:})
+                end
+%             end
+        end
+        
         function argv = getArgsForProcessSource(this, setIx)
             argv = {
                 this.cfg.getSetValue(this.cfg.importPathList, setIx);
@@ -76,6 +94,7 @@ classdef (Abstract) ImporterBase < hive.proc.ProcessorBase
                 .withLabels(abfLabels, abfChemNames, labelFile)...
                 .withDatasetInfo(name, id, setIx, sourceIx, this.treatment.name)...
                 .withJitterCorrector(this.jitterCorrector)...
+                .inParallel(this.doParfor)...
                 .convert;
             
             fprintf('%s (%.3fs)\n', char(status), toc(t));

@@ -19,6 +19,7 @@ classdef AbfToMat < hive.util.Logging
         sourceId
         treatmentName
         jitterCorrector = []
+        doParfor = false
     end
     
     %
@@ -60,6 +61,10 @@ classdef AbfToMat < hive.util.Logging
         
         function this = withJitterCorrector(this, object)
             this.jitterCorrector = object;
+        end
+        
+        function this = inParallel(this, flag)
+            this.doParfor = flag;
         end
     end
     
@@ -284,21 +289,44 @@ classdef AbfToMat < hive.util.Logging
             sweepWindowQuality = cell(nFiles, 1);
             
             % read files
-            for ix = 1:nFiles                
-                abf = this.readAbf(ix);
-                
-                voltammograms{ix} = abf.data;
-                sampleFreq(ix) = abf.sampleFreq;
-                sweepFreq(ix) = abf.sweepFreq;
-                headers{ix} = abf.header;
-                sampleIx{ix} = abf.sampleWindow;
-                sweepIx{ix} = abf.sweepWindow;
-                otherData{ix} = abf.otherData;
-                otherChannels{ix} = abf.otherChannels;
-                jitterIx{ix} = abf.jitterIx;
-                
-                [nSamples(ix), nSweeps(ix)] = size(voltammograms{ix});
-                recTime(ix) = diff(headers{ix}.recTime);
+            if (this.doParfor)
+                parfor ix = 1:nFiles
+                    abf = this.readAbf(ix); %#ok<PFBNS>
+
+                    voltammograms{ix} = abf.data; %#ok<PFOUS>
+                    sampleFreq(ix) = abf.sampleFreq;
+                    sweepFreq(ix) = abf.sweepFreq;
+                    headers{ix} = abf.header;
+                    sampleIx{ix} = abf.sampleWindow;
+                    sweepIx{ix} = abf.sweepWindow;
+                    otherData{ix} = abf.otherData;
+                    otherChannels{ix} = abf.otherChannels; %#ok<PFOUS>
+                    jitterIx{ix} = abf.jitterIx;
+                    sweepWindowCorrCoef{ix} = abf.sweepWindowCorrCoef;
+                    sweepWindowQuality{ix} = abf.sweepWindowQuality;
+
+                    [nSamples(ix), nSweeps(ix)] = size(voltammograms{ix});
+                    recTime(ix) = diff(headers{ix}.recTime);
+                end
+            else
+                for ix = 1:nFiles                
+                    abf = this.readAbf(ix);
+
+                    voltammograms{ix} = abf.data;
+                    sampleFreq(ix) = abf.sampleFreq;
+                    sweepFreq(ix) = abf.sweepFreq;
+                    headers{ix} = abf.header;
+                    sampleIx{ix} = abf.sampleWindow;
+                    sweepIx{ix} = abf.sweepWindow;
+                    otherData{ix} = abf.otherData;
+                    otherChannels{ix} = abf.otherChannels;
+                    jitterIx{ix} = abf.jitterIx;
+                    sweepWindowCorrCoef{ix} = abf.sweepWindowCorrCoef;
+                    sweepWindowQuality{ix} = abf.sweepWindowQuality;
+
+                    [nSamples(ix), nSweeps(ix)] = size(voltammograms{ix});
+                    recTime(ix) = diff(headers{ix}.recTime);
+                end
             end
             
             save(this.outputFile, 'voltammograms');
