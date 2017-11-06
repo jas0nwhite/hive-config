@@ -1,4 +1,4 @@
-function [ fig ] = plotCalibration3( time, predictions, labels, stepIx, chems, muRange, stats )
+function [ fig ] = plotCalibration3( time, predictions, labels, stepIx, chems, muRange, stats, plotIx )
 %PLOTCALIBRATION3 Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -9,7 +9,7 @@ function [ fig ] = plotCalibration3( time, predictions, labels, stepIx, chems, m
     
     desat = @(c) hsv2rgb(rgb2hsv(c) .* [1.0 0.3 1.2]);
     colors = lines(8);
-    labColor = colors(2, :);
+    labColor = colors(3, :); %colors(2, :);
     colors = colors([1 4 7 8], :);
     
     rows = 3;
@@ -23,6 +23,12 @@ function [ fig ] = plotCalibration3( time, predictions, labels, stepIx, chems, m
 
     for chemIx = 1:nChems
         chem = Chem.get(chems{chemIx});
+        
+        if nargin > 7
+            colorIx = plotIx;
+        else
+            colorIx = chemIx;
+        end
         
         switch chem
             case Chem.pH
@@ -42,7 +48,7 @@ function [ fig ] = plotCalibration3( time, predictions, labels, stepIx, chems, m
         xlabel('time');
         ylabel(muLabel);
         
-        hp = plot(X, Y(:, chemIx), '.', 'Color', colors(chemIx, :), 'MarkerSize', 10);
+        hp = plot(X, Y(:, chemIx), '.', 'Color', colors(colorIx, :), 'MarkerSize', 10);
         for ix = 1:nSteps
             selectIx = stepIx{ix};
             stepX = [min(X(selectIx)), max(X(selectIx))];
@@ -93,14 +99,14 @@ function [ fig ] = plotCalibration3( time, predictions, labels, stepIx, chems, m
     axis manual;
     
     for chemIx = 1:nChems
-        plot(xlim(), [stats.fullRmse(chemIx) stats.fullRmse(chemIx)], '--', 'Color', desat(colors(chemIx, :)));
+        plot(xlim(), [stats.fullRmse(chemIx) stats.fullRmse(chemIx)], '--', 'Color', desat(colors(colorIx, :)));
     end
     
     for chemIx = 1:nChems
         y = stats.predRmse(:, chemIx);
         x = stats.labels(:, chemIx);
         
-        plot(x, y, '.', 'MarkerSize', 25, 'Color', colors(chemIx, :));
+        plot(x, y, '.', 'MarkerSize', 25, 'Color', colors(colorIx, :));
     end
     
     
@@ -124,14 +130,14 @@ function [ fig ] = plotCalibration3( time, predictions, labels, stepIx, chems, m
     axis manual;
     
     for chemIx = 1:nChems
-        plot(xlim(), [stats.fullSnr(chemIx) stats.fullSnr(chemIx)], '--', 'Color', desat(colors(chemIx, :)));
+        plot(xlim(), [stats.fullSnr(chemIx) stats.fullSnr(chemIx)], '--', 'Color', desat(colors(colorIx, :)));
     end
     
     for chemIx = 1:nChems
         x = stats.labels(:, chemIx);
         y = stats.predSnr(:, chemIx);
         
-        plot(x(x > 0), y(x > 0), '.', 'MarkerSize', 25, 'Color', colors(chemIx, :));
+        plot(x(x > 0), y(x > 0), '.', 'MarkerSize', 25, 'Color', colors(colorIx, :));
     end
 end
 
