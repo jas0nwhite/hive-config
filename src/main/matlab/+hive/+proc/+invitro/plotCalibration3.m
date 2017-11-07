@@ -1,4 +1,4 @@
-function [ fig ] = plotCalibration3( time, predictions, labels, stepIx, chems, muRange, stats, plotIx )
+function [ fig ] = plotCalibration3( time, predictions, labels, stepIx, chems, muRange, stats )
 %PLOTCALIBRATION3 Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -7,10 +7,10 @@ function [ fig ] = plotCalibration3( time, predictions, labels, stepIx, chems, m
     muMin = min(muRange);
     muMax = max(muRange);
     
-    desat = @(c) hsv2rgb(rgb2hsv(c) .* [1.0 0.3 1.2]);
+    desat = @(c) hsv2rgb(min([1, 1, 1], rgb2hsv(c) .* [1.0 0.3 1.2]));
     colors = lines(8);
-    labColor = colors(3, :); %colors(2, :);
-    colors = colors([1 4 7 8], :);
+    labColor = colors(3, :);
+    colors = colors([1 4 5 7 2], :);
     
     rows = 3;
     cols = nChems * 2;
@@ -23,12 +23,7 @@ function [ fig ] = plotCalibration3( time, predictions, labels, stepIx, chems, m
 
     for chemIx = 1:nChems
         chem = Chem.get(chems{chemIx});
-        
-        if nargin > 7
-            colorIx = plotIx;
-        else
-            colorIx = chemIx;
-        end
+        colorIx = chem.ix;
         
         switch chem
             case Chem.pH
@@ -99,10 +94,16 @@ function [ fig ] = plotCalibration3( time, predictions, labels, stepIx, chems, m
     axis manual;
     
     for chemIx = 1:nChems
+        chem = Chem.get(chems{chemIx});
+        colorIx = chem.ix;
+
         plot(xlim(), [stats.fullRmse(chemIx) stats.fullRmse(chemIx)], '--', 'Color', desat(colors(colorIx, :)));
     end
     
     for chemIx = 1:nChems
+        chem = Chem.get(chems{chemIx});
+        colorIx = chem.ix;
+        
         y = stats.predRmse(:, chemIx);
         x = stats.labels(:, chemIx);
         
@@ -130,10 +131,16 @@ function [ fig ] = plotCalibration3( time, predictions, labels, stepIx, chems, m
     axis manual;
     
     for chemIx = 1:nChems
+        chem = Chem.get(chems{chemIx});
+        colorIx = chem.ix;
+        
         plot(xlim(), [stats.fullSnr(chemIx) stats.fullSnr(chemIx)], '--', 'Color', desat(colors(colorIx, :)));
     end
     
     for chemIx = 1:nChems
+        chem = Chem.get(chems{chemIx});
+        colorIx = chem.ix;
+        
         x = stats.labels(:, chemIx);
         y = stats.predSnr(:, chemIx);
         
