@@ -9,7 +9,7 @@ function summarize(this)
     
     for setId = 1:nSets
         nSources = size(this.cfg.sourceCatalog{setId}, 1);
-        chemicals = {Chem.Dopamine.name, Chem.Serotonin.name};
+        [~, chemicals] = enumeration('Chem');
         nChem = numel(chemicals);
         
         labelC = cell(nSources, 1);
@@ -34,8 +34,14 @@ function summarize(this)
             % metadata = load(metadataFile);
             
             nObs = size(cv.predictions, 1);
-            labels = zeros(nObs, nChem);
-            predictions = zeros(nObs, nChem);
+            labels = nan(nObs, nChem);
+            predictions = nan(nObs, nChem);
+            
+            % pre-populate labels with neutral values
+            for chemIx = 1:nChem
+                chem = Chem.get(chemicals{chemIx});
+                labels(:, chemIx) = repmat(chem.neutral, nObs, 1);
+            end
             
             % find how our accumulator and the CV results match up
             [~, accIx, cvIx] = intersect(chemicals, cv.chemical);
