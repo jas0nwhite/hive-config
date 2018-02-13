@@ -19,6 +19,10 @@ function [goodWindow, excludeIx, r, q, fig] = findStableSection(data, sweepWindo
     
     [pkY, pkX] = findpeaks(q, 'MinPeakDistance', windowSize, 'MinPeakHeight', .95);
     
+    if (isempty(pkY) || isempty(pkX))
+        [pkY, pkX] = findpeaks(q, 'MinPeakDistance', windowSize);
+    end
+        
     startIx = pkX(end);
     endIx = pkX(end) + windowSize;
     goodWindow = startIx:endIx;
