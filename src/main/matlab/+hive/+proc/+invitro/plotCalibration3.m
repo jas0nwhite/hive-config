@@ -4,6 +4,7 @@ function [ fig ] = plotCalibration3( time, predictions, labels, stepIx, chems, m
 
     nSteps = size(stepIx, 1);
     nChems = numel(chems);
+    
     muMin = min(muRange);
     muMax = max(muRange);
     
@@ -25,11 +26,30 @@ function [ fig ] = plotCalibration3( time, predictions, labels, stepIx, chems, m
         chem = Chem.get(chems{chemIx});
         colorIx = chem.ix;
         
+        %
+        % TODO: find the 5th and 95th percentile and set ylim to that for
+        % plots
+        %
+        
+        Lmin = min(L(:, chemIx));
+        Lmax = max(L(:, chemIx));
+        
+        yq = quantile(Y(:, chemIx), [0.01, 0.99]);
+        muLo = min(Lmin, yq(1));
+        muHi = max(Lmax, yq(2));
+        
         switch chem
             case Chem.pH
                 units = '';
+                
+                muMin = Lmin;
+                muMax = Lmax;
             otherwise
                 units = sprintf(' (%s)', chem.units);
+                
+                if (Lmax < 2/3 * muMax)
+                    muMax = Lmax;
+                end
         end
         
         muLabel = [chem.label units];
@@ -53,8 +73,9 @@ function [ fig ] = plotCalibration3( time, predictions, labels, stepIx, chems, m
         
         axis tight;
         xl = xlim();
-        yq = quantile(Y(:, chemIx), 20);
-        yl = [min([muMin; yq(1)]), max([muMax; yq(20)])];
+        %yq = quantile(Y(:, chemIx), 20);
+        %yl = [min([muMin; yq(1)]), max([muMax; yq(20)])];
+        yl = [muLo, muHi];
         xtwix = diff(xl) / 20;
         ytwix = diff(yl) / 20;
         
