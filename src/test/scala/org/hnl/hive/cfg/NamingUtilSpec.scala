@@ -27,8 +27,7 @@ class NamingUtilSpec extends WordSpec with Matchers with Inspectors with OptionV
         dsClass("dopamine"),
         dsProtocol("dopamine"),
         probeName("A_EL"),
-        probeDate("2015_07_07")
-      )
+        probeDate("2015_07_07"))
 
       val option2 = NamingUtil.datasetInfoFromName("2015_10_27_dopamine_am_KK_2013_07_29")
 
@@ -39,8 +38,7 @@ class NamingUtilSpec extends WordSpec with Matchers with Inspectors with OptionV
         dsClass("dopamine"),
         dsProtocol("dopamine"),
         probeName("am_KK"),
-        probeDate("2013_07_29")
-      )
+        probeDate("2013_07_29"))
 
       val option3 = NamingUtil.datasetInfoFromName("2015_11_12_pH_HLH_pm3_KK_2013_07_29")
 
@@ -51,8 +49,7 @@ class NamingUtilSpec extends WordSpec with Matchers with Inspectors with OptionV
         dsClass("pH"),
         dsProtocol("pH_HLH"),
         probeName("pm3_KK"),
-        probeDate("2013_07_29")
-      )
+        probeDate("2013_07_29"))
 
       val option4 = NamingUtil.datasetInfoFromName("2017_03_09_5HT_uncorrelated_octaflow_bypass_100k_97Hz_V8")
 
@@ -63,8 +60,7 @@ class NamingUtilSpec extends WordSpec with Matchers with Inspectors with OptionV
         dsClass("serotonin"),
         dsProtocol("5HT_uncorrelated_octaflow_bypass_100k_97Hz"),
         probeName("V8"),
-        probeDate("")
-      )
+        probeDate(""))
     }
 
     "parse uncorrelated dataset names" in {
@@ -77,8 +73,7 @@ class NamingUtilSpec extends WordSpec with Matchers with Inspectors with OptionV
         dsClass("serotonin"),
         dsProtocol("5HT_uncorrelated_100k_97Hz"),
         probeName("A"),
-        probeDate("")
-      )
+        probeDate(""))
 
       val option2 = NamingUtil.datasetInfoFromName("2017_03_09_5HT_uncorrelated_octaflow_bypass_100k_97Hz_V8")
 
@@ -89,8 +84,7 @@ class NamingUtilSpec extends WordSpec with Matchers with Inspectors with OptionV
         dsClass("serotonin"),
         dsProtocol("5HT_uncorrelated_octaflow_bypass_100k_97Hz"),
         probeName("V8"),
-        probeDate("")
-      )
+        probeDate(""))
 
       val option3 = NamingUtil.datasetInfoFromName("2017_03_27_DA_uncorrelated_octaflow_100k_97Hz_S8")
 
@@ -101,8 +95,7 @@ class NamingUtilSpec extends WordSpec with Matchers with Inspectors with OptionV
         dsClass("dopamine"),
         dsProtocol("DA_uncorrelated_octaflow_100k_97Hz"),
         probeName("S8"),
-        probeDate("")
-      )
+        probeDate(""))
 
       val option4 = NamingUtil.datasetInfoFromName("2016_06_15_DA_RBV1_100k_97Hz_J_EL_2016_06_10")
 
@@ -113,8 +106,7 @@ class NamingUtilSpec extends WordSpec with Matchers with Inspectors with OptionV
         dsClass("dopamine"),
         dsProtocol("DA_RBV1_100k_97Hz"),
         probeName("J_EL"),
-        probeDate("2016_06_10")
-      )
+        probeDate("2016_06_10"))
 
     }
 
@@ -128,8 +120,7 @@ class NamingUtilSpec extends WordSpec with Matchers with Inspectors with OptionV
         dsClass("mixture"),
         dsProtocol("DA_5HT_NE_octaflow_400Vs_10Hz"),
         probeName("X1"),
-        probeDate("2017_01_01")
-      )
+        probeDate("2017_01_01"))
 
       val option2 = NamingUtil.datasetInfoFromName("2017_06_22_DA_5HT_NE_octaflow_400Vs_10Hz_X1")
 
@@ -140,8 +131,7 @@ class NamingUtilSpec extends WordSpec with Matchers with Inspectors with OptionV
         dsClass("mixture"),
         dsProtocol("DA_5HT_NE_octaflow_400Vs_10Hz"),
         probeName("X1"),
-        probeDate("")
-      )
+        probeDate(""))
 
       val option3 = NamingUtil.datasetInfoFromName("2017_06_22_DA_5HT_NE_octaflow_400Vs_10Hz")
 
@@ -152,8 +142,43 @@ class NamingUtilSpec extends WordSpec with Matchers with Inspectors with OptionV
         dsClass("mixture"),
         dsProtocol("DA_5HT_NE_octaflow_400Vs_10Hz"),
         probeName(""),
-        probeDate("")
-      )
+        probeDate(""))
+
+    }
+
+    "parse four-transmitter dataset names" in {
+      val option1 = NamingUtil.datasetInfoFromName("2018_03_27_5HT_5HIAA_pH_uncorrelated_100k_97Hz_CF003_2018_03_24")
+
+      option1 should not be (null)
+      option1 shouldBe defined
+      option1.value should have(
+        dsDate("2018_03_27"),
+        dsClass("mixture"),
+        dsProtocol("5HT_5HIAA_pH_uncorrelated_100k_97Hz"),
+        probeName("CF003"),
+        probeDate("2018_03_24"))
+
+      val option2 = NamingUtil.datasetInfoFromName("2018_03_27_5HT_5HIAA_pH_uncorrelated_100k_97Hz_CF003")
+
+      option2 should not be (null)
+      option2 shouldBe defined
+      option2.value should have(
+        dsDate("2018_03_27"),
+        dsClass("mixture"),
+        dsProtocol("5HT_5HIAA_pH_uncorrelated_100k_97Hz"),
+        probeName("CF003"),
+        probeDate(""))
+
+      val option3 = NamingUtil.datasetInfoFromName("2018_03_27_5HT_5HIAA_pH_uncorrelated_100k_97Hz")
+
+      option3 should not be (null)
+      option3 shouldBe defined
+      option3.value should have(
+        dsDate("2018_03_27"),
+        dsClass("mixture"),
+        dsProtocol("5HT_5HIAA_pH_uncorrelated_100k_97Hz"),
+        probeName(""),
+        probeDate(""))
 
     }
 
@@ -169,8 +194,7 @@ trait CustomMatchers {
           info.dsClass == expectedValue,
           "dsClass",
           expectedValue,
-          info.dsClass
-        )
+          info.dsClass)
     }
 
   def dsDate(expectedValue: String) =
@@ -180,8 +204,7 @@ trait CustomMatchers {
           info.dsDate == expectedValue,
           "dsDate",
           expectedValue,
-          info.dsDate
-        )
+          info.dsDate)
     }
 
   def dsProtocol(expectedValue: String) =
@@ -191,8 +214,7 @@ trait CustomMatchers {
           info.dsProtocol == expectedValue,
           "dsProtocol",
           expectedValue,
-          info.dsProtocol
-        )
+          info.dsProtocol)
     }
 
   def probeName(expectedValue: String) =
@@ -202,8 +224,7 @@ trait CustomMatchers {
           info.probeName == expectedValue,
           "probeName",
           expectedValue,
-          info.probeName
-        )
+          info.probeName)
     }
 
   def probeDate(expectedValue: String) =
@@ -213,7 +234,6 @@ trait CustomMatchers {
           info.probeDate == expectedValue,
           "probeDate",
           expectedValue,
-          info.probeDate
-        )
+          info.probeDate)
     }
 }
