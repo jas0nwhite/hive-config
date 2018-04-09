@@ -19,9 +19,15 @@ classdef (Abstract) CatalogBase
                 [setIx, sourceIx] = this.getSourceIxByDatasetId(setIx);
             end
             
-            id = this.datasetCatalog{setIx}{sourceIx, 1};
-            name = this.datasetCatalog{setIx}{sourceIx, 2};
-            directory = this.sourceCatalog{setIx}{sourceIx, 2};
+            if isempty(this.datasetCatalog{setIx})
+                id = NaN;
+                name = missing;
+                directory = missing;
+            else                
+                id = this.datasetCatalog{setIx}{sourceIx, 1};
+                name = this.datasetCatalog{setIx}{sourceIx, 2};
+                directory = this.sourceCatalog{setIx}{sourceIx, 2};
+            end
         end
         
         function [setIx, sourceIx] = getSourceIxByDatasetId(this, datasetId)

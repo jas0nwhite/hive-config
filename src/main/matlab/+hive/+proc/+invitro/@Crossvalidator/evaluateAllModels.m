@@ -7,6 +7,11 @@ function evaluateAllModels( this, setId )
     
     fprintf('*** CROSS-EVALUATING SET %d: %d SOURCES...\n\n', setId, nSources);
     
+    % skip if nothing do to
+    if nSources == 0
+        return
+    end
+    
     % skip if necessary
     cvPermuteFile = fullfile(this.cfg.resultPathList{setId}, 'cv-permutation.mat');
     
@@ -14,12 +19,6 @@ function evaluateAllModels( this, setId )
         fprintf('    SKIP\n');
         return
     end
-    
-    % peek at one source to find number of analytes
-    [~, name, ~] = this.cfg.getSourceInfo(setId, 1);
-    cvTestFile = fullfile(this.testCfg.getSetValue(this.testCfg.resultPathList, setId), name, 'cv-testing.mat');
-    load(cvTestFile, 'chemical');
-    nAnalytes = size(chemical, 2);
     
     % process all sources
     sourceResults = cell(nSources, 1);
