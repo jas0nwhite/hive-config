@@ -183,10 +183,15 @@ classdef AbfToMat < hive.util.Logging
             [dirName, filename, ~] = fileparts(abfFile);
             [~, dirName, ~] = fileparts(dirName);
             ax = findobj(fig, 'type', 'axes', 'Tag', '');
-            title(ax, {
-                strrep(dirName, '_', '\_')
-                strrep(filename, '_', '\_')
+            
+            plotTitle = strrep(dirName, '_', '\_');
+            plotSubtitle = strrep(strrep(filename, dirName, ''), '_', '');
+            
+            title(ax(end), {
+                plotTitle
+                plotSubtitle
                 });
+            
             
             % save the plot in the output directory
             s = hgexport('readstyle', 'PNG-4MP');
