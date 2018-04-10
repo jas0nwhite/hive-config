@@ -11,14 +11,12 @@ function results = evaluateModels(this, setId, sourceId)
     resultDir = fullfile(setDir, name);
     
     cvModelFile = fullfile(resultDir, 'cv-model.mat');
+    cvStats = fullfile(resultDir, 'cv-stats.mat');
     
-    load(cvModelFile);
+    load(cvModelFile, 'CVerr');
+    load(cvStats, 'chems');
     
-    if ~iscell(CVerr.glmnet_fit.beta)
-        nAnalytes = 1;
-    else
-        nAnalytes = size(CVerr.glmnet_fit.beta, 2);
-    end
+    nAnalytes = numel(chems);
     
     % PROCESS EACH TESTING SET
     nTests = size(this.cfg.sourceCatalog{setId}, 1);
@@ -39,6 +37,15 @@ function results = evaluateModels(this, setId, sourceId)
         cvTestFile = fullfile(setDir, testName, 'cv-testing.mat');
         
         testing = load(cvTestFile);
+        
+        % before we go any further, check to see if this test was trained
+        % for any of the analytes used in this dataset
+        [~, resultAnalyteIx, testAnalyteIx] = intersect(chems, testing.chemical);
+        
+        if isempty(resultAnalyteIx) || isempty(testAnalyteIx)
+            % there is no overlap... continue to next dataset
+            continue;
+        end
         
         % testing data
         x = diff(testing.voltammograms', 1, 2); %#ok<UDIM>
@@ -64,22 +71,28 @@ function results = evaluateModels(this, setId, sourceId)
         results.sd(testId, :) = std(meanSubtracted);
         
         % find linear fit
-        for analyteIx = 1:nAnalytes
-            lm = fitlm(testing.labels(:, analyteIx), predictions(:, analyteIx));
+        for ix = 1:numel(resultAnalyteIx)
+            resIx = resultAnalyteIx(ix);
+            tstIx = testAnalyteIx(ix);
+            
+            lm = fitlm(testing.labels(:, tstIx), predictions(:, resIx));
             c = lm.Coefficients;
-            results.lmAlpha(testId, analyteIx) = c.Estimate(1);
-            results.lmBeta(testId, analyteIx) = c.Estimate(2);
-            results.lmRsquared(testId, analyteIx) = lm.Rsquared.Ordinary;
-            results.lmRmse(testId, analyteIx) = lm.RMSE;
+            results.lmAlpha(testId, resIx) = c.Estimate(1);
+            results.lmBeta(testId, resIx) = c.Estimate(2);
+            results.lmRsquared(testId, resIx) = lm.Rsquared.Ordinary;
+            results.lmRmse(testId, resIx) = lm.RMSE;
         end
         
         % evaluate RMSE and SNR
-        signal = predictions;
-        truth = testing.labels;
+        signal = predictions(:, resultAnalyteIx);
+        truth = testing.labels(:, testAnalyteIx);
         noise = signal - truth;
         
-        results.rmse(testId, :) = arrayfun(@(i) rms(noise(:, i)), 1:size(noise, 2));
-        results.snr(testId, :) = arrayfun(@(i) snr(signal(:, i), noise(:, i)), 1:size(signal, 2));
+        results.rmse(testId, resultAnalyteIx) = arrayfun(@(i) rms(noise(:, i)), 1:size(noise, 2));
+        results.snr(testId, resultAnalyteIx) = arrayfun(@(i) snr(signal(:, i), noise(:, i)), 1:size(signal, 2));
+        
+        % record analytes for proper assignment to grand results
+        results.analytes = chems(resIx);
     end
     
     fprintf('    %03d: DONE (%.3fs)\n', sourceId, toc(t));

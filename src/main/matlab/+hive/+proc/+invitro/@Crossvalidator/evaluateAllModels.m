@@ -34,24 +34,27 @@ function evaluateAllModels( this, setId )
     end
     
     % collate
-    results.rmse = nan(nSources, nSources, nAnalytes);
-    results.snr = nan(nSources, nSources, nAnalytes);
+    results.analytes = Chem.names;
+    results.rmse = nan(nSources, nSources, Chem.count);
+    results.snr = nan(nSources, nSources, Chem.count);
     results.n = nan(nSources, nSources, 1);
-    results.sd = nan(nSources, nSources, nAnalytes);
-    results.lmAlpha = nan(nSources, nSources, nAnalytes);
-    results.lmBeta = nan(nSources, nSources, nAnalytes);
-    results.lmRsquared = nan(nSources, nSources, nAnalytes);
-    results.lmRmse = nan(nSources, nSources, nAnalytes);
+    results.sd = nan(nSources, nSources, Chem.count);
+    results.lmAlpha = nan(nSources, nSources, Chem.count);
+    results.lmBeta = nan(nSources, nSources, Chem.count);
+    results.lmRsquared = nan(nSources, nSources, Chem.count);
+    results.lmRmse = nan(nSources, nSources, Chem.count);
     
     for sourceId = 1:nSources
-        results.rmse(sourceId, :, :)       = sourceResults{sourceId}.rmse(:, :);
-        results.snr(sourceId, :, :)        = sourceResults{sourceId}.snr(:, :);
-        results.n(sourceId, :)             = sourceResults{sourceId}.n(:);
-        results.sd(sourceId, :, :)         = sourceResults{sourceId}.sd(:, :);
-        results.lmAlpha(sourceId, :, :)    = sourceResults{sourceId}.lmAlpha(:, :);
-        results.lmBeta(sourceId, :, :)     = sourceResults{sourceId}.lmBeta(:, :);
-        results.lmRsquared(sourceId, :, :) = sourceResults{sourceId}.lmRsquared(:, :);
-        results.lmRmse(sourceId, :, :)     = sourceResults{sourceId}.lmRmse(:, :);
+        [~, resIx, srcIx] = intersect(results.analytes, sourceResults{sourceId}.analytes);
+        
+        results.rmse(sourceId, :, resIx)       = sourceResults{sourceId}.rmse(:, srcIx);
+        results.snr(sourceId, :, resIx)        = sourceResults{sourceId}.snr(:, srcIx);
+        results.n(sourceId, :)                 = sourceResults{sourceId}.n(:);
+        results.sd(sourceId, :, resIx)         = sourceResults{sourceId}.sd(:, srcIx);
+        results.lmAlpha(sourceId, :, resIx)    = sourceResults{sourceId}.lmAlpha(:, srcIx);
+        results.lmBeta(sourceId, :, resIx)     = sourceResults{sourceId}.lmBeta(:, srcIx);
+        results.lmRsquared(sourceId, :, resIx) = sourceResults{sourceId}.lmRsquared(:, srcIx);
+        results.lmRmse(sourceId, :, resIx)     = sourceResults{sourceId}.lmRmse(:, srcIx);
     end
     
     % save results
