@@ -37,15 +37,15 @@ classdef (Abstract) ImporterBase < hive.proc.ProcessorBase
             
             args = this.getArgsForProcessSource(setIx);
             
-%             if this.doParfor
-%                 parfor sourceIx = 1:nSources
-%                     this.processSource(setIx, sourceIx, args{:}) %#ok<PFBNS>
-%                 end
-%             else
+            if this.doParfor
+                parfor sourceIx = 1:nSources
+                    this.processSource(setIx, sourceIx, args{:}) %#ok<PFBNS>
+                end
+            else
                 for sourceIx = 1:nSources
                     this.processSource(setIx, sourceIx, args{:})
                 end
-%             end
+            end
         end
         
         function argv = getArgsForProcessSource(this, setIx)
