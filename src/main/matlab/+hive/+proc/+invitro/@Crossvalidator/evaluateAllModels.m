@@ -16,7 +16,7 @@ function evaluateAllModels( this, setId )
     cvPermuteFile = fullfile(this.cfg.resultPathList{setId}, 'cv-permutation.mat');
     
     if ~this.overwrite && exist(cvPermuteFile, 'file')
-        fprintf('    SKIP\n');
+        fprintf('    SKIP\n\n');
         return
     end
     
@@ -61,5 +61,6 @@ function evaluateAllModels( this, setId )
     save(cvPermuteFile, '-struct', 'results');
     hive.util.appendDatasetInfo(cvPermuteFile, [], [], setId, [], this.treatment.name);
 
+    fprintf('\n');
 end
 
