@@ -74,7 +74,7 @@ function analyzeDataset(this, dsIx)
 
         % SAVE
         if (numel(chems) > 1)
-            filebase = sprintf('cv-plot-%s', Chem.get(chems{plotIx}).prefix);
+            filebase = sprintf('cv-plot-%s', lower(Chem.get(chems{plotIx}).colName));
         else
             filebase = 'cv-plot';
         end
