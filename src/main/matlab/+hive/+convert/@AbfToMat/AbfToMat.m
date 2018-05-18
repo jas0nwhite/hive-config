@@ -20,6 +20,7 @@ classdef AbfToMat < hive.util.Logging
         treatmentName
         jitterCorrector = []
         doParfor = false
+        doStability = true
     end
     
     %
@@ -65,6 +66,10 @@ classdef AbfToMat < hive.util.Logging
         
         function this = inParallel(this, flag)
             this.doParfor = flag;
+        end
+        
+        function this = withStabilitySearch(this, flag)
+            this.doStability = flag;
         end
     end
     
@@ -176,30 +181,35 @@ classdef AbfToMat < hive.util.Logging
             % TODO: clean this up
             %
             
-            % find the most stable region of the file
-            [sweepWindow, excludeIx, r, q, fig] = hive.proc.invitro.findStableSection(data, sweepWindow);
-            
-            % annotate the plot
-            [dirName, filename, ~] = fileparts(abfFile);
-            [~, dirName, ~] = fileparts(dirName);
-            ax = findobj(fig, 'type', 'axes', 'Tag', '');
-            
-            plotTitle = strrep(dirName, '_', '\_');
-            plotSubtitle = strrep(strrep(filename, dirName, ''), '_', '');
-            
-            title(ax(end), {
-                plotTitle
-                plotSubtitle
-                });
-            
-            
-            % save the plot in the output directory
-            s = hgexport('readstyle', 'PNG-4MP');
-            s.Format = 'png';
-            [outDir, ~, ~] = fileparts(this.outputFile);
-            hgexport(fig, fullfile(outDir, [filename '.png']), s);
-            close(fig);
-
+            if this.doStability
+                % find the most stable region of the file
+                [sweepWindow, excludeIx, r, q, fig] = hive.proc.invitro.findStableSection(data, sweepWindow);
+                
+                % annotate the plot
+                [dirName, filename, ~] = fileparts(abfFile);
+                [~, dirName, ~] = fileparts(dirName);
+                ax = findobj(fig, 'type', 'axes', 'Tag', '');
+                
+                plotTitle = strrep(dirName, '_', '\_');
+                plotSubtitle = strrep(strrep(filename, dirName, ''), '_', '');
+                
+                title(ax(end), {
+                    plotTitle
+                    plotSubtitle
+                    });
+                
+                
+                % save the plot in the output directory
+                s = hgexport('readstyle', 'PNG-4MP');
+                s.Format = 'png';
+                [outDir, ~, ~] = fileparts(this.outputFile);
+                hgexport(fig, fullfile(outDir, [filename '.png']), s);
+                close(fig);
+            else
+                excludeIx = [];
+                r = [];
+                q = [];
+            end
             
             
             % extract the sweeps
