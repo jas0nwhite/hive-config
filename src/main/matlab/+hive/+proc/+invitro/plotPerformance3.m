@@ -9,19 +9,31 @@ function [fig, ax1, ax2, ax3] = plotPerformance3(P)
     %
     colors = lines(8);
     
+    if P.Chem == Chem.pH
+        units = '';
+    else
+        units = sprintf(' (%s)', P.Chem.units);
+    end
+    
     %
     % PERFORMANCE
     %
     fig = figure;
     ax1 = subplot(3, 2, 1:4);
     hold on;
-    title(sprintf('performance  |  r^2 = %0.4f  |  RMSE = %0.1f nM',...
-        P.Summary.Fit.Rsquared.Ordinary, P.Summary.Fit.RMSE));
-    xlabel('label (nM)');
-    ylabel('mean prediction (nM)');
+    title(sprintf('performance  |  r^2 = %0.4f  |  RMSE = %0.1f%s',...
+        P.Summary.Fit.Rsquared.Ordinary, P.Summary.Fit.RMSE, units));
+    xlabel(sprintf('label%s', units));
+    ylabel(sprintf('mean prediction%s', units));
 
-    xlim([P.Xmin - 200, P.Xmax + 200]);
-    ylim([P.Xmin - 200, P.Xmax + 200]);
+    xlim([P.Xmin, P.Xmax]);
+    ylim([P.Xmin, P.Xmax]);
+    
+    xtwix = diff(xlim) / 20;
+    ytwix = diff(ylim) / 20;
+    
+    xlim(xlim + [-2*xtwix, 2*xtwix]);
+    ylim(ylim + [-2*ytwix, 2*ytwix]);
     
     h = refline(1, 0);
     h.Color = colors(2, :);
@@ -50,9 +62,9 @@ function [fig, ax1, ax2, ax3] = plotPerformance3(P)
     %
     ax2 = subplot(3, 2, 5);
     hold on;
-    title(sprintf('RMSE = %0.1f nM', rms(P.Noise)));
-    xlabel('label (nM)');
-    ylabel('RMSE (nM)');
+    title(sprintf('RMSE = %0.1f%s', rms(P.Noise), units));
+    xlabel(sprintf('label%s', units));
+    ylabel(sprintf('RMSE%s', units));
     
     xl = [P.Xmin, P.Xmax];
     yl = [min(P.Summary.Yrmse), max(P.Summary.Yrmse)];
@@ -81,10 +93,10 @@ function [fig, ax1, ax2, ax3] = plotPerformance3(P)
     ax3 = subplot(3, 2, 6);
     hold on;
     title(sprintf('SNR = %0.1f dB', snr(P.Y, P.Noise)));
-    xlabel('label (nM)');
+    xlabel(sprintf('label%s', units));
     ylabel('SNR (dB)');
     
-    xl = [10, P.Xmax];
+    xl = [max(P.Xmin, P.Xmax / 1000), P.Xmax];
     yl = [min(P.Summary.Ysnr), max(P.Summary.Ysnr)];
     xtwix = diff(xl) / 20;
     ytwix = diff(yl) / 20;
