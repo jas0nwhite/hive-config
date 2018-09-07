@@ -27,3 +27,4 @@ src/main/resources/h2caseclass.sed
 src/main/resources/h2scodec.sed
 src/main/resources/scodec.scala.txt
 src/test/scala/testing.sc
+__pycache__
