@@ -67,9 +67,12 @@ function [ fig ] = plotCalibration3( time, predictions, labels, stepIx, chems, m
         %
         % predicitons
         %
-        % hp = plot(X, Y(:, chemIx), '.', 'Color', colors(colorIx, :), ' MarkerSize', 10);
-        hp = scatter(X, Y(:, chemIx), 5, colors(colorIx, :), 'filled');
-        alpha(hp, alphaValue);
+        if numel(X) / nSteps > 100
+            hp = scatter(X, Y(:, chemIx), 5, colors(colorIx, :), 'filled');
+            alpha(hp, alphaValue);
+        else
+            plot(X, Y(:, chemIx), '.', 'Color', colors(colorIx, :), 'MarkerSize', 15);
+        end
 
         %
         % actual values
