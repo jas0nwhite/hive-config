@@ -92,7 +92,7 @@ function results = evaluateModels(this, setId, sourceId)
         results.snr(testId, resultAnalyteIx) = arrayfun(@(i) snr(signal(:, i), noise(:, i)), 1:size(signal, 2));
         
         % record analytes for proper assignment to grand results
-        results.analytes = chems(resIx);
+        results.analytes = chems(resultAnalyteIx);
     end
     
     fprintf('    %03d: DONE (%.3fs)\n', sourceId, toc(t));
