@@ -9,6 +9,7 @@ classdef Crossvalidator < hive.proc.ProcessorBase
         muMax
         trainingDebug = false
         removeJitter = true
+        skipTrainingLabels = cell(Chem.count, 1);
     end
     
     %
@@ -54,6 +55,10 @@ classdef Crossvalidator < hive.proc.ProcessorBase
             else
                 this.removeJitter = setting;
             end
+        end
+        
+        function this = withSkipTrainingLabels(this, chem, labels)
+            this.skipTrainingLabels{chem.ix, 1} = labels;
         end
         
         function this = process(this)

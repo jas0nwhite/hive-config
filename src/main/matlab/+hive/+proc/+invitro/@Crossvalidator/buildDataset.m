@@ -70,9 +70,9 @@ function buildDataset(this, dsIx)
             all.voltammograms{ix}(:, ixToRemove) = [];
         end
         
-        jitterOutput = sprintf('[-%d jitter]', nRemoved);
+        extraOutput = sprintf('[-%d jitter]', nRemoved);
     else
-        jitterOutput = '';
+        extraOutput = '';
     end
     
     % FIND TARGET ANALYTES
@@ -100,16 +100,23 @@ function buildDataset(this, dsIx)
         stepN = size(step, 1);
         stepValidN = numel(stepValidIx);
         
-        if (this.trainingPct >= 1)
-            if (this.trainingPct >= stepValidN)
-                % leave some samples left for testing
-                trainN = round(stepValidN * .9);
-            else
-                % use the specified number of samples
-                trainN = min(stepValidN, this.trainingPct);
-            end
+        stepLabels = unique(step, 'rows');
+        skipTraining = any(arrayfun(@(c) any(this.skipTrainingLabels{c, :} == stepLabels(c)), chemIx));
+        
+        if skipTraining
+            trainN = 0;
         else
-            trainN = round(stepValidN * this.trainingPct);
+            if (this.trainingPct >= 1)
+                if (this.trainingPct >= stepValidN)
+                    % leave some samples left for testing
+                    trainN = round(stepValidN * .9);
+                else
+                    % use the specified number of samples
+                    trainN = min(stepValidN, this.trainingPct);
+                end
+            else
+                trainN = round(stepValidN * this.trainingPct);
+            end
         end
         
         trainIx{ix} = datasample(index, trainN, 'Replace', false);
@@ -148,13 +155,17 @@ function buildDataset(this, dsIx)
     offset = 0;
     train.ix = cell(nSteps, 1);
     for i = 1:nSteps
-        train.ix{i} = (1:numel(trainIx{i})) + offset;
-        offset = max(train.ix{i});
+        if ~isempty(trainIx{i})
+            train.ix{i} = (1:numel(trainIx{i})) + offset;
+            offset = max(train.ix{i});
+        else
+            train.ix{i} = [];
+        end
     end
-    test.ix = train.ix(arrayfun(@(c) ~isempty(c{:}), train.ix));
+    train.ix = train.ix(arrayfun(@(c) ~isempty(c{:}), train.ix));
     
     save(cvTrainFile, '-struct', 'train');
     hive.util.appendDatasetInfo(cvTrainFile, name, id, setId, sourceId, this.treatment.name);
     
-    fprintf('    %03d: DONE (%.3fs) %s\n', id, toc(t), jitterOutput);
+    fprintf('    %03d: DONE (%.3fs) %s\n', id, toc(t), extraOutput);
 end
