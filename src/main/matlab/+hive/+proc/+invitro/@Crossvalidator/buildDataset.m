@@ -138,7 +138,9 @@ function buildDataset(this, dsIx)
     test.ix = cell(nSteps, 1);
     for i = 1:nSteps
         test.ix{i} = (1:numel(testIx{i})) + offset;
-        offset = max(test.ix{i});
+        if (~isempty(test.ix{i}))
+            offset = max(test.ix{i});
+        end
     end
     test.ix = test.ix(arrayfun(@(c) ~isempty(c{:}), test.ix));
     
