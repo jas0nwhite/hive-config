@@ -30,22 +30,10 @@ classdef (Abstract) ImporterBase < hive.proc.ProcessorBase
     %
     methods (Access = protected)
         
-        function processSet(this, setIx)
-            nSources = size(this.cfg.sourceCatalog{setIx}, 1);
-            
-            this.displayProcessSetHeader(setIx, nSources);
-            
-            args = this.getArgsForProcessSource(setIx);
-            
-            if this.doParfor
-                parfor sourceIx = 1:nSources
-                    this.processSource(setIx, sourceIx, args{:}) %#ok<PFBNS>
-                end
-            else
-                for sourceIx = 1:nSources
-                    this.processSource(setIx, sourceIx, args{:})
-                end
-            end
+        function numWorkers = getNumWorkers(~)
+            % override: to limit I/O on the working node, only run one
+            % AbfToMat job at a time... it is parallelized, anyway
+            numWorkers = 0;
         end
         
         function argv = getArgsForProcessSource(this, setIx)
@@ -56,11 +44,11 @@ classdef (Abstract) ImporterBase < hive.proc.ProcessorBase
                 };
         end
         
-        function displayProcessSetHeader(this, setIx, nSources)
+        function displayProcessSetHeader(this, setIx, nSources, nTotalSources)
             outPath = this.cfg.getSetValue(this.cfg.importPathList, setIx);
 
-            fprintf('\n***\n*** %s set %d (%d sources) into %s\n***\n\n',...
-                this.actionLabel, setIx, nSources, outPath);
+            fprintf('\n***\n*** NODE %d: %s set %d (%d / %d sources) into %s\n***\n\n',...
+                this.nodeId, this.actionLabel, setIx, nSources, nTotalSources, outPath);
         end
         
         function processSource(this, setIx, sourceIx, outPath, vgramWin, timeWin)

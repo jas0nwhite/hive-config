@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+module load Java
+
+SCRIPTHOME="$(dirname $0)"
+
+JVM_ARGS="-Dlog-level=${2:-WARN}"
+
+JAR="$SCRIPTHOME/hiveConfig.jar"
+
+java $JVM_ARGS -jar $JAR "$1"
+
+java_status=$?
+
+if [ $java_status == 3 ]
+then
+	echo
+	echo "Usage: $0 config-file"
+	echo
+	exit $java_status
+fi
+
+if [ $java_status != 0 ]
+then
+	echo
+	echo "*** CONFIGURATION FAILED ***"
+	echo
+	exit $java_status
+fi

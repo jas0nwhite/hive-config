@@ -7,8 +7,8 @@ function summarize(this)
     % read in all datasets
     nSets = numel(this.cfg.sourceCatalog);
 
-    for setId = 1:nSets
-        nSources = size(this.cfg.sourceCatalog{setId}, 1);
+    parfor (setId = 1:nSets, this.getNumWorkers())
+        nSources = size(this.cfg.sourceCatalog{setId}, 1); %#ok<PFBNS>
 
         % if there's nothing to do, move on...
         if nSources == 0
@@ -94,21 +94,34 @@ function summarize(this)
         validTruthNames = truthNames(validChemIx);
         validSignalNames = signalNames(validChemIx);
 
-        s = hgexport('readstyle', 'png-4MP');
-        s.Resolution = 300;
-        s.Format = 'png';
-
         figDir = this.testCfg.getSetValue(this.testCfg.resultPathList, setId);
 
         %
         % SAVE DATA
         %
-        save(fullfile(figDir, 'data.mat'), 'signalNames', 'truthNames', 'data', 'validChemIx', ...
-            'n', 'x', 'sd', 'rmse', 'snrdb', 'truth', 'signal', 'noise');
+        vars = struct();
+        vars.signalNames = signalNames;
+        vars.truthNames =  truthNames;
+        vars.data =        data;
+        vars.validChemIx = validChemIx;
+        vars.n =           n;
+        vars.x =           x;
+        vars.sd =          sd;
+        vars.rmse =        rmse;
+        vars.snrdb =       snrdb;
+        vars.truth =       truth;
+        vars.signal =      signal;
+        vars.noise =       noise;
+        
+        saveStruct(fullfile(figDir, 'data.mat'), vars);
         
         %
         % PLOTS PER CHEM
         %
+        s = hgexport('readstyle', 'png-4MP');
+        s.Resolution = 300;
+        s.Format = 'png';
+        
         for ix = 1:nValidChems
             signalName = validSignalNames{ix};
             truthName = validTruthNames{ix};
@@ -155,7 +168,7 @@ function summarize(this)
             close(fig);
 
             fid = fopen(fullfile(figDir, sprintf('fit-%s.txt', lower(chem.colName))), 'w');
-            txt = evalc('disp(fit)');
+            txt = getDispText(fit);
             txt = regexprep(txt, '<[/]?strong>', '');
             fprintf(fid, '%s', txt);
             fclose(fid);
@@ -202,3 +215,10 @@ function summarize(this)
 
 end
 
+function saveStruct(file, S)
+    save(file, '-struct', 'S');
+end
+
+function text = getDispText(object) %#ok<INUSD>
+    text = evalc('disp(object)');
+end

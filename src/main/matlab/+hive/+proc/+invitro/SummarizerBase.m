@@ -24,13 +24,32 @@ classdef (Abstract) SummarizerBase < hive.proc.ProcessorBase
             s.LineMode = 'scaled';
             
             for setIx = 1:nSets
-                nSources = this.cfg.getSize(this.cfg.sourceCatalog, setIx);
                 inPath = this.cfg.importPathList{setIx};
                 outPath = this.cfg.resultPathList{setIx};
                 
-                fprintf('\n***\n*** Plotting set %d from %s\n***\n\n', setIx, outPath);
+                % perform modulo-based dataset selection
+                [datasetIdsToProcess, allDatasetIds] = this.getDatasetIdsToProcess(setIx);
                 
-                parfor sourceIx = 1:nSources
+                % convert from datasetIds to sourceIxs (within set)
+                [setIxsToProcess, sourceIxsToProcess] = this.cfg.getSourceIxByDatasetId(datasetIdsToProcess);
+                assert(numel(setIxsToProcess) ~= 1 || setIxsToProcess == setIx);
+                
+                if iscell(sourceIxsToProcess)
+                    sourceIxsToProcess = cell2mat(sourceIxsToProcess);
+                end
+                
+                nSources = numel(sourceIxsToProcess);
+                
+                fprintf('\n***\n*** NODE %d: Plotting set %d (%d / %d sources) from %s\n***\n\n', ...
+                    this.nodeId, setIx, nSources, numel(allDatasetIds), outPath);
+                
+                if nSources == 0
+                    return
+                end
+                
+                parfor (jobIx = 1:nSources, this.getNumWorkers())
+                    sourceIx = sourceIxsToProcess(jobIx);
+                    
                     [id, name, ~] = this.cfg.getSourceInfo(setIx, sourceIx); %#ok<PFBNS>
                     
                     fprintf('    dataset %03d: %s... ', id, name);
@@ -135,11 +154,11 @@ classdef (Abstract) SummarizerBase < hive.proc.ProcessorBase
                 };
         end
         
-        function displayProcessSetHeader(this, setIx, nSources)
+        function displayProcessSetHeader(this, setIx, nSources, nTotalSources)
             path = this.cfg.getSetValue(this.cfg.importPathList, setIx);
             
-            fprintf('\n***\n*** %s set %d (%d sources) from %s\n***\n\n',...
-                this.actionLabel, setIx, nSources, path);
+            fprintf('\n***\n*** NODE %d: %s set %d (%d / %d sources) from %s\n***\n\n',...
+                this.nodeId, this.actionLabel, setIx, nSources, nTotalSources, path);
         end
         
         function processSource(this, setIx, sourceIx, inPath, outPath)
@@ -154,7 +173,7 @@ classdef (Abstract) SummarizerBase < hive.proc.ProcessorBase
             
             if this.overwrite || ~exist(outFile, 'file')
                 
-                [summary, status] = this.analyzeVgramFile(vgramFile); %#ok<ASGLU>
+                [summary, status] = this.analyzeVgramFile(vgramFile);
                 
                 if status == hive.Status.Success
                     if (~exist(outDir, 'dir'))

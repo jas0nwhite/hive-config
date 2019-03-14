@@ -30,20 +30,35 @@ classdef (Abstract) CatalogBase
             end
         end
         
+        function id = getDatasetId(this, setIx, sourceIx)
+            if isempty(this.datasetCatalog{setIx})
+                id = NaN;
+            else                
+                id = this.datasetCatalog{setIx}{sourceIx, 1};
+            end
+        end
+        
         function [setIx, sourceIx] = getSourceIxByDatasetId(this, datasetId)
             nSets = size(this.datasetCatalog, 1);
             locations = cell(nSets, 1);
             
             for ix = 1:nSets
                 if ~isempty(this.datasetCatalog{ix})
-                    locations{ix} = find(vertcat(this.datasetCatalog{ix}{: , 1}) == datasetId);
+                    ixList = vertcat(this.datasetCatalog{ix}{: , 1});
+                    [mL, mIx] = ismember(datasetId, ixList);
+                    locations{ix} = mIx(mL);
                 else
                     locations{ix} = [];
                 end
             end
             
             setIx = find(cellfun(@(v) ~isempty(v), locations));
-            sourceIx = locations{setIx};
+            
+            if numel(datasetId) == 1
+                sourceIx = locations{setIx, 1};
+            else
+                sourceIx = locations(setIx, :);
+            end
         end
         
         function val = getSetValue(~, setList, setIx)

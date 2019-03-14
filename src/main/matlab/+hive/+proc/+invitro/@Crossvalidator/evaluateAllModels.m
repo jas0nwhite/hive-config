@@ -23,15 +23,10 @@ function evaluateAllModels( this, setId )
     % process all sources
     sourceResults = cell(nSources, 1);
     
-    if this.doParfor
-        parfor sourceId = 1:nSources
-            sourceResults{sourceId} = this.evaluateModels(setId, sourceId); %#ok<PFBNS>
-        end
-    else
-        for sourceId = 1:nSources
-            sourceResults{sourceId} = this.evaluateModels(setId, sourceId);
-        end
+    parfor (sourceId = 1:nSources, this.getNumWorkers())
+        sourceResults{sourceId} = this.evaluateModels(setId, sourceId); %#ok<PFBNS>
     end
+    
     
     % collate
     results.analytes = Chem.names;

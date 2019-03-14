@@ -9,7 +9,9 @@ classdef Crossvalidator < hive.proc.ProcessorBase
         muMax
         trainingDebug = false
         removeJitter = true
-        skipTrainingLabels = cell(Chem.count, 1);
+        skipTrainingLabels = cell(Chem.count, 1)
+        processSets = true
+        processSources = true
     end
     
     %
@@ -61,100 +63,130 @@ classdef Crossvalidator < hive.proc.ProcessorBase
             this.skipTrainingLabels{chem.ix, 1} = labels;
         end
         
+        function this = forSourcesOnly(this)
+            this.processSources = true;
+            this.processSets = false;
+        end
+        
+        function this = forSetsOnly(this)
+            this.processSources = false;
+            this.processSets = true;
+        end
+        
         function this = process(this)
+            % set up
             if this.doParfor
-                gcp();
+                p = gcp();
+                this.x_cpuCount = p.NumWorkers;
+            else
+                this.x_cpuCount = 0; % force parfor loops to run in workspace
+            end
+            
+            % perform modulo-based dataset selection
+            nFull = this.cfg.getSize(this.cfg.datasetCatalog);
+            fullList = 1:nFull;
+            nodeIds = mod(fullList, this.nodeCount);
+            processList = fullList(nodeIds == this.nodeId);
+            nDatasets = numel(processList);
+            
+            if nDatasets == 0
+                fprintf('*** NODE %d: NO DATASETS\n\n', this.nodeId);
+                return
             end
             
             %
             % ASSEMBLE TRAINING AND TESTING DATA
             %
-            nDatasets = this.cfg.getSize(this.cfg.datasetCatalog);
-            
-            g = tic;
-            fprintf('*** ASSEMBLING %d DATASETS...\n\n', nDatasets);
-            
-            if this.doParfor
-                parfor dsIx = 1:nDatasets
-                    this.buildDataset(dsIx); %#ok<PFBNS>
+            if this.processSources
+                g = tic;
+                
+                fprintf('*** NODE %d: ASSEMBLING %d DATASETS...\n\n', this.nodeId, nDatasets);
+                
+                parfor (ix = 1:nDatasets, this.getNumWorkers())
+                    this.buildDataset(processList(ix)); %#ok<PFBNS>
                 end
+                
+                fprintf('\n*** DONE (%.3fs)\n\n\n', toc(g));
             else
-                for dsIx = 1:nDatasets
-                    this.buildDataset(dsIx);
-                end
+                fprintf('*** NODE %d: SKIP ASSEMBLE DATASETS (forSetsOnly)\n\n', this.nodeId);
             end
-            
-            fprintf('\n*** DONE (%.3fs)\n\n\n', toc(g));
             
             
             %
             % TRAIN
             %
-            g = tic;
-            
-            fprintf('*** TRAINING %d MODELS...\n\n', nDatasets);
-            
-            for dsIx = 1:nDatasets
-                this.trainModel(dsIx);
+            if this.processSources
+                g = tic;
+                
+                % here, trainModel() uses parfor, so we can't
+                fprintf('*** NODE %d: TRAINING %d MODELS...\n\n', this.nodeId, nDatasets);
+                
+                for ix = 1:nDatasets
+                    this.trainModel(processList(ix));
+                end
+                
+                fprintf('\n*** DONE (%.3fs)\n\n\n', toc(g));
+            else
+                fprintf('*** NODE %d: SKIP TRAIN MODELS (forSetsOnly)\n\n', this.nodeId);
             end
-            
-            fprintf('\n*** DONE (%.3fs)\n\n\n', toc(g));
             
             
             %
             % TEST
             %
-            g = tic;
-            
-            fprintf('*** TESTING %d DATASETS...\n\n', nDatasets);
-            
-            if this.doParfor
-                parfor dsIx = 1:nDatasets
-                    this.generatePredictions(dsIx); %#ok<PFBNS>
+            if this.processSources
+                g = tic;
+                
+                fprintf('*** NODE %d: TESTING %d DATASETS...\n\n', this.nodeId, nDatasets);
+                
+                parfor (ix = 1:nDatasets, this.getNumWorkers())
+                    this.generatePredictions(processList(ix)); %#ok<PFBNS>
                 end
+                
+                fprintf('\n*** DONE (%.3fs)\n\n\n', toc(g));
             else
-                for dsIx = 1:nDatasets
-                    this.generatePredictions(dsIx);
-                end
+                fprintf('*** NODE %d: SKIP TEST DATASETS (forSetsOnly)\n\n', this.nodeId);
             end
-            
-            fprintf('\n*** DONE (%.3fs)\n\n\n', toc(g));
             
             
             %
             % ANALYZE
             %
-            g = tic;
-            
-            fprintf('*** ANALYZING %d DATASETS...\n\n', nDatasets);
-            
-            if this.doParfor
-                parfor dsIx = 1:nDatasets
-                    this.analyzeDataset(dsIx); %#ok<PFBNS>
+            if this.processSources
+                g = tic;
+                
+                fprintf('*** NODE %d: ANALYZING %d DATASETS...\n\n', this.nodeId, nDatasets);
+                
+                parfor (ix = 1:nDatasets, this.getNumWorkers())
+                    this.analyzeDataset(processList(ix)); %#ok<PFBNS>
                 end
+                
+                fprintf('\n*** DONE (%.3fs)\n\n\n', toc(g));
             else
-                for dsIx = 1:nDatasets
-                    this.analyzeDataset(dsIx);
-                end
+                fprintf('*** NODE %d: SKIP ANALYZE DATASETS (forSetsOnly)\n\n', this.nodeId);
             end
-            
-            fprintf('\n*** DONE (%.3fs)\n\n\n', toc(g));
             
             
             %
             % EVALUATE MODELS
-            %
-            g = tic;
-            
-            nSets = size(this.cfg.sourceCatalog, 1);
-            
-            fprintf('*** CROSS-EVALUATING %d SETS...\n\n', nSets);
-            
-            for setId = 1:nSets
-               this.evaluateAllModels(setId); 
+            %            
+            if this.processSets
+                g = tic;
+                
+                nSets = size(this.cfg.sourceCatalog, 1);
+                
+                fprintf('*** NODE %d: CROSS-EVALUATING %d SETS...\n\n', nSets);
+                
+                for setId = 1:nSets
+                    this.evaluateAllModels(setId);
+                end
+                
+                fprintf('\n*** DONE (%.3fs)\n\n\n', toc(g));
+            else
+                fprintf('*** NODE %d: SKIP CROSS-EVALUATE SETS (forSourcesOnly)\n\n', this.nodeId);
             end
             
-            fprintf('\n*** DONE (%.3fs)\n\n\n', toc(g));
+            
         end
     end
     
@@ -163,13 +195,13 @@ classdef Crossvalidator < hive.proc.ProcessorBase
     %
     methods
         
-        buildDataset(this, dsIx)
+        buildDataset(this, ix)
         
-        trainModel(this, dsIx)
+        trainModel(this, ix)
         
-        generatePredictions(this, dsIx)
+        generatePredictions(this, ix)
         
-        analyzeDataset(this, dsIx)
+        analyzeDataset(this, ix)
         
         summarize(this)
         

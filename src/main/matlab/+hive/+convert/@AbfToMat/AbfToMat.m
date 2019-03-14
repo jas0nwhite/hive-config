@@ -344,11 +344,18 @@ classdef AbfToMat < hive.util.Logging
                 end
             end
             
-            save(this.outputFile, 'voltammograms');
+            varinfo = whos('voltammograms');
+            formatArgs = {};
+            if varinfo.bytes > 1.75 * 2^30
+                % vgrams are over 1.75G... use v7.3 format
+                formatArgs = {'-v7.3', '-nocompression'};
+            end
+            
+            save(this.outputFile, 'voltammograms', formatArgs{:});
             this.appendDatasetInfo(this.outputFile);
             
             if sum(arrayfun(@(c) numel(c{:}), otherData)) > 0
-                save(this.otherFile, 'otherData', 'otherChannels');
+                save(this.otherFile, 'otherData', 'otherChannels', '-v7.3', '-nocompression');
                 this.appendDatasetInfo(this.otherFile);
             end
             
