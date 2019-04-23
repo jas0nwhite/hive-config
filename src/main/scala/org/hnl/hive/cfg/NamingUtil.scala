@@ -50,15 +50,17 @@ object NamingUtil extends Logging {
   val serotoninP = s"""(?:serotonin|5HT)${fastq}${uncorrq}"""
   val norepiP = s"""(?:norepinephrine|NE)${fastq}${uncorrq}"""
   val hiaaP = s"""(?:5HIAA)${fastq}${uncorrq}"""
+  val kynaP = s"""(?:KYNA)${fastq}${uncorrq}"""
   val phP = s"""pH_[LH]{3}${fastq}${altq}${uncorrq}"""
   val randomP = """(?:increased_|decreased_)?random_high_(?:DA|5HT)(?:_[0-9])?"""
-  val mixtureP = s"""(?:(?:DA|5HT|NE|5HIAA|pH)_?){2,5}${octaflowq}${fastq}${uncorrq}"""
+  val mixtureP = s"""(?:(?:DA|5HT|NE|5HIAA|KYNA|pH)_?){2,6}${octaflowq}${fastq}${uncorrq}"""
 
   val pH = new Regex(s"""(${dateP})_(${phP})_(${nameP})_?(${dateP})?${ordinalq}?""")
   val dopamine = new Regex(s"""(${dateP})_(${dopamineP})_(${nameP})_?(${dateP})?${ordinalq}?""")
   val serotonin = new Regex(s"""(${dateP})_(${serotoninP})_(${nameP})_?(${dateP})?${ordinalq}?""")
   val norepi = new Regex(s"""(${dateP})_(${norepiP})_(${nameP})_?(${dateP})?${ordinalq}?""")
   val hiaa = new Regex(s"""(${dateP})_(${hiaaP})_(${nameP})_?(${dateP})?${ordinalq}?""")
+  val kyna = new Regex(s"""(${dateP})_(${kynaP})_(${nameP})_?(${dateP})?${ordinalq}?""")
   val random = new Regex(s"""(${dateP})_(${randomP})_(${nameP})_?(${dateP})?${ordinalq}?""")
   val mixture = new Regex(s"""(${dateP})_(${mixtureP})_?(${nameP})?_?(${dateP})?${ordinalq}?""")
 
@@ -70,6 +72,7 @@ object NamingUtil extends Logging {
       case serotonin(dsDate, dsProtocol, probeName, null)      => Some(InvitroDataset(dsDate, "serotonin", dsProtocol, probeName, ""))
       case norepi(dsDate, dsProtocol, probeName, null)         => Some(InvitroDataset(dsDate, "norepinephrine", dsProtocol, probeName, ""))
       case hiaa(dsDate, dsProtocol, probeName, null)           => Some(InvitroDataset(dsDate, "5-hydroxyindoleacetic acid", dsProtocol, probeName, ""))
+      case kyna(dsDate, dsProtocol, probeName, null)           => Some(InvitroDataset(dsDate, "kynurenic acid", dsProtocol, probeName, ""))
       case random(dsDate, dsProtocol, probeName, null)         => Some(InvitroDataset(dsDate, "mixture", dsProtocol, probeName, ""))
       case mixture(dsDate, dsProtocol, null, null)             => Some(InvitroDataset(dsDate, "mixture", dsProtocol, "", ""))
       case mixture(dsDate, dsProtocol, probeName, null)        => Some(InvitroDataset(dsDate, "mixture", dsProtocol, probeName, ""))
@@ -80,6 +83,7 @@ object NamingUtil extends Logging {
       case serotonin(dsDate, dsProtocol, probeName, probeDate) => Some(InvitroDataset(dsDate, "serotonin", dsProtocol, probeName, probeDate))
       case norepi(dsDate, dsProtocol, probeName, probeDate)    => Some(InvitroDataset(dsDate, "norepinephrine", dsProtocol, probeName, probeDate))
       case hiaa(dsDate, dsProtocol, probeName, probeDate)      => Some(InvitroDataset(dsDate, "5-hydroxyindoleacetic acid", dsProtocol, probeName, probeDate))
+      case kyna(dsDate, dsProtocol, probeName, probeDate)      => Some(InvitroDataset(dsDate, "kynurenic acid", dsProtocol, probeName, probeDate))
       case random(dsDate, dsProtocol, probeName, probeDate)    => Some(InvitroDataset(dsDate, "mixture", dsProtocol, probeName, probeDate))
       case mixture(dsDate, dsProtocol, probeName, probeDate)   => Some(InvitroDataset(dsDate, "mixture", dsProtocol, probeName, probeDate))
 
