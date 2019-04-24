@@ -4,7 +4,7 @@
 #SBATCH --output=log/iv-sets.out
 #SBATCH --error=log/iv-sets.err
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=24
+#SBATCH --cpus-per-task=40
 
 
 ######################
@@ -12,7 +12,7 @@
 ######################
 
 # collect job information
-NODE_ID=1
+NODE_ID=0
 NUM_NODES=$SLURM_NTASKS
 NUM_CPUS=$SLURM_CPUS_PER_TASK
 
@@ -23,6 +23,9 @@ sleep 1
 
 # load MATLAB module
 module load MATLAB || exit 1
+
+# get rid of default java options (not sure where this is coming from)
+unset _JAVA_OPTIONS
 
 # run matlab
 matlab -nodisplay -nosplash -nodesktop << EOF

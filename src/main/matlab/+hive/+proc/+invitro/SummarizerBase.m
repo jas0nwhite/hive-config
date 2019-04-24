@@ -48,6 +48,7 @@ classdef (Abstract) SummarizerBase < hive.proc.ProcessorBase
                 end
                 
                 parfor (jobIx = 1:nSources, this.getNumWorkers())
+                %for (jobIx = 1:nSources)
                     sourceIx = sourceIxsToProcess(jobIx);
                     
                     [id, name, ~] = this.cfg.getSourceInfo(setIx, sourceIx); %#ok<PFBNS>

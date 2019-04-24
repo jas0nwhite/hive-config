@@ -6,7 +6,7 @@ function process_cluster_sets( nodeId, nodeCount, cpuCount )
     addpath(fullfile(pwd, 'lib', 'glmnet_interface'));
     addpath(fullfile(pwd, 'testing'));
 
-    overwrite = false;
+    overwrite = true;
     parallel = (cpuCount > 1);
     R2017a = strcmp(version('-release'), '2017a');
 
@@ -17,13 +17,18 @@ function process_cluster_sets( nodeId, nodeCount, cpuCount )
     % set up and configure parallel pool
     if parallel && isempty(gcp('nocreate'))
         pc = parcluster('local');
-        [~, host] = system('hostname');
-        pc.JobStorageLocation = fullfile(pc.JobStorageLocation, strtrim(lower(host)));
-        pc.NumThreads = 2;
+        
+        jobDir = fullfile(pc.JobStorageLocation, sprintf('job%03d', nodeId));
+        if ~exist(jobDir, 'dir')
+            mkdir(jobDir);
+        end
+        
+        pc.JobStorageLocation = jobDir;
+        pc.NumThreads = 1;
         pc.NumWorkers = cpuCount;
-
+        
         disp(pc);
-
+        
         parpool(pc, cpuCount, 'IdleTimeout', Inf);
     end
 

@@ -175,7 +175,7 @@ classdef Crossvalidator < hive.proc.ProcessorBase
                 
                 nSets = size(this.cfg.sourceCatalog, 1);
                 
-                fprintf('*** NODE %d: CROSS-EVALUATING %d SETS...\n\n', nSets);
+                fprintf('*** NODE %d: CROSS-EVALUATING %d SETS...\n\n', this.nodeId, nSets);
                 
                 for setId = 1:nSets
                     this.evaluateAllModels(setId);
