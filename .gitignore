@@ -29,3 +29,4 @@ src/main/resources/scodec.scala.txt
 src/test/scala/testing.sc
 __pycache__
 hiveConfig.jar
+.ipynb_checkpoints
