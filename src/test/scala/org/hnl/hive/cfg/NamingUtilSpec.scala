@@ -128,6 +128,18 @@ class NamingUtilSpec extends WordSpec with Matchers with Inspectors with OptionV
         probeDate("")
       )
 
+      val option6 = NamingUtil.datasetInfoFromName("2019_05_15_pH_uncorrelated_100k_97Hz_CFR001")
+
+      option6 should not be (null)
+      option6 shouldBe defined
+      option6.value should have(
+        dsDate("2019_05_15"),
+        dsClass("pH"),
+        dsProtocol("pH_uncorrelated_100k_97Hz"),
+        probeName("CFR001"),
+        probeDate("")
+      )
+
     }
 
     "parse three-transmitter dataset names" in {

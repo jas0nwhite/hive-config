@@ -16,7 +16,7 @@ mainClass in assembly := Some("org.hnl.hive.cfg.GenerateHiveConfig")
 
 libraryDependencies ++= {
   Seq(
-  	"org.clapper"                      %% "grizzled-scala"         % "4.2.0",
+  	"org.clapper"                      %% "grizzled-scala"         % "4.9.0",
   	"com.typesafe"                      % "config"                 % "1.3.1",
   	"com.jsuereth"                     %% "scala-arm"              % "2.0",
 	"org.scodec"                       %% "scodec-stream"          % "1.0.1",

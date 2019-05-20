@@ -25,15 +25,16 @@ import resource.managed
 class LabelCatalog(config: TreatmentConfig) extends Logging {
 
   case class Line(
-      datasetId: Int,
-      fileId: Int,
+      datasetId:      Int,
+      fileId:         Int,
       concentrations: List[Double],
-      onset: Double,
-      offset: Double,
-      exclude: Boolean,
-      notes: String,
-      file: String,
-      probe: String) extends Ordered[Line] {
+      onset:          Double,
+      offset:         Double,
+      exclude:        Boolean,
+      notes:          String,
+      file:           String,
+      probe:          String
+  ) extends Ordered[Line] {
 
     def toCsvLine: String =
       s"""$datasetId,$fileId,${concentrations.mkString(",")},$onset,$offset,$exclude,$notes,$file,$probe\n"""
@@ -167,10 +168,11 @@ class LabelCatalog(config: TreatmentConfig) extends Logging {
 
         val colIx = getColumnIndices(csvHdr)
 
-        debug(s"file  : ${file}")
-        debug(s"target: ${targetColumns.mkString(",")}")
-        debug(s"CSV   : ${csvHdr}")
-        debug(s"index : ${colIx.mkString(",")}")
+        debug(s"file    : ${file}")
+        debug(s"target  : ${targetColumns.mkString(",")}")
+        debug(s"CSV     : ${csvHdr}")
+        debug(s"index   : ${colIx.mkString(",")}")
+        debug(s"rawspec : ${rawGlob}")
 
         // get the position (index) of each column
         val ixs = ListBuffer(colIx: _*)
@@ -204,9 +206,9 @@ class LabelCatalog(config: TreatmentConfig) extends Logging {
             .replaceAllLiterally("\"", "")
             .replaceAllLiterally("''", "")
             .replaceAllLiterally(",", ";")
-          suffix = f"$fileId%04d.abf"
-          _ = debug(s"$line -> *$suffix")
-          rawfile = rawFiles.filter(s => s.endsWith(suffix)).head
+          suffix = f".*${fileId}%04d${rawGlob.replace("*.", "[.]")}$$"
+          _ = debug(s"${line} -> ${suffix}")
+          rawfile = rawFiles.filter(s => s matches suffix).head
 
         } yield Line(datasetId, fileId, concentrations, onset, offset, exclude, notes, rawfile, probeName.getOrElse("<error>"))
 

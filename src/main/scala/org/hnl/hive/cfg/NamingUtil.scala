@@ -42,6 +42,7 @@ object NamingUtil extends Logging {
   val bypassq = """(?:_bypass)?"""
   val uncorrq = s"""(?:_(?:uncorrelated|RBV[^_]*)${octaflowq}${bypassq}_[0-9]+k_[0-9]+Hz)?"""
   val ordinalq = """(?:_\d{1})?"""
+  val lowhighq = """(?:_[LH]{3})?"""
 
   val dateP = """\d{4}_\d{2}_\d{2}"""
   val nameP = """(?:[ap]m\d?_)?(?:[A-Za-z]+|[A-Za-z]+_[A-Za-z]+|[A-Za-z0-9]+)"""
@@ -51,7 +52,7 @@ object NamingUtil extends Logging {
   val norepiP = s"""(?:norepinephrine|NE)${fastq}${uncorrq}"""
   val hiaaP = s"""(?:5HIAA)${fastq}${uncorrq}"""
   val kynaP = s"""(?:KYNA)${fastq}${uncorrq}"""
-  val phP = s"""pH_[LH]{3}${fastq}${altq}${uncorrq}"""
+  val phP = s"""pH${lowhighq}${fastq}${altq}${uncorrq}"""
   val randomP = """(?:increased_|decreased_)?random_high_(?:DA|5HT)(?:_[0-9])?"""
   val mixtureP = s"""(?:(?:DA|5HT|NE|5HIAA|KYNA|pH)_?){2,6}${octaflowq}${fastq}${uncorrq}"""
 
