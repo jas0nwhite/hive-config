@@ -8,7 +8,7 @@ classdef (Abstract) ProcessorBase < hive.util.Logging
         actionLabel = 'Processing'
         overwrite = false;
         doParfor = true;
-        nodeId = 1;
+        nodeId = 0;
         nodeCount = 1;
         x_cpuCount
     end

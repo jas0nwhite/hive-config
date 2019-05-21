@@ -4,7 +4,7 @@ classdef (Abstract) ImporterBase < hive.proc.ProcessorBase
     
     properties (Access = protected)
         labels
-        vgramChannel = 'FSCV_1'
+        vgramChannel = 'FSCV'
         jitterCorrector = []
     end
     
@@ -57,14 +57,14 @@ classdef (Abstract) ImporterBase < hive.proc.ProcessorBase
             t = tic;
             
             % find chemcial labels and names
-            abfIx = this.labels.datasetId == id;
+            rawIx = this.labels.datasetId == id;
             chemIx = (1:Chem.count) + 2;
-            abfLabels = table2array(this.labels(abfIx, chemIx));
-            abfChemNames = arrayfun(@(ix) Chem.get(ix).name, 1:Chem.count, 'UniformOutput', false);
+            rawLabels = table2array(this.labels(rawIx, chemIx));
+            rawChemNames = arrayfun(@(ix) Chem.get(ix).name, 1:Chem.count, 'UniformOutput', false);
             
-            abfFiles = this.labels.file(abfIx);
+            rawFiles = this.labels.file(rawIx);
             
-            fprintf('    dataset %03d (%d files): %s... ', id, length(abfFiles), name);
+            fprintf('    dataset %03d (%d files): %s... ', id, length(rawFiles), name);
             
             outDir = fullfile(outPath, name);
             
@@ -77,13 +77,28 @@ classdef (Abstract) ImporterBase < hive.proc.ProcessorBase
             labelFile = fullfile(outDir, this.cfg.labelFile);
             otherFile = fullfile(outDir, 'otherwaveforms.mat');
             
-            status = hive.convert.AbfToMat(abfFiles, this.vgramChannel, vgramFile, metaFile, otherFile, vgramWin, timeWin)...
-                .withOverwrite(this.overwrite)...
-                .withLabels(abfLabels, abfChemNames, labelFile)...
-                .withDatasetInfo(name, id, setIx, sourceIx, this.treatment.name)...
-                .withJitterCorrector(this.jitterCorrector)...
-                .inParallel(this.doParfor)...
-                .convert;
+            if ~isempty(rawFiles)
+                if all(endsWith(rawFiles, '.abf', 'IgnoreCase', true))
+                    converter = hive.convert.AbfToMat(...
+                        rawFiles, this.vgramChannel, vgramFile, metaFile, otherFile, vgramWin, timeWin);
+                elseif all(endsWith(rawFiles, '.h5', 'IgnoreCase', true))
+                    converter = hive.convert.H5ToMat(...
+                        rawFiles, this.vgramChannel, vgramFile, metaFile, otherFile, vgramWin, timeWin);
+                else
+                    this.error( ...
+                        'UnsupportedFileMix', ...
+                        'mixture of .abf and .h5 files not yet supported [%d: %s]', ...
+                        setIx, name);
+                end
+                
+                status = converter...
+                    .withOverwrite(this.overwrite)...
+                    .withLabels(rawLabels, rawChemNames, labelFile)...
+                    .withDatasetInfo(name, id, setIx, sourceIx, this.treatment.name)...
+                    .withJitterCorrector(this.jitterCorrector)...
+                    .inParallel(this.doParfor)...
+                    .convert;
+            end
             
             fprintf('%s (%.3fs)\n', char(status), toc(t));
         end
