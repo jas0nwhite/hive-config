@@ -16,6 +16,31 @@ function trainModel(this, dsIx)
     
     training = load(cvTrainFile);
     
+    % DETERMINE CV FOLDS
+    [nObvs, ~] = size(training.labels);
+    
+    switch this.treatment.trainingStyleId
+        case 9
+            % generate folds by unique combinations of analytes
+            combos = unique(training.labels, 'rows');
+            nFolds = size(combos, 1);
+            foldId = nan(nObvs, 1);
+            
+            for fold = 1:nFolds
+                foldIx = ismember(training.labels, combos(fold, :), 'rows');
+                foldId(foldIx) = fold;
+            end
+            
+        otherwise
+            % generate 10 randomly-selected folds
+            rng(032272);
+            nFolds = 10;
+            foldId = randsample(...
+                1:nFolds,...
+                nObvs,...
+                true);
+    end
+    
     % DETERMINE ALPHA RANGE
     switch this.treatment.alphaSelectId
         case 0
@@ -28,10 +53,10 @@ function trainModel(this, dsIx)
     
     % TRAIN
     CVerr = hive.proc.train.trainModelForAlpha(...
-        training.voltammograms, training.labels, alphaRange, this.trainingDebug); %#ok<NASGU>
+        training.voltammograms, training.labels, foldId, alphaRange, this.trainingDebug);
     
     save(cvModelFile, 'CVerr');
     hive.util.appendDatasetInfo(cvModelFile, name, id, setId, sourceId, this.treatment.name);
     
-    fprintf('    %03d: DONE (%.3fs)\n', id, toc(t));
+    fprintf('    %03d: %03d-fold-cv DONE (%.3fs)\n', id, nFolds, toc(t));
 end

@@ -1,15 +1,15 @@
-function CVerr = trainModelForAlpha(voltammograms, labels, alphaRange, debug)
+function CVerr = trainModelForAlpha(voltammograms, labels, foldId, alphaRange, debug)
 %TRAINMODELFORALPHA Summary of this function goes here
 %   Detailed explanation goes here
 
     % check args
-    narginchk(2, 4);
+    narginchk(2, 5);
     
-    if nargin < 3
+    if nargin < 4
         alphaRange = 1.0;
     end
     
-    if nargin < 4
+    if nargin < 5
         debug = false;
     end
     
@@ -21,6 +21,19 @@ function CVerr = trainModelForAlpha(voltammograms, labels, alphaRange, debug)
         error('observation dimensions disagree: voltammograms[%d x %d], labels[%d x %d]', ...
             nObvs, nAnalytes, nSweeps, nSamples);
     end
+    
+    % create cv-folds if not passed in
+    if nargin < 3
+        % generate 10 randomly-selected folds
+        rng(032272);
+        nFolds = 10;
+        foldId = randsample(...
+            1:nFolds,...
+            nObvs,...
+            true);
+    end
+    
+    nFolds = numel(unique(foldId));
     
     % choose family for glmnet fit
     if nAnalytes == 1
@@ -37,14 +50,6 @@ function CVerr = trainModelForAlpha(voltammograms, labels, alphaRange, debug)
     % prepare response matrix
     %  - dimensions: (glmnet) observations x variables
     Y = labels;
-    
-    % cross-validation folds
-    rng(032272);
-    nFolds = 10;
-    foldId = randsample(...
-        1:nFolds,...
-        nObvs,...
-        true);
     
     % train for each alpha in the range
     nAlpha = numel(alphaRange);
