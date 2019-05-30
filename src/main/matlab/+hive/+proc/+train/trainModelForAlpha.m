@@ -1,17 +1,25 @@
-function CVerr = trainModelForAlpha(voltammograms, labels, foldId, alphaRange, debug)
+function CVerr = trainModelForAlpha(voltammograms, labels, foldId, alphaRange, preprocFn, debug)
 %TRAINMODELFORALPHA Summary of this function goes here
 %   Detailed explanation goes here
 
     % check args
-    narginchk(2, 5);
+    narginchk(2, 6);
     
+    % default alpha == LASSO
     if nargin < 4
         alphaRange = 1.0;
     end
     
+    % default preprocess == diff
     if nargin < 5
+        preprocFn = @(x) diff(x, 1, 1);
+    end
+    
+    % default debug == false
+    if nargin < 6
         debug = false;
     end
+    
     
     % make sure dimensions are correct
     [nObvs, nAnalytes] = size(labels);    
@@ -43,9 +51,8 @@ function CVerr = trainModelForAlpha(voltammograms, labels, foldId, alphaRange, d
     end
     
     % prepare input matrix
-    %  - first differential along "sample" dimension
     %  - dimensions: (glmnet) observations x variables
-    X = diff(voltammograms, 1, 1)';
+    X = preprocFn(voltammograms)';
     
     % prepare response matrix
     %  - dimensions: (glmnet) observations x variables

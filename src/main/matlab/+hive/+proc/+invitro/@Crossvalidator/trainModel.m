@@ -20,16 +20,16 @@ function trainModel(this, dsIx)
     [nObvs, ~] = size(training.labels);
     
     switch this.treatment.trainingStyleId
-        case 9
-            % generate folds by unique combinations of analytes
-            combos = unique(training.labels, 'rows');
-            nFolds = size(combos, 1);
-            foldId = nan(nObvs, 1);
-            
-            for fold = 1:nFolds
-                foldIx = ismember(training.labels, combos(fold, :), 'rows');
-                foldId(foldIx) = fold;
-            end
+        % case 9
+        %     % generate folds by unique combinations of analytes
+        %     combos = unique(training.labels, 'rows');
+        %     nFolds = size(combos, 1);
+        %     foldId = nan(nObvs, 1);
+        % 
+        %     for fold = 1:nFolds
+        %         foldIx = ismember(training.labels, combos(fold, :), 'rows');
+        %         foldId(foldIx) = fold;
+        %     end
             
         otherwise
             % generate 10 randomly-selected folds
@@ -51,9 +51,20 @@ function trainModel(this, dsIx)
             error('unhandled alphaSelectId %03d', cfg.alphaSelectId);
     end
     
+    % DETERMINE PREPROCESSING FUNCTION
+    switch this.treatment.trainingStyleId
+        case 9
+            % use FFT
+            preprocFn = @hive.proc.model.log_P1_fft;
+            
+        otherwise
+            % use first derivative (difference)
+            preprocFn = @hive.proc.model.first_diff;
+    end
+    
     % TRAIN
     CVerr = hive.proc.train.trainModelForAlpha(...
-        training.voltammograms, training.labels, foldId, alphaRange, this.trainingDebug);
+        training.voltammograms, training.labels, foldId, alphaRange, preprocFn, this.trainingDebug);
     
     save(cvModelFile, 'CVerr');
     hive.util.appendDatasetInfo(cvModelFile, name, id, setId, sourceId, this.treatment.name);
