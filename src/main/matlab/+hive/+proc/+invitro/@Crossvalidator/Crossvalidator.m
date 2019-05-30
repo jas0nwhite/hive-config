@@ -12,6 +12,7 @@ classdef Crossvalidator < hive.proc.ProcessorBase
         skipTrainingLabels = cell(Chem.count, 1)
         processSets = true
         processSources = true
+        preprocessor
     end
     
     %
@@ -24,6 +25,7 @@ classdef Crossvalidator < hive.proc.ProcessorBase
             this.cfg = cfg.training;
             this.testCfg = cfg.testing;
             this.actionLabel = 'Cross-validating';
+            this.preprocessor = hive.proc.train.DataPreprocessor(cfg);
             
             % defaults
             this.trainingPct = .1;

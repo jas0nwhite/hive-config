@@ -52,15 +52,7 @@ function trainModel(this, dsIx)
     end
     
     % DETERMINE PREPROCESSING FUNCTION
-    switch this.treatment.trainingStyleId
-        case 9
-            % use FFT
-            preprocFn = @hive.proc.model.log_P1_fft;
-            
-        otherwise
-            % use first derivative (difference)
-            preprocFn = @hive.proc.model.first_diff;
-    end
+    preprocFn = this.preprocessor.getPreprocessFn();
     
     % TRAIN
     CVerr = hive.proc.train.trainModelForAlpha(...

@@ -52,7 +52,7 @@ function CVerr = trainModelForAlpha(voltammograms, labels, foldId, alphaRange, p
     
     % prepare input matrix
     %  - dimensions: (glmnet) observations x variables
-    X = preprocFn(voltammograms)';
+    X = preprocFn(voltammograms, 1)';
     
     % prepare response matrix
     %  - dimensions: (glmnet) observations x variables

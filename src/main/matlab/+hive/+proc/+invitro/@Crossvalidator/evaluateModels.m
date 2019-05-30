@@ -47,8 +47,11 @@ function results = evaluateModels(this, setId, sourceId)
             continue;
         end
         
+        % DETERMINE PREPROCESSING FUNCTION
+        preprocFn = this.preprocessor.getPreprocessFn();
+        
         % testing data
-        x = diff(testing.voltammograms', 1, 2); %#ok<UDIM>
+        x = preprocFn(testing.voltammograms', 2);
         
         % generate predictions
         predictions = cvglmnetPredict(CVerr, x, 'lambda_min');

@@ -16,15 +16,18 @@ function generatePredictions(this, dsIx)
     end
     
     testing = load(cvTestFile);
-    load(cvModelFile);
+    load(cvModelFile); %#ok<LOAD>
+    
+    % DETERMINE PREPROCESSING FUNCTION
+    preprocFn = this.preprocessor.getPreprocessFn();
     
     % testing data
-    x = diff(testing.voltammograms', 1, 2); %#ok<UDIM>
-    labels = testing.labels; %#ok<NASGU>
+    x = preprocFn(testing.voltammograms', 2);
+    labels = testing.labels;
     
     % generate predictions
-    predictions = cvglmnetPredict(CVerr, x, 'lambda_min'); %#ok<NASGU>
-    chemical = testing.chemical; %#ok<NASGU>
+    predictions = cvglmnetPredict(CVerr, x, 'lambda_min');
+    chemical = testing.chemical;
     
     save(cvPredFile, 'predictions', 'labels', 'chemical');
     hive.util.appendDatasetInfo(cvPredFile, name, id, setId, sourceId, this.treatment.name);
