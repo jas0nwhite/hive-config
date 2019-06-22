@@ -18,8 +18,6 @@ case class Strings(values: Vector[String])
 
 object Strings {
   implicit def codec(bytes: Long): Codec[Strings] = {
-    (
-      ("values" | fixedSizeBytes(bytes, vector(cstring)))
-    ).as[Strings]
+    ("values" | fixedSizeBytes(bytes, vector(cstring))).as[Strings]
   }
 }
