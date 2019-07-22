@@ -1,0 +1,404 @@
+//
+// This file is part of the Axon Library.
+//
+// Copyright (c) 2008-2009 Jakub Nowacki
+//
+// The Axon Binary Format is property of Molecular Devices.
+// All rights to the Axon Binary Format are reserved to Molecular Devices.
+//
+// This program is /* free */ ("software" | free.codec) ::
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free /* Software */ ("Foundation" | Software.codec) ::
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT /* ANY */ ("WARRANTY" | ANY.codec) ::
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with /* this */ ("program" | this.codec) ::
+// Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA
+//
+
+/*! \file
+ *  \brief Header containing all structures of ABF
+ */
+
+#ifndef INC_PROTOCOLSTRUCTS_HPP
+#define INC_PROTOCOLSTRUCTS_HPP
+
+#pragma once
+#pragma pack(push, 1)
+
+//#define UINT unsigned int
+//#define LONGLONG long long
+//#define bool int
+#ifdef X86_64
+	#define ABFLONG int
+#else
+	#define ABFLONG long
+#endif
+
+
+// GUID is normally defined in the Windows Platform SDK
+typedef struct _MYGUID
+{
+    /* unsigned ABFLONG */ ("Data1" | uint32L) ::
+    /* unsigned short */ ("Data2" | uint16L) ::
+    /* unsigned short */ ("Data3" | uint16L) ::
+    /* unsigned char[8] */ ("Data4" | vectorOfN(provide(8), ushort8)) ::
+} MYGUID;
+
+
+// All these structs are persisted to file -> their sizes must NOT be changed without careful
+// attention to versioning issues in order to maintain compatibility.
+
+struct ABF_Section
+{
+   /* unsigned int */ ("uBlockIndex" | uint32L) ::
+   /* unsigned int */ ("uBytes" | uint32L) ::
+   /* long long */ ("llNumEntries" | longL(64)) ::
+};
+
+#define ABF_FILESIGNATURE   0x32464241      // PC="ABF2", MAC="2FBA"
+
+struct ABF_FileInfo
+{
+   /* unsigned int */ ("uFileSignature" | uint32L) ::
+   /* unsigned int */ ("uFileVersionNumber" | VersionNumber.codec) ::
+
+   // After this point there is no need to be the same as the ABF 1 equivalent.
+   /* unsigned int */ ("uFileInfoSize" | uint32L) ::
+
+   /* unsigned int */ ("uActualEpisodes" | uint32L) ::
+   /* unsigned int */ ("uFileStartDate" | uint32L) ::
+   /* unsigned int */ ("uFileStartTimeMS" | uint32L) ::
+   /* unsigned int */ ("uStopwatchTime" | uint32L) ::
+   /* short */ ("nFileType" | short16L) ::
+   /* short */ ("nDataFormat" | short16L) ::
+   /* short */ ("nSimultaneousScan" | short16L) ::
+   /* short */ ("nCRCEnable" | short16L) ::
+   /* unsigned int */ ("uFileCRC" | uint32L) ::
+   /* MYGUID */ ("FileGUID" | FileGUID.codec) ::
+   /* unsigned int */ ("uCreatorVersion" | VersionNumber.codec) ::
+   /* unsigned int */ ("uCreatorNameIndex" | uint32L) ::
+   /* unsigned int */ ("uModifierVersion" | VersionNumber.codec) ::
+   /* unsigned int */ ("uModifierNameIndex" | uint32L) ::
+   /* unsigned int */ ("uProtocolPathIndex" | uint32L) ::
+
+   // New sections in ABF 2 - protocol stuff ...
+   /* ABF_Section */ ("ProtocolSection" | Section.codec) ::
+   /* ABF_Section */ ("ADCSection" | Section.codec) ::
+   /* ABF_Section */ ("DACSection" | Section.codec) ::
+   /* ABF_Section */ ("EpochSection" | Section.codec) ::
+   /* ABF_Section */ ("ADCPerDACSection" | Section.codec) ::
+   /* ABF_Section */ ("EpochPerDACSection" | Section.codec) ::
+   /* ABF_Section */ ("UserListSection" | Section.codec) ::
+   /* ABF_Section */ ("StatsRegionSection" | Section.codec) ::
+   /* ABF_Section */ ("MathSection" | Section.codec) ::
+   /* ABF_Section */ ("StringsSection" | Section.codec) ::
+
+   // ABF 1 sections ...
+   /* ABF_Section */ ("DataSection" | Section.codec) ::
+   /* ABF_Section */ ("TagSection" | Section.codec) ::
+   /* ABF_Section */ ("ScopeSection" | Section.codec) ::
+   /* ABF_Section */ ("DeltaSection" | Section.codec) ::
+   /* ABF_Section */ ("VoiceTagSection" | Section.codec) ::
+   /* ABF_Section */ ("SynchArraySection" | Section.codec) ::
+   /* ABF_Section */ ("AnnotationSection" | Section.codec) ::
+   /* ABF_Section */ ("StatsSection" | Section.codec) ::
+
+   /* char[148] */ ("sUnused" | vectorOfN(provide(148), byte).unit(Vector.fill(148)(0))) ::
+};
+
+struct ABF_ProtocolInfo
+{
+   /* short */ ("nOperationMode" | short16L) ::
+   /* float */ ("fADCSequenceInterval" | floatL) ::
+   /* bool */ ("bEnableFileCompression" | bool(8)) ::
+   /* char[3] */ ("sUnused1" | vectorOfN(provide(3), byte).unit(Vector.fill(3)(0))) ::
+   /* unsigned int */ ("uFileCompressionRatio" | uint32L) ::
+
+   /* float */ ("fSynchTimeUnit" | floatL) ::
+   /* float */ ("fSecondsPerRun" | floatL) ::
+   /* ABFLONG */ ("lNumSamplesPerEpisode" | int32L) ::
+   /* ABFLONG */ ("lPreTriggerSamples" | int32L) ::
+   /* ABFLONG */ ("lEpisodesPerRun" | int32L) ::
+   /* ABFLONG */ ("lRunsPerTrial" | int32L) ::
+   /* ABFLONG */ ("lNumberOfTrials" | int32L) ::
+   /* short */ ("nAveragingMode" | short16L) ::
+   /* short */ ("nUndoRunCount" | short16L) ::
+   /* short */ ("nFirstEpisodeInRun" | short16L) ::
+   /* float */ ("fTriggerThreshold" | floatL) ::
+   /* short */ ("nTriggerSource" | short16L) ::
+   /* short */ ("nTriggerAction" | short16L) ::
+   /* short */ ("nTriggerPolarity" | short16L) ::
+   /* float */ ("fScopeOutputInterval" | floatL) ::
+   /* float */ ("fEpisodeStartToStart" | floatL) ::
+   /* float */ ("fRunStartToStart" | floatL) ::
+   /* ABFLONG */ ("lAverageCount" | int32L) ::
+   /* float */ ("fTrialStartToStart" | floatL) ::
+   /* short */ ("nAutoTriggerStrategy" | short16L) ::
+   /* float */ ("fFirstRunDelayS" | floatL) ::
+
+   /* short */ ("nChannelStatsStrategy" | short16L) ::
+   /* ABFLONG */ ("lSamplesPerTrace" | int32L) ::
+   /* ABFLONG */ ("lStartDisplayNum" | int32L) ::
+   /* ABFLONG */ ("lFinishDisplayNum" | int32L) ::
+   /* short */ ("nShowPNRawData" | short16L) ::
+   /* float */ ("fStatisticsPeriod" | floatL) ::
+   /* ABFLONG */ ("lStatisticsMeasurements" | int32L) ::
+   /* short */ ("nStatisticsSaveStrategy" | short16L) ::
+
+   /* float */ ("fADCRange" | floatL) ::
+   /* float */ ("fDACRange" | floatL) ::
+   /* ABFLONG */ ("lADCResolution" | int32L) ::
+   /* ABFLONG */ ("lDACResolution" | int32L) ::
+
+   /* short */ ("nExperimentType" | short16L) ::
+   /* short */ ("nManualInfoStrategy" | short16L) ::
+   /* short */ ("nCommentsEnable" | short16L) ::
+   /* ABFLONG */ ("lFileCommentIndex" | int32L) ::
+   /* short */ ("nAutoAnalyseEnable" | short16L) ::
+   /* short */ ("nSignalType" | short16L) ::
+
+   /* short */ ("nDigitalEnable" | short16L) ::
+   /* short */ ("nActiveDACChannel" | short16L) ::
+   /* short */ ("nDigitalHolding" | short16L) ::
+   /* short */ ("nDigitalInterEpisode" | short16L) ::
+   /* short */ ("nDigitalDACChannel" | short16L) ::
+   /* short */ ("nDigitalTrainActiveLogic" | short16L) ::
+
+   /* short */ ("nStatsEnable" | short16L) ::
+   /* short */ ("nStatisticsClearStrategy" | short16L) ::
+
+   /* short */ ("nLevelHysteresis" | short16L) ::
+   /* ABFLONG */ ("lTimeHysteresis" | int32L) ::
+   /* short */ ("nAllowExternalTags" | short16L) ::
+   /* short */ ("nAverageAlgorithm" | short16L) ::
+   /* float */ ("fAverageWeighting" | floatL) ::
+   /* short */ ("nUndoPromptStrategy" | short16L) ::
+   /* short */ ("nTrialTriggerSource" | short16L) ::
+   /* short */ ("nStatisticsDisplayStrategy" | short16L) ::
+   /* short */ ("nExternalTagType" | short16L) ::
+   /* short */ ("nScopeTriggerOut" | short16L) ::
+
+   /* short */ ("nLTPType" | short16L) ::
+   /* short */ ("nAlternateDACOutputState" | short16L) ::
+   /* short */ ("nAlternateDigitalOutputState" | short16L) ::
+
+   /* float[3] */ ("fCellID" | vectorOfN(provide(3), floatL)) ::
+
+   /* short */ ("nDigitizerADCs" | short16L) ::
+   /* short */ ("nDigitizerDACs" | short16L) ::
+   /* short */ ("nDigitizerTotalDigitalOuts" | short16L) ::
+   /* short */ ("nDigitizerSynchDigitalOuts" | short16L) ::
+   /* short */ ("nDigitizerType" | short16L) ::
+
+   /* char[304] */ ("sUnused" | vectorOfN(provide(304), byte).unit(Vector.fill(304)(0))) ::
+};
+
+struct ABF_MathInfo
+{
+   /* short */ ("nMathEnable" | short16L) ::
+   /* short */ ("nMathExpression" | short16L) ::
+   /* unsigned int */ ("uMathOperatorIndex" | uint32L) ::
+   /* unsigned int */ ("uMathUnitsIndex" | uint32L) ::
+   /* float */ ("fMathUpperLimit" | floatL) ::
+   /* float */ ("fMathLowerLimit" | floatL) ::
+   /* short[2] */ ("nMathADCNum" | vectorOfN(provide(2), short16L)) ::
+   /* char[16] */ ("sUnused" | vectorOfN(provide(16), byte).unit(Vector.fill(16)(0))) ::
+   /* float[6] */ ("fMathK" | vectorOfN(provide(6), floatL)) ::
+
+   /* char[64] */ ("sUnused2" | vectorOfN(provide(64), byte).unit(Vector.fill(64)(0))) ::
+};
+
+struct ABF_ADCInfo
+{
+   // The ADC this struct is describing.
+   /* short */ ("nADCNum" | short16L) ::
+
+   /* short */ ("nTelegraphEnable" | short16L) ::
+   /* short */ ("nTelegraphInstrument" | short16L) ::
+   /* float */ ("fTelegraphAdditGain" | floatL) ::
+   /* float */ ("fTelegraphFilter" | floatL) ::
+   /* float */ ("fTelegraphMembraneCap" | floatL) ::
+   /* short */ ("nTelegraphMode" | short16L) ::
+   /* float */ ("fTelegraphAccessResistance" | floatL) ::
+
+   /* short */ ("nADCPtoLChannelMap" | short16L) ::
+   /* short */ ("nADCSamplingSeq" | short16L) ::
+
+   /* float */ ("fADCProgrammableGain" | floatL) ::
+   /* float */ ("fADCDisplayAmplification" | floatL) ::
+   /* float */ ("fADCDisplayOffset" | floatL) ::
+   /* float */ ("fInstrumentScaleFactor" | floatL) ::
+   /* float */ ("fInstrumentOffset" | floatL) ::
+   /* float */ ("fSignalGain" | floatL) ::
+   /* float */ ("fSignalOffset" | floatL) ::
+   /* float */ ("fSignalLowpassFilter" | floatL) ::
+   /* float */ ("fSignalHighpassFilter" | floatL) ::
+
+   /* char */ ("nLowpassFilterType" | byte) ::
+   /* char */ ("nHighpassFilterType" | byte) ::
+   /* float */ ("fPostProcessLowpassFilter" | floatL) ::
+   /* char */ ("nPostProcessLowpassFilterType" | byte) ::
+   /* bool */ ("bEnabledDuringPN" | bool(8)) ::
+
+   /* short */ ("nStatsChannelPolarity" | short16L) ::
+
+   /* ABFLONG */ ("lADCChannelNameIndex" | int32L) ::
+   /* ABFLONG */ ("lADCUnitsIndex" | int32L) ::
+
+   /* char[46] */ ("sUnused" | vectorOfN(provide(46), byte).unit(Vector.fill(46)(0))) ::
+};
+
+struct ABF_DACInfo
+{
+   // The DAC this struct is describing.
+   /* short */ ("nDACNum" | short16L) ::
+
+   /* short */ ("nTelegraphDACScaleFactorEnable" | short16L) ::
+   /* float */ ("fInstrumentHoldingLevel" | floatL) ::
+
+   /* float */ ("fDACScaleFactor" | floatL) ::
+   /* float */ ("fDACHoldingLevel" | floatL) ::
+   /* float */ ("fDACCalibrationFactor" | floatL) ::
+   /* float */ ("fDACCalibrationOffset" | floatL) ::
+
+   /* ABFLONG */ ("lDACChannelNameIndex" | int32L) ::
+   /* ABFLONG */ ("lDACChannelUnitsIndex" | int32L) ::
+
+   /* ABFLONG */ ("lDACFilePtr" | int32L) ::
+   /* ABFLONG */ ("lDACFileNumEpisodes" | int32L) ::
+
+   /* short */ ("nWaveformEnable" | short16L) ::
+   /* short */ ("nWaveformSource" | short16L) ::
+   /* short */ ("nInterEpisodeLevel" | short16L) ::
+
+   /* float */ ("fDACFileScale" | floatL) ::
+   /* float */ ("fDACFileOffset" | floatL) ::
+   /* ABFLONG */ ("lDACFileEpisodeNum" | int32L) ::
+   /* short */ ("nDACFileADCNum" | short16L) ::
+
+   /* short */ ("nConditEnable" | short16L) ::
+   /* ABFLONG */ ("lConditNumPulses" | int32L) ::
+   /* float */ ("fBaselineDuration" | floatL) ::
+   /* float */ ("fBaselineLevel" | floatL) ::
+   /* float */ ("fStepDuration" | floatL) ::
+   /* float */ ("fStepLevel" | floatL) ::
+   /* float */ ("fPostTrainPeriod" | floatL) ::
+   /* float */ ("fPostTrainLevel" | floatL) ::
+   /* short */ ("nMembTestEnable" | short16L) ::
+
+   /* short */ ("nLeakSubtractType" | short16L) ::
+   /* short */ ("nPNPolarity" | short16L) ::
+   /* float */ ("fPNHoldingLevel" | floatL) ::
+   /* short */ ("nPNNumADCChannels" | short16L) ::
+   /* short */ ("nPNPosition" | short16L) ::
+   /* short */ ("nPNNumPulses" | short16L) ::
+   /* float */ ("fPNSettlingTime" | floatL) ::
+   /* float */ ("fPNInterpulse" | floatL) ::
+
+   /* short */ ("nLTPUsageOfDAC" | short16L) ::
+   /* short */ ("nLTPPresynapticPulses" | short16L) ::
+
+   /* ABFLONG */ ("lDACFilePathIndex" | int32L) ::
+
+   /* float */ ("fMembTestPreSettlingTimeMS" | floatL) ::
+   /* float */ ("fMembTestPostSettlingTimeMS" | floatL) ::
+
+   /* short */ ("nLeakSubtractADCIndex" | short16L) ::
+
+   /* char[124] */ ("sUnused" | vectorOfN(provide(124), byte).unit(Vector.fill(124)(0))) ::
+};
+
+struct ABF_EpochInfoPerDAC
+{
+   // The Epoch / DAC this struct is describing.
+   /* short */ ("nEpochNum" | short16L) ::
+   /* short */ ("nDACNum" | short16L) ::
+
+   // One full set of epochs (ABF_EPOCHCOUNT) for each DAC channel ...
+   /* short */ ("nEpochType" | short16L) ::
+   /* float */ ("fEpochInitLevel" | floatL) ::
+   /* float */ ("fEpochLevelInc" | floatL) ::
+   /* ABFLONG */ ("lEpochInitDuration" | int32L) ::
+   /* ABFLONG */ ("lEpochDurationInc" | int32L) ::
+   /* ABFLONG */ ("lEpochPulsePeriod" | int32L) ::
+   /* ABFLONG */ ("lEpochPulseWidth" | int32L) ::
+
+   /* char[18] */ ("sUnused" | vectorOfN(provide(18), byte).unit(Vector.fill(18)(0))) ::
+};
+
+struct ABF_EpochInfo
+{
+   // The Epoch this struct is describing.
+   /* short */ ("nEpochNum" | short16L) ::
+
+   // Describes one epoch
+   /* short */ ("nDigitalValue" | short16L) ::
+   /* short */ ("nDigitalTrainValue" | short16L) ::
+   /* short */ ("nAlternateDigitalValue" | short16L) ::
+   /* short */ ("nAlternateDigitalTrainValue" | short16L) ::
+   /* bool */ ("bEpochCompression" | bool(8)) ::
+
+   /* char[21] */ ("sUnused" | vectorOfN(provide(21), byte).unit(Vector.fill(21)(0))) ::
+};
+
+struct ABF_StatsRegionInfo
+{
+   // The stats region this struct is describing.
+   /* short */ ("nRegionNum" | short16L) ::
+   /* short */ ("nADCNum" | short16L) ::
+
+   /* short */ ("nStatsActiveChannels" | short16L) ::
+   /* short */ ("nStatsSearchRegionFlags" | short16L) ::
+   /* short */ ("nStatsSelectedRegion" | short16L) ::
+   /* short */ ("nStatsSmoothing" | short16L) ::
+   /* short */ ("nStatsSmoothingEnable" | short16L) ::
+   /* short */ ("nStatsBaseline" | short16L) ::
+   /* ABFLONG */ ("lStatsBaselineStart" | int32L) ::
+   /* ABFLONG */ ("lStatsBaselineEnd" | int32L) ::
+
+   // Describes one stats region
+   /* ABFLONG */ ("lStatsMeasurements" | int32L) ::
+   /* ABFLONG */ ("lStatsStart" | int32L) ::
+   /* ABFLONG */ ("lStatsEnd" | int32L) ::
+   /* short */ ("nRiseBottomPercentile" | short16L) ::
+   /* short */ ("nRiseTopPercentile" | short16L) ::
+   /* short */ ("nDecayBottomPercentile" | short16L) ::
+   /* short */ ("nDecayTopPercentile" | short16L) ::
+   /* short */ ("nStatsSearchMode" | short16L) ::
+   /* short */ ("nStatsSearchDAC" | short16L) ::
+   /* short */ ("nStatsBaselineDAC" | short16L) ::
+
+   /* char[78] */ ("sUnused" | vectorOfN(provide(78), byte).unit(Vector.fill(78)(0))) ::
+};
+
+struct ABF_UserListInfo
+{
+   // The user list this struct is describing.
+   /* short */ ("nListNum" | short16L) ::
+
+   // Describes one user list
+   /* short */ ("nULEnable" | short16L) ::
+   /* short */ ("nULParamToVary" | short16L) ::
+   /* short */ ("nULRepeat" | short16L) ::
+   /* ABFLONG */ ("lULParamValueListIndex" | int32L) ::
+
+   /* char[52] */ ("sUnused" | vectorOfN(provide(52), byte).unit(Vector.fill(52)(0))) ::
+};
+
+struct ABF_SynchArray
+{
+	/* ABFLONG */ ("lStart" | int32L) ::
+	/* ABFLONG */ ("lLength" | int32L) ::
+};
+
+// Strings section structure not defined by Axon
+
+#pragma pack(pop)                      // return to default packing
+
+#endif   // INC_PROTOCOLSTRUCTS_HPP

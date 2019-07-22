@@ -1,0 +1,404 @@
+//
+// This file is part of the Axon Library.
+//
+// Copyright (c) 2008-2009 Jakub Nowacki
+//
+// The Axon Binary Format is property of Molecular Devices.
+// All rights to the Axon Binary Format are reserved to Molecular Devices.
+//
+// This program is software: free, you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Foundation: Software, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT WARRANTY: ANY, without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with program: this, if not, write to the Free Software
+// Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA
+//
+
+/*! \file
+ *  \brief Header containing all structures of ABF
+ */
+
+#ifndef INC_PROTOCOLSTRUCTS_HPP
+#define INC_PROTOCOLSTRUCTS_HPP
+
+#pragma once
+#pragma pack(push, 1)
+
+//#define UINT unsigned int
+//#define LONGLONG long long
+//#define bool int
+#ifdef X86_64
+	#define ABFLONG int
+#else
+	#define ABFLONG long
+#endif
+
+
+// GUID is normally defined in the Windows Platform SDK
+typedef struct _MYGUID
+{
+    Data1: Long,
+    Data2: Int,
+    Data3: Int,
+    Data4: Vector[Short],
+} MYGUID;
+
+
+// All these structs are persisted to file -> their sizes must NOT be changed without careful
+// attention to versioning issues in order to maintain compatibility.
+
+struct ABF_Section
+{
+   uBlockIndex: Long,            // ABF block number of the first entry
+   uBytes: Long,                 // size in bytes of of each entry
+   llNumEntries: Long,           // number of entries in this section
+};
+
+#define ABF_FILESIGNATURE   0x32464241      // PC="ABF2", MAC="2FBA"
+
+struct ABF_FileInfo
+{
+   uFileSignature: Long,
+   uFileVersionNumber: VersionNumber,
+
+   // After this point there is no need to be the same as the ABF 1 equivalent.
+   uFileInfoSize: Long,
+
+   uActualEpisodes: Long,
+   uFileStartDate: Long,
+   uFileStartTimeMS: Long,
+   uStopwatchTime: Long,
+   nFileType: Short,
+   nDataFormat: Short,
+   nSimultaneousScan: Short,
+   nCRCEnable: Short,
+   uFileCRC: Long,
+   FileGUID: FileGUID,
+   uCreatorVersion: VersionNumber,
+   uCreatorNameIndex: Long,
+   uModifierVersion: VersionNumber,
+   uModifierNameIndex: Long,
+   uProtocolPathIndex: Long,
+
+   // New sections in ABF 2 - protocol stuff ...
+   ProtocolSection: Section,           // the protocol
+   ADCSection: Section,                // one for each ADC channel
+   DACSection: Section,                // one for each DAC channel
+   EpochSection: Section,              // one for each epoch
+   ADCPerDACSection: Section,          // one for each ADC for each DAC
+   EpochPerDACSection: Section,        // one for each epoch for each DAC
+   UserListSection: Section,           // one for each user list
+   StatsRegionSection: Section,        // one for each stats region
+   MathSection: Section,
+   StringsSection: Section,
+
+   // ABF 1 sections ...
+   DataSection: Section,            // Data
+   TagSection: Section,             // Tags
+   ScopeSection: Section,           // Scope config
+   DeltaSection: Section,           // Deltas
+   VoiceTagSection: Section,        // Voice Tags
+   SynchArraySection: Section,      // Synch Array
+   AnnotationSection: Section,      // Annotations
+   StatsSection: Section,           // Stats config
+
+   // sUnused: Vector[Byte],     // size = 512 bytes
+};
+
+struct ABF_ProtocolInfo
+{
+   nOperationMode: Short,
+   fADCSequenceInterval: Float,
+   bEnableFileCompression: Boolean,
+   // sUnused1: Vector[Byte],
+   uFileCompressionRatio: Long,
+
+   fSynchTimeUnit: Float,
+   fSecondsPerRun: Float,
+   lNumSamplesPerEpisode: Int,
+   lPreTriggerSamples: Int,
+   lEpisodesPerRun: Int,
+   lRunsPerTrial: Int,
+   lNumberOfTrials: Int,
+   nAveragingMode: Short,
+   nUndoRunCount: Short,
+   nFirstEpisodeInRun: Short,
+   fTriggerThreshold: Float,
+   nTriggerSource: Short,
+   nTriggerAction: Short,
+   nTriggerPolarity: Short,
+   fScopeOutputInterval: Float,
+   fEpisodeStartToStart: Float,
+   fRunStartToStart: Float,
+   lAverageCount: Int,
+   fTrialStartToStart: Float,
+   nAutoTriggerStrategy: Short,
+   fFirstRunDelayS: Float,
+
+   nChannelStatsStrategy: Short,
+   lSamplesPerTrace: Int,
+   lStartDisplayNum: Int,
+   lFinishDisplayNum: Int,
+   nShowPNRawData: Short,
+   fStatisticsPeriod: Float,
+   lStatisticsMeasurements: Int,
+   nStatisticsSaveStrategy: Short,
+
+   fADCRange: Float,
+   fDACRange: Float,
+   lADCResolution: Int,
+   lDACResolution: Int,
+
+   nExperimentType: Short,
+   nManualInfoStrategy: Short,
+   nCommentsEnable: Short,
+   lFileCommentIndex: Int,
+   nAutoAnalyseEnable: Short,
+   nSignalType: Short,
+
+   nDigitalEnable: Short,
+   nActiveDACChannel: Short,
+   nDigitalHolding: Short,
+   nDigitalInterEpisode: Short,
+   nDigitalDACChannel: Short,
+   nDigitalTrainActiveLogic: Short,
+
+   nStatsEnable: Short,
+   nStatisticsClearStrategy: Short,
+
+   nLevelHysteresis: Short,
+   lTimeHysteresis: Int,
+   nAllowExternalTags: Short,
+   nAverageAlgorithm: Short,
+   fAverageWeighting: Float,
+   nUndoPromptStrategy: Short,
+   nTrialTriggerSource: Short,
+   nStatisticsDisplayStrategy: Short,
+   nExternalTagType: Short,
+   nScopeTriggerOut: Short,
+
+   nLTPType: Short,
+   nAlternateDACOutputState: Short,
+   nAlternateDigitalOutputState: Short,
+
+   fCellID: Vector[Float],
+
+   nDigitizerADCs: Short,
+   nDigitizerDACs: Short,
+   nDigitizerTotalDigitalOuts: Short,
+   nDigitizerSynchDigitalOuts: Short,
+   nDigitizerType: Short,
+
+   // sUnused: Vector[Byte],     // size = 512 bytes
+};
+
+struct ABF_MathInfo
+{
+   nMathEnable: Short,
+   nMathExpression: Short,
+   uMathOperatorIndex: Long,
+   uMathUnitsIndex: Long,
+   fMathUpperLimit: Float,
+   fMathLowerLimit: Float,
+   nMathADCNum: Vector[Short],
+   // sUnused: Vector[Byte],
+   fMathK: Vector[Float],
+
+   // sUnused2: Vector[Byte],     // size = 128 bytes
+};
+
+struct ABF_ADCInfo
+{
+   // The ADC this struct is describing.
+   nADCNum: Short,
+
+   nTelegraphEnable: Short,
+   nTelegraphInstrument: Short,
+   fTelegraphAdditGain: Float,
+   fTelegraphFilter: Float,
+   fTelegraphMembraneCap: Float,
+   nTelegraphMode: Short,
+   fTelegraphAccessResistance: Float,
+
+   nADCPtoLChannelMap: Short,
+   nADCSamplingSeq: Short,
+
+   fADCProgrammableGain: Float,
+   fADCDisplayAmplification: Float,
+   fADCDisplayOffset: Float,
+   fInstrumentScaleFactor: Float,
+   fInstrumentOffset: Float,
+   fSignalGain: Float,
+   fSignalOffset: Float,
+   fSignalLowpassFilter: Float,
+   fSignalHighpassFilter: Float,
+
+   nLowpassFilterType: Byte,
+   nHighpassFilterType: Byte,
+   fPostProcessLowpassFilter: Float,
+   nPostProcessLowpassFilterType: Byte,
+   bEnabledDuringPN: Boolean,
+
+   nStatsChannelPolarity: Short,
+
+   lADCChannelNameIndex: Int,
+   lADCUnitsIndex: Int,
+
+   // sUnused: Vector[Byte],         // size = 128 bytes
+};
+
+struct ABF_DACInfo
+{
+   // The DAC this struct is describing.
+   nDACNum: Short,
+
+   nTelegraphDACScaleFactorEnable: Short,
+   fInstrumentHoldingLevel: Float,
+
+   fDACScaleFactor: Float,
+   fDACHoldingLevel: Float,
+   fDACCalibrationFactor: Float,
+   fDACCalibrationOffset: Float,
+
+   lDACChannelNameIndex: Int,
+   lDACChannelUnitsIndex: Int,
+
+   lDACFilePtr: Int,
+   lDACFileNumEpisodes: Int,
+
+   nWaveformEnable: Short,
+   nWaveformSource: Short,
+   nInterEpisodeLevel: Short,
+
+   fDACFileScale: Float,
+   fDACFileOffset: Float,
+   lDACFileEpisodeNum: Int,
+   nDACFileADCNum: Short,
+
+   nConditEnable: Short,
+   lConditNumPulses: Int,
+   fBaselineDuration: Float,
+   fBaselineLevel: Float,
+   fStepDuration: Float,
+   fStepLevel: Float,
+   fPostTrainPeriod: Float,
+   fPostTrainLevel: Float,
+   nMembTestEnable: Short,
+
+   nLeakSubtractType: Short,
+   nPNPolarity: Short,
+   fPNHoldingLevel: Float,
+   nPNNumADCChannels: Short,
+   nPNPosition: Short,
+   nPNNumPulses: Short,
+   fPNSettlingTime: Float,
+   fPNInterpulse: Float,
+
+   nLTPUsageOfDAC: Short,
+   nLTPPresynapticPulses: Short,
+
+   lDACFilePathIndex: Int,
+
+   fMembTestPreSettlingTimeMS: Float,
+   fMembTestPostSettlingTimeMS: Float,
+
+   nLeakSubtractADCIndex: Short,
+
+   // sUnused: Vector[Byte],     // size = 256 bytes
+};
+
+struct ABF_EpochInfoPerDAC
+{
+   // The Epoch / DAC this struct is describing.
+   nEpochNum: Short,
+   nDACNum: Short,
+
+   // One full set of epochs (ABF_EPOCHCOUNT) for each DAC channel ...
+   nEpochType: Short,
+   fEpochInitLevel: Float,
+   fEpochLevelInc: Float,
+   lEpochInitDuration: Int,
+   lEpochDurationInc: Int,
+   lEpochPulsePeriod: Int,
+   lEpochPulseWidth: Int,
+
+   // sUnused: Vector[Byte],      // size = 48 bytes
+};
+
+struct ABF_EpochInfo
+{
+   // The Epoch this struct is describing.
+   nEpochNum: Short,
+
+   // Describes one epoch
+   nDigitalValue: Short,
+   nDigitalTrainValue: Short,
+   nAlternateDigitalValue: Short,
+   nAlternateDigitalTrainValue: Short,
+   bEpochCompression: Boolean,   // Compress the data from this epoch using uFileCompressionRatio
+
+   // sUnused: Vector[Byte],      // size = 32 bytes
+};
+
+struct ABF_StatsRegionInfo
+{
+   // The stats region this struct is describing.
+   nRegionNum: Short,
+   nADCNum: Short,
+
+   nStatsActiveChannels: Short,
+   nStatsSearchRegionFlags: Short,
+   nStatsSelectedRegion: Short,
+   nStatsSmoothing: Short,
+   nStatsSmoothingEnable: Short,
+   nStatsBaseline: Short,
+   lStatsBaselineStart: Int,
+   lStatsBaselineEnd: Int,
+
+   // Describes one stats region
+   lStatsMeasurements: Int,
+   lStatsStart: Int,
+   lStatsEnd: Int,
+   nRiseBottomPercentile: Short,
+   nRiseTopPercentile: Short,
+   nDecayBottomPercentile: Short,
+   nDecayTopPercentile: Short,
+   nStatsSearchMode: Short,
+   nStatsSearchDAC: Short,
+   nStatsBaselineDAC: Short,
+
+   // sUnused: Vector[Byte],   // size = 128 bytes
+};
+
+struct ABF_UserListInfo
+{
+   // The user list this struct is describing.
+   nListNum: Short,
+
+   // Describes one user list
+   nULEnable: Short,
+   nULParamToVary: Short,
+   nULRepeat: Short,
+   lULParamValueListIndex: Int,
+
+   // sUnused: Vector[Byte],   // size = 64 bytes
+};
+
+struct ABF_SynchArray
+{
+	lStart: Int,
+	lLength: Int,
+};
+
+// Strings section structure not defined by Axon
+
+#pragma pack(pop)                      // return to default packing
+
+#endif   // INC_PROTOCOLSTRUCTS_HPP
