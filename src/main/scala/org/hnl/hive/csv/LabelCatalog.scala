@@ -1,61 +1,57 @@
 package org.hnl.hive.csv
 
-import java.io.{ File, FileWriter }
+import java.io.{File, FileWriter}
 
 import scala.collection.mutable.ListBuffer
 import scala.math.Ordered
-import scala.util.{ Failure, Success, Try }
-
-import org.hnl.hive.cfg.{ NamingUtil, TreatmentConfig, Util }
-import org.hnl.hive.cfg.matlab.Chem
-
+import scala.util.{Failure, Success, Try}
+import org.hnl.hive.cfg.{NamingUtil, TreatmentConfig, Util}
+import org.hnl.hive.cfg.matlab.{Chem, Chemical}
 import grizzled.slf4j.Logging
 import resource.managed
 
-// scalastyle:off multiple.string.literals
-
 /**
- * LabelCatalog
- * <p>
- * Created on Mar 10, 2016.
- * <p>
- *
- * @author Jason White
- */
+  * LabelCatalog
+  * <p>
+  * Created on Mar 10, 2016.
+  * <p>
+  *
+  * @author Jason White
+  */
 class LabelCatalog(config: TreatmentConfig) extends Logging {
 
   case class Line(
-      datasetId:      Int,
-      fileId:         Int,
-      concentrations: List[Double],
-      onset:          Double,
-      offset:         Double,
-      exclude:        Boolean,
-      notes:          String,
-      file:           String,
-      probe:          String
+    datasetId: Int,
+    fileId: Int,
+    concentrations: List[Double],
+    onset: Double,
+    offset: Double,
+    exclude: Boolean,
+    notes: String,
+    file: String,
+    probe: String
   ) extends Ordered[Line] {
 
     def toCsvLine: String =
       s"""$datasetId,$fileId,${concentrations.mkString(",")},$onset,$offset,$exclude,$notes,$file,$probe\n"""
 
-    import scala.math.Ordered.orderingToOrdered // scalastyle:ignore import.grouping
+    import scala.math.Ordered.orderingToOrdered
 
-    def compare(that: Line): Int = (this.datasetId, this.fileId) compare (that.datasetId, that.fileId)
+    def compare(that: Line): Int = (this.datasetId, this.fileId) compare(that.datasetId, that.fileId)
   }
 
   type Dataset = List[(String, Int)]
   type Catalog = List[List[String]]
 
-  protected val chemicals = Chem.getChemList(config)
-  protected val chemCols = chemicals.sorted.map(_.colName)
-  protected val chemVars = chemicals.sorted.map(_.prefix)
-  protected val chemZeros = chemicals.sorted.map(_.neutral)
+  protected val chemicals: List[Chemical] = Chem.getChemList(config)
+  protected val chemCols: List[String] = chemicals.sorted.map(_.colName)
+  protected val chemVars: List[String] = chemicals.sorted.map(_.prefix)
+  protected val chemZeros: List[Double] = chemicals.sorted.map(_.neutral)
 
-  protected val variables =
+  protected val variables: List[String] =
     "datasetId" :: "fileId" :: chemVars ::: ("onset" :: "offset" :: "exclude" :: "notes" :: "file" :: "probe" :: Nil)
 
-  protected val targetColumns =
+  protected val targetColumns: List[String] =
     "index" :: chemCols ::: ("onset" :: "offset" :: "exclude" :: "notes" :: Nil)
 
   protected val headerLine: String =
@@ -70,12 +66,13 @@ class LabelCatalog(config: TreatmentConfig) extends Logging {
   }
 
   /**
-   * processes the CSV files for every entry in the given catalog
-   * @param catalog the catalog of directories
-   * @param csvGlob the CSV filespec in glob syntax
-   * @param rawGlob the raw filespec in glob syntax
-   * @param outputFile the output file
-   */
+    * processes the CSV files for every entry in the given catalog
+    *
+    * @param catalog    the catalog of directories
+    * @param csvGlob    the CSV filespec in glob syntax
+    * @param rawGlob    the raw filespec in glob syntax
+    * @param outputFile the output file
+    */
   def processCatalog(catalog: Catalog, csvGlob: String, rawGlob: String, outputFile: String): Unit = {
     // first, we need to add an ID to every dataset
     val datasets: List[Dataset] = org.hnl.hive.util.Util.deepZip(catalog, 1)
@@ -84,11 +81,9 @@ class LabelCatalog(config: TreatmentConfig) extends Logging {
     val csvFiles: List[Try[(String, Int)]] = findCsvFiles(datasets, csvGlob).flatten
 
     // now, we'll form a function call for each file, but we won't call it yet
-    val writers: List[(FileWriter) => Unit] = csvFiles.map { pair =>
-      pair match {
-        case Success((csv, ix)) => ((fw: FileWriter) => writeCsvLines(csv, ix, rawGlob, fw))
-        case Failure(e)         => warn(e.getMessage); ((_: FileWriter) => ())
-      }
+    val writers: List[FileWriter => Unit] = csvFiles.map {
+      case Success((csv, ix)) => (fw: FileWriter) => writeCsvLines(csv, ix, rawGlob, fw)
+      case Failure(e)         => warn(e.getMessage); (_: FileWriter) => ()
     }
 
     // next, let's create whatever directories are needed to hold the output file
@@ -121,44 +116,44 @@ class LabelCatalog(config: TreatmentConfig) extends Logging {
   }
 
   /**
-   * finds the (single) CSV file for each entry in the dataset list
-   * @param datasets the dataset list
-   * @param csvGlob the CSV filespec in glob syntax
-   * @return nest list of Try() objects: Failures if the number of CSV files != 1
-   */
+    * finds the (single) CSV file for each entry in the dataset list
+    *
+    * @param datasets the dataset list
+    * @param csvGlob  the CSV filespec in glob syntax
+    * @return nest list of Try() objects: Failures if the number of CSV files != 1
+    */
   protected def findCsvFiles(datasets: List[Dataset], csvGlob: String): List[List[Try[(String, Int)]]] =
     datasets.map { dataset =>
-      dataset.map { pair =>
-        pair match {
-          case (dir, ix) => Try({
-            val csvSpec = dir + "/" + csvGlob
-            val csvList = org.hnl.hive.cfg.Util.findPaths(csvSpec)
+      dataset.map {
+        case (dir, ix) => Try({
+          val csvSpec = dir + "/" + csvGlob
+          val csvList = org.hnl.hive.cfg.Util.findPaths(csvSpec)
 
-            if (csvList.length == 1) {
-              (csvList(0), ix)
-            }
-            else {
-              throw new IndexOutOfBoundsException(s"${csvList.length} files found for ${csvSpec} (expected 1)")
-            }
-          })
-        }
+          if (csvList.length == 1) {
+            (csvList.head, ix)
+          }
+          else {
+            throw new IndexOutOfBoundsException(s"${csvList.length} files found for $csvSpec (expected 1)")
+          }
+        })
       }
     }
 
   /**
-   * reads the given CSV file and writes the corresponding lines to the given output file
-   * @param file the CSV file
-   * @param datasetId the dataset ID for the file
-   * @param rawGlob the raw filespec in glob syntax
-   * @param out the output file
-   */
-  protected def writeCsvLines(file: String, datasetId: Int, rawGlob: String, out: FileWriter): Unit = { // scalastyle:ignore method.length
+    * reads the given CSV file and writes the corresponding lines to the given output file
+    *
+    * @param file      the CSV file
+    * @param datasetId the dataset ID for the file
+    * @param rawGlob   the raw filespec in glob syntax
+    * @param out       the output file
+    */
+  protected def writeCsvLines(file: String, datasetId: Int, rawGlob: String, out: FileWriter): Unit = {
     val source = managed(io.Source.fromFile(file))
 
     val result = source.map {
       csv =>
         val csvLines = csv.getLines
-        val csvHdr = csvLines.take(1).toList(0)
+        val csvHdr = csvLines.take(1).toList.head
         val rawFiles = Util.findPaths(Util.dirname(file) + "/" + rawGlob).sorted
 
         val probeName = for {
@@ -168,11 +163,11 @@ class LabelCatalog(config: TreatmentConfig) extends Logging {
 
         val colIx = getColumnIndices(csvHdr)
 
-        debug(s"file    : ${file}")
+        debug(s"file    : $file")
         debug(s"target  : ${targetColumns.mkString(",")}")
-        debug(s"CSV     : ${csvHdr}")
+        debug(s"CSV     : $csvHdr")
         debug(s"index   : ${colIx.mkString(",")}")
-        debug(s"rawspec : ${rawGlob}")
+        debug(s"rawspec : $rawGlob")
 
         // get the position (index) of each column
         val ixs = ListBuffer(colIx: _*)
@@ -189,7 +184,7 @@ class LabelCatalog(config: TreatmentConfig) extends Logging {
         val lines = for {
           line <- csvLines
 
-          if (line.replace(",", "").trim.length > 0) // only process non-empty lines
+          if line.replace(",", "").trim.length > 0 // only process non-empty lines
 
           // get column values, retaining empty strings (with "-1" argument)
           vals = line.split(",", -1).map(_.trim)
@@ -206,8 +201,8 @@ class LabelCatalog(config: TreatmentConfig) extends Logging {
             .replaceAllLiterally("\"", "")
             .replaceAllLiterally("''", "")
             .replaceAllLiterally(",", ";")
-          suffix = f".*${fileId}%04d${rawGlob.replace("*.", "[.]")}$$"
-          _ = debug(s"${line} -> ${suffix}")
+          suffix = f".*$fileId%04d${rawGlob.replace("*.", "[.]")}$$"
+          _ = debug(s"$line -> $suffix")
           rawfile = rawFiles.filter(s => s matches suffix).head
 
         } yield Line(datasetId, fileId, concentrations, onset, offset, exclude, notes, rawfile, probeName.getOrElse("<error>"))
@@ -218,8 +213,8 @@ class LabelCatalog(config: TreatmentConfig) extends Logging {
 
     // either.either is kooky -- maybe a bug in scala-arm 2.0?
     result.either.either match {
-      case Right(lines) => debug(s"status: COMPLETE")
-      case Left(es)     => es.foreach { e => error(s"processing '${file}'", e) }
+      case Right(_) => debug(s"status: COMPLETE")
+      case Left(es) => es.foreach { e => error(s"processing '$file'", e) }
     }
   }
 

@@ -74,7 +74,7 @@
  <check class="org.scalastyle.scalariform.NoFinalizeChecker" level="warning" enabled="true"></check>
  <check class="org.scalastyle.scalariform.CovariantEqualsChecker" level="warning" enabled="true"></check>
  <check class="org.scalastyle.scalariform.StructuralTypeChecker" level="warning" enabled="true"></check>
- <check class="org.scalastyle.file.RegexChecker" level="warning" enabled="true">
+ <check class="org.scalastyle.file.RegexChecker" level="warning" enabled="false">
   <parameters>
    <parameter name="regex"><![CDATA[println]]></parameter>
    <parameter name="line"><![CDATA[false]]></parameter>

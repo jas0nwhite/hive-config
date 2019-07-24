@@ -6,25 +6,25 @@ import org.hnl.matlab.MExp
 import org.hnl.matlab.MExp._
 
 /**
- * Config
- * <p>
- * Created on Mar 1, 2016.
- * <p>
- *
- * @author Jason White
- */
+  * Config
+  * <p>
+  * Created on Mar 1, 2016.
+  * <p>
+  *
+  * @author Jason White
+  */
 case class Config(
   name: String,
   cfg: TreatmentConfig,
   training: TrainingCatalog,
   testing: TestingCatalog,
   target: TargetCatalog)
-    extends MatClassFile {
+  extends MatClassFile {
 
   override val pkg: String = ""
 
-  protected val treatmentDef =
-    ClassProps().attribs("Constant") // scalastyle:ignore multiple.string.literals
+  protected val treatmentDef: ClassProps =
+    ClassProps().attribs("Constant")
       .%(
         "",
         "treatment definition",
@@ -39,7 +39,7 @@ case class Config(
         'muSelectId %=% cfg.muSelectId.toInt
       )
 
-  protected val treatmentDirs =
+  protected val treatmentDirs: ClassProps =
     ClassProps().attribs("Constant")
       .%(
         "",
@@ -57,7 +57,7 @@ case class Config(
         'codePath %=% CCell(cfg.codePath: _*)
       )
 
-  protected val catalogs =
+  protected val catalogs: ClassProps =
     ClassProps().attribs("Constant")
       .%(
         "",
@@ -70,7 +70,7 @@ case class Config(
         'target %=% target.classObj
       )
 
-  protected val methods =
+  protected val methods: ClassMethods =
     ClassMethods().attribs("Static")
       .%(
         "",
@@ -87,7 +87,7 @@ case class Config(
           )
       )
 
-  override val mClass =
+  override val mClass: ClassDef =
     ClassDef(name).from("hive.cfg.ConfigBase")
       .%(
         s"configruation information for HIVE treatment '${cfg.name}'",

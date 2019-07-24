@@ -7,20 +7,20 @@ import java.nio.file.Files
 import org.hnl.hive.cfg.matlab._
 import org.hnl.hive.csv.LabelCatalog
 
-import com.typesafe.config.{ ConfigException, ConfigFactory }
+import com.typesafe.config.{ConfigException, ConfigFactory}
 
 import grizzled.slf4j.Logging
 
 // scalastyle:off multiple.string.literals
 
 /**
- * GenerateHiveConfig$
- * <p>
- * Created on Mar 6, 2016.
- * <p>
- *
- * @author Jason White
- */
+  * GenerateHiveConfig$
+  * <p>
+  * Created on Mar 6, 2016.
+  * <p>
+  *
+  * @author Jason White
+  */
 object GenerateHiveConfig extends App with Logging {
 
   info("begin processing")
@@ -74,22 +74,21 @@ object GenerateHiveConfig extends App with Logging {
 
   }
   catch {
-    case e: ConfigException.Parse => {
+    case e: ConfigException.Parse =>
       error(s"parsing ${e.getMessage}")
       System.exit(2)
-    }
-    case e: ConfigException => {
+
+    case e: ConfigException =>
       error(s"processing ${args(0)}: ${e.getMessage}")
       System.exit(2)
-    }
-    case e: HiveConfigException => {
+
+    case e: HiveConfigException =>
       error(e.getMessage)
       System.exit(2)
-    }
-    case e: Throwable => {
+
+    case e: Throwable =>
       error(s"${e.getClass.getName.split("[.]").last} processing ${args(0)}: ${e.getMessage}")
       System.exit(2)
-    }
   }
 
   protected def createMatlabFile(matClass: MatClassFile): Unit = {

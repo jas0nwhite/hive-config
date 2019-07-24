@@ -1,27 +1,26 @@
 package org.hnl.hive.cfg.matlab
 
-import org.hnl.hive.cfg.InvitroDataset
-import org.hnl.hive.cfg.TreatmentConfig
+import org.hnl.hive.cfg.{InvitroConfig, InvitroDataset, TreatmentConfig}
 import org.hnl.matlab.M._
 import org.hnl.matlab.MExp
 import org.hnl.matlab.MExp._
 
 /**
- * TestingCatalog
- * <p>
- * Created on Mar 8, 2016.
- * <p>
- *
- * @author Jason White
- */
+  * TestingCatalog
+  * <p>
+  * Created on Mar 8, 2016.
+  * <p>
+  *
+  * @author Jason White
+  */
 case class TestingCatalog(name: String, treatmentCfg: TreatmentConfig) extends MatClassFile {
 
   override val pkg = "hive.cfg"
 
-  val cfg = treatmentCfg.testing
+  val cfg: InvitroConfig = treatmentCfg.testing
 
-  protected val paths =
-    ClassProps().attribs("Constant") // scalastyle:ignore multiple.string.literals
+  protected val paths: ClassProps =
+    ClassProps().attribs("Constant")
       .%(
         "",
         "testing paths",
@@ -33,7 +32,7 @@ case class TestingCatalog(name: String, treatmentCfg: TreatmentConfig) extends M
         'resultPathList %=% CCell(cfg.resultPaths: _*)
       )
 
-  protected val settings =
+  protected val settings: ClassProps =
     ClassProps().attribs("Constant")
       .%(
         "",
@@ -53,7 +52,7 @@ case class TestingCatalog(name: String, treatmentCfg: TreatmentConfig) extends M
         'timeWindowList %=% CCell(cfg.timeWindows.map(l => RVec(l: _*)): _*)
       )
 
-  protected val catalogs =
+  protected val catalogs: ClassProps =
     ClassProps().attribs("Constant")
       .%(
         "",
@@ -70,7 +69,7 @@ case class TestingCatalog(name: String, treatmentCfg: TreatmentConfig) extends M
         })
       )
 
-  override val mClass =
+  override val mClass: ClassDef =
     ClassDef(name).from("hive.cfg.CatalogBase")
       .%(
         s"testing catalog for HIVE treatment '${treatmentCfg.name}'",

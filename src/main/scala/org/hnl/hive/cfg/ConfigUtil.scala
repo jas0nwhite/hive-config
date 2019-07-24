@@ -12,103 +12,111 @@ import grizzled.slf4j.Logging
 // scalastyle:off null
 
 /**
- * ConfigUtil
- * <p>
- * Created on Mar 15, 2016.
- * <p>
- *
- * @author Jason White
- */
+  * ConfigUtil
+  * <p>
+  * Created on Mar 15, 2016.
+  * <p>
+  *
+  * @author Jason White
+  */
 object ConfigUtil {
   implicit def configToWrappedConfig(config: Config): WrappedConfig =
     new WrappedConfig(config)
 }
 
 /**
- * WrappedConfig
- * <p>
- * Created on Mar 15, 2016.
- * <p>
- *
- * @author Jason White
- */
+  * WrappedConfig
+  * <p>
+  * Created on Mar 15, 2016.
+  * <p>
+  *
+  * @author Jason White
+  */
 class WrappedConfig(config: Config) extends Logging {
 
   /**
-   * getString
-   * @param key
-   * @return
-   */
+    * getString
+    *
+    * @param key the key for the value
+    * @return the value as a String
+    */
   def getString(key: String): String = doTry {
     config.getString(key)
   }
 
   /**
-   * getString
-   * @param key
-   * @param fallback
-   * @return
-   */
+    * getString
+    *
+    * @param key the key for the value
+    * @param fallback the fallback (default) value
+    * @return the value as String, or default
+    */
   def getString(key: String, fallback: String): String = doTry {
     if (config.hasPath(key)) {
       config.getString(key)
     }
     else {
-      info(s"no value found for '${key}', using '${fallback}'")
+      info(s"no value found for '$key', using '$fallback'")
       fallback
     }
   }
 
   /**
-   * getInt
-   * @param key
-   * @return
-   */
+    * getInt
+    *
+    * @param key the key for the value
+    * @return the value as an int
+    */
   def getInt(key: String): Int = doTry {
     config.getInt(key)
   }
 
   /**
-   * getIntList
-   * @param key
-   * @return
-   */
+    * getIntList
+    *
+    * @param key the key for the value
+    * @return the value as a list of ints
+    */
   def getIntList(key: String): List[Int] = doTry {
     config.getIntList(key).asScala.map(_.toInt).toList
   }
 
   /**
-   * getDouble
-   * @param key
-   * @return
-   */
+    * getDouble
+    *
+    * @param key the key for the value
+    * @return the value as a double
+    */
   def getDouble(key: String): Double = doTry {
     config.getDouble(key)
   }
 
   /**
-   * getDoubleList
-   * @param key
-   * @return
-   */
+    * getDoubleList
+    *
+    * @param key the key for the value
+    * @return the value as a list of doubles
+    */
   def getDoubleList(key: String): List[Double] = doTry {
     config.getDoubleList(key).asScala.map(_.toDouble).toList
   }
 
   /**
-   * getAbsolutePath
-   * @param key
-   * @return
-   */
+    * getAbsolutePath
+    *
+    * @param key the key for the value
+    * @return the value as an absolute filepath
+    */
   def getAbsolutePath(key: String): String = doTry {
     toAbsolutePath(config.getString(key))
   }
 
   /**
-   * getIntVectorList
-   * @param key
-   * @return
-   */
+    * getIntVectorList
+    *
+    * @param key the key for the value
+    * @return the value as an int vector list
+    */
   def getIntVectorList(key: String): List[List[Int]] = doTry {
     val value = config.getValue(key)
 
@@ -120,16 +128,17 @@ class WrappedConfig(config: Config) extends Logging {
 
     getDeepValueType(value) match {
       case List(ConfigValueType.LIST, ConfigValueType.LIST, ConfigValueType.NUMBER) => asList(value)(v => asList(v)(e => asInt(e)))
-      case List(ConfigValueType.LIST, ConfigValueType.NUMBER) => List(asList(value)(v => asInt(v)))
-      case List(ConfigValueType.NUMBER) => List(List(asInt(value)))
+      case List(ConfigValueType.LIST, ConfigValueType.NUMBER)                       => List(asList(value)(v => asInt(v)))
+      case List(ConfigValueType.NUMBER)                                             => List(List(asInt(value)))
     }
   }
 
   /**
-   * getAbsolutePathList
-   * @param key
-   * @return
-   */
+    * getAbsolutePathList
+    *
+    * @param key the key for the value
+    * @return the value as a list of absolute filepaths
+    */
   def getAbsolutePathList(key: String): List[String] = doTry {
     val value: ConfigValue = config.getValue(key)
     val kind: ConfigValueType = value.valueType
@@ -142,21 +151,23 @@ class WrappedConfig(config: Config) extends Logging {
   }
 
   /**
-   * getObjectList
-   * @param key
-   * @return
-   */
+    * getObjectList
+    *
+    * @param key the key for the value
+    * @return the value as a list of config objects
+    */
   def getObjectList(key: String): List[WrappedConfig] = doTry {
-    config.getObjectList(key).asScala.map { o => new WrappedConfig(o.toConfig()) }.toList
+    config.getObjectList(key).asScala.map { o => new WrappedConfig(o.toConfig) }.toList
   }
 
   /**
-   * getConfigObject
-   * @param key
-   * @return
-   */
+    * getConfigObject
+    *
+    * @param key the key for the value
+    * @return the value as a config object
+    */
   def getConfigObject(key: String): Config = doTry {
-    config.getObject(key).toConfig()
+    config.getObject(key).toConfig
   }
 
   /*
@@ -172,8 +183,8 @@ class WrappedConfig(config: Config) extends Logging {
 
   protected def getDeepValueType(value: ConfigValue): List[ConfigValueType] = {
     value.valueType match {
-      case l @ ConfigValueType.LIST => l :: getDeepValueType(value.asInstanceOf[ConfigList].get(0))
-      case e @ _                    => e :: Nil
+      case l@ConfigValueType.LIST => l :: getDeepValueType(value.asInstanceOf[ConfigList].get(0))
+      case e@_                    => e :: Nil
     }
   }
 
@@ -182,21 +193,20 @@ class WrappedConfig(config: Config) extends Logging {
       f
     }
     catch {
-      case e: ConfigException if config.origin != null && config.origin.lineNumber > 0 => {
+      case e: ConfigException if config.origin != null && config.origin.lineNumber > 0 =>
         val e2 = new HiveConfigException(s"in ${config.origin.filename} on line ${config.origin.lineNumber}: ${e.getMessage}")
         e2.setStackTrace(e.getStackTrace)
         throw e2
-      }
     }
   }
 }
 
 /**
- * HiveConfigException
- * <p>
- * Created on Mar 15, 2016.
- * <p>
- *
- * @author Jason White
- */
+  * HiveConfigException
+  * <p>
+  * Created on Mar 15, 2016.
+  * <p>
+  *
+  * @author Jason White
+  */
 class HiveConfigException(message: String = null, cause: Throwable = null) extends Exception(message, cause)

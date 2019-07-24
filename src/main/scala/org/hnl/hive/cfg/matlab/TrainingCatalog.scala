@@ -1,27 +1,26 @@
 package org.hnl.hive.cfg.matlab
 
-import org.hnl.hive.cfg.InvitroDataset
-import org.hnl.hive.cfg.TreatmentConfig
+import org.hnl.hive.cfg.{InvitroConfig, InvitroDataset, TreatmentConfig}
 import org.hnl.matlab.M._
 import org.hnl.matlab.MExp
 import org.hnl.matlab.MExp._
 
 /**
- * TrainingCatalog
- * <p>
- * Created on Mar 8, 2016.
- * <p>
- *
- * @author Jason White
- */
+  * TrainingCatalog
+  * <p>
+  * Created on Mar 8, 2016.
+  * <p>
+  *
+  * @author Jason White
+  */
 case class TrainingCatalog(name: String, treatmentCfg: TreatmentConfig) extends MatClassFile {
 
   override val pkg = "hive.cfg"
 
-  val cfg = treatmentCfg.training
+  val cfg: InvitroConfig = treatmentCfg.training
 
-  protected val paths =
-    ClassProps().attribs("Constant") // scalastyle:ignore multiple.string.literals
+  protected val paths: ClassProps =
+    ClassProps().attribs("Constant")
       .%(
         "",
         "training directories",
@@ -33,7 +32,7 @@ case class TrainingCatalog(name: String, treatmentCfg: TreatmentConfig) extends 
         'resultPathList %=% CCell(cfg.resultPaths: _*)
       )
 
-  protected val settings =
+  protected val settings: ClassProps =
     ClassProps().attribs("Constant")
       .%(
         "",
@@ -51,7 +50,7 @@ case class TrainingCatalog(name: String, treatmentCfg: TreatmentConfig) extends 
         'timeWindowList %=% CCell(cfg.timeWindows.map(l => RVec(l: _*)): _*)
       )
 
-  protected val outputs =
+  protected val outputs: ClassProps =
     ClassProps().attribs("Constant")
       .%(
         "",
@@ -62,7 +61,7 @@ case class TrainingCatalog(name: String, treatmentCfg: TreatmentConfig) extends 
         'indexCloudFile %=% treatmentCfg.trainingIndexCloudFile
       )
 
-  protected val catalogs =
+  protected val catalogs: ClassProps =
     ClassProps().attribs("Constant")
       .%(
         "",
@@ -79,7 +78,7 @@ case class TrainingCatalog(name: String, treatmentCfg: TreatmentConfig) extends 
         })
       )
 
-  override val mClass =
+  override val mClass: ClassDef =
     ClassDef(name).from("hive.cfg.CatalogBase")
       .%(
         s"training catalog for HIVE treatment '${treatmentCfg.name}'",

@@ -6,19 +6,19 @@ import org.hnl.matlab.MExp
 import org.hnl.matlab.MExp._
 
 /**
- * TargetCatalog
- * <p>
- * Created on Mar 8, 2016.
- * <p>
- *
- * @author Jason White
- */
+  * TargetCatalog
+  * <p>
+  * Created on Mar 8, 2016.
+  * <p>
+  *
+  * @author Jason White
+  */
 case class TargetCatalog(name: String, cfg: TreatmentConfig) extends MatClassFile {
 
   override val pkg = "hive.cfg"
 
-  protected val paths =
-    ClassProps().attribs("Constant") // scalastyle:ignore multiple.string.literals
+  protected val paths: ClassProps =
+    ClassProps().attribs("Constant")
       .%(
         "",
         "target directories",
@@ -29,7 +29,7 @@ case class TargetCatalog(name: String, cfg: TreatmentConfig) extends MatClassFil
         'resultPathList %=% CCell(cfg.targetResultPaths: _*)
       )
 
-  protected val settings =
+  protected val settings: ClassProps =
     ClassProps().attribs("Constant")
       .%(
         "",
@@ -42,7 +42,7 @@ case class TargetCatalog(name: String, cfg: TreatmentConfig) extends MatClassFil
         'vgramWindowList %=% CCell(cfg.targetVgramWindows.map(l => RVec(l: _*)): _*)
       )
 
-  protected val catalogs =
+  protected val catalogs: ClassProps =
     ClassProps().attribs("Constant")
       .%(
         "",
@@ -54,7 +54,7 @@ case class TargetCatalog(name: String, cfg: TreatmentConfig) extends MatClassFil
         'datasetCatalog %=% makeIndexedCellArray(cfg.targetDatasetCatalog)((s: String) => Str(s))
       )
 
-  override val mClass =
+  override val mClass: ClassDef =
     ClassDef(name).from("hive.cfg.CatalogBase")
       .%(
         s"target catalog for HIVE treatment '${cfg.name}'",

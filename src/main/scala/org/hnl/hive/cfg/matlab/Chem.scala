@@ -6,29 +6,27 @@ import org.hnl.matlab.MExp
 import org.hnl.matlab.MExp._
 
 /**
- * Chemical
- * <p>
- * Created on Mar 1, 2016.
- * <p>
- *
- * @author Jason White
- */
+  * Chemical
+  * <p>
+  * Created on Mar 1, 2016.
+  * <p>
+  *
+  * @author Jason White
+  */
 case class Chemical(ix: Int, colName: String, name: String, label: String, prefix: String, units: String, neutral: Double) extends Ordered[Chemical] {
 
   def compare(that: Chemical): Int = this.ix compare that.ix
 
 }
 
-// scalastyle:off multiple.string.literals
-
 /**
- * Chem
- * <p>
- * Created on Mar 1, 2016.
- * <p>
- *
- * @author Jason White
- */
+  * Chem
+  * <p>
+  * Created on Mar 1, 2016.
+  * <p>
+  *
+  * @author Jason White
+  */
 case class Chem(name: String, chems: List[Chemical], treatment: String) extends MatClassFile {
 
   override val pkg: String = ""
@@ -36,7 +34,7 @@ case class Chem(name: String, chems: List[Chemical], treatment: String) extends 
   /*
    * enumeration
    */
-  protected val enum =
+  protected val enum: ClassEnum =
     ClassEnum()
       .%(
         "",
@@ -48,7 +46,7 @@ case class Chem(name: String, chems: List[Chemical], treatment: String) extends 
   /*
    * methods
    */
-  protected val methods = {
+  protected val methods: ClassMethods = {
     ClassMethods()
       .+(
         FnDef("ix", 'this).returns('n)
@@ -135,7 +133,7 @@ case class Chem(name: String, chems: List[Chemical], treatment: String) extends 
   /*
    * class
    */
-  override val mClass =
+  override val mClass: ClassDef =
     ClassDef(name).from("uint32", "hive.cfg.ChemBase")
       .%(
         s"Chemicals for use in HIVE treatment '$treatment'",
@@ -155,13 +153,13 @@ case class Chem(name: String, chems: List[Chemical], treatment: String) extends 
 }
 
 /**
- * Methods to extract the ChemClass object from the config object
- * <p>
- * Created on Mar 7, 2016.
- * <p>
- *
- * @author Jason White
- */
+  * Methods to extract the ChemClass object from the config object
+  * <p>
+  * Created on Mar 7, 2016.
+  * <p>
+  *
+  * @author Jason White
+  */
 object Chem {
 
   def getChemList(config: TreatmentConfig): List[Chemical] = config.chemicals.map { c =>
