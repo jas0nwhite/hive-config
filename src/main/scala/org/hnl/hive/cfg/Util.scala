@@ -1,7 +1,13 @@
 package org.hnl.hive.cfg
 
-import grizzled.slf4j.Logging
 import java.nio.file.Paths
+import java.util
+import java.util.StringTokenizer
+
+import grizzled.file.{util => GF}
+import grizzled.slf4j.Logging
+
+import scala.collection.JavaConverters._
 
 /**
   * Util
@@ -20,7 +26,7 @@ object Util extends Logging {
     * @return list of matching file paths
     */
   def findPaths(spec: String): List[String] = try {
-    val list = grizzled.file.util.eglob(spec)
+    val list = GF.eglob(spec)
 
     debug(s"found ${list.length} matches for '$spec'")
 
@@ -69,4 +75,17 @@ object Util extends Logging {
     * @return the basename (laste element) of the path
     */
   def basenames(paths: List[String]): List[String] = paths.map(basename)
+
+
+  /**
+    * returns a list representing the parts and separators of a filepath
+    *
+    * @param filePath the path in string value (Java-style)
+    * @return a list of parts and separators for the path
+    */
+  def splitPath(filePath: String): List[String] = new StringTokenizer(
+    GF.normalizePath(GF.universalPath(filePath)), "/.", true)
+    .asInstanceOf[util.Enumeration[String]]
+    .asScala
+    .toList
 }

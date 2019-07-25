@@ -1,8 +1,8 @@
 package org.hnl.hive.cfg
 
-import scala.util.matching.Regex
-
 import grizzled.slf4j.Logging
+
+import scala.util.matching.Regex
 
 /**
   * Utilities to parse naming of various files and directories created by the HNL
@@ -15,17 +15,15 @@ import grizzled.slf4j.Logging
 object NamingUtil extends Logging {
 
   def datasetNameFromPath(fileName: String): Option[String] = {
-    val string = "([^/]+)".r
-    val subdir = "(.*)/([^/]+)".r
-    val file = "([^/]+)[.]?(.*)".r
-    val dirFile = "(.*)/([^/]+)/([^/]+)[.]?(.*)".r
+    val parts = Util.splitPath(fileName)
 
-    fileName match {
-      case dirFile(_, dir, _, _) => Some(dir)
-      case subdir(_, dir)        => Some(dir)
-      case file(name, _)         => Some(name)
-      case string(s)             => Some(s)
-      case _                     =>
+    parts.reverse match {
+      case "abf" :: "." :: name :: _ => Some(name) // abf file
+      case "h5" :: "." :: name :: _  => Some(name) // h5 file
+      case "/" :: name :: _          => Some(name) // dir ending in slash
+      case name :: "/" :: _          => Some(name) // dir or file with no extension
+      case name :: Nil               => Some(name) // string by itself
+      case _                         =>
         warn(s"could not determine dataset name of [$fileName]")
         None
     }

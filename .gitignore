@@ -1,10 +1,6 @@
 target
-.cache-main
-.cache-tests
-.worksheet
 .*.swp
 bin
-commit.sh
 project/target
 src/main/matlab/*.conf
 src/main/matlab/Chem.m
@@ -20,6 +16,7 @@ data
 2017_03_09_5HT_run_0000.abf
 src/main/resources/abfload.m
 src/test/scala/testing.sc
-__pycache__
 hiveConfig.jar
-.ipynb_checkpoints
+/filter.sh
+/.idea
+/.project

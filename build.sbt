@@ -1,4 +1,4 @@
-name := "iterate-config"
+name := "hive-config"
 
 version := "0.0.1"
 

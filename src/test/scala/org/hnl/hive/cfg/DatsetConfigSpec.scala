@@ -1,26 +1,23 @@
 package org.hnl.hive.cfg
 
 import org.scalatest._
-import org.hnl.hive.cfg.NamingUtil._
-import org.scalatest.matchers.HavePropertyMatcher
-import org.scalatest.matchers.HavePropertyMatchResult
 
 /**
- * NamingUtilSpec
- * <p>
- * Created on Apr 12, 2017.
- * <p>
- *
- * @author Jason White
- */
-class NamingUtilSpec extends WordSpec with Matchers with Inspectors with OptionValues with CustomMatchers {
+  * DatsetConfigSpec
+  * <p>
+  * Created on Apr 12, 2017.
+  * <p>
+  *
+  * @author Jason White
+  */
+class DatsetConfigSpec extends WordSpec with Matchers with Inspectors with OptionValues with CustomMatchers {
 
-  "NamingUtil" should {
+  "DatasetConfig" should {
 
     "parse probe names" in {
-      val option1 = NamingUtil.datasetInfoFromName("2015_07_14_dopamine_A_EL_2015_07_07")
+      val option1 = DatasetConfig.datasetInfoFromPath("2015_07_14_dopamine_A_EL_2015_07_07")
 
-      option1 should not be (null)
+      option1 should not be null
       option1 shouldBe defined
       option1.value should have(
         dsDate("2015_07_14"),
@@ -30,9 +27,9 @@ class NamingUtilSpec extends WordSpec with Matchers with Inspectors with OptionV
         probeDate("2015_07_07")
       )
 
-      val option2 = NamingUtil.datasetInfoFromName("2015_10_27_dopamine_am_KK_2013_07_29")
+      val option2 = DatasetConfig.datasetInfoFromPath("2015_10_27_dopamine_am_KK_2013_07_29")
 
-      option2 should not be (null)
+      option2 should not be null
       option2 shouldBe defined
       option2.value should have(
         dsDate("2015_10_27"),
@@ -42,9 +39,9 @@ class NamingUtilSpec extends WordSpec with Matchers with Inspectors with OptionV
         probeDate("2013_07_29")
       )
 
-      val option3 = NamingUtil.datasetInfoFromName("2015_11_12_pH_HLH_pm3_KK_2013_07_29")
+      val option3 = DatasetConfig.datasetInfoFromPath("2015_11_12_pH_HLH_pm3_KK_2013_07_29")
 
-      option3 should not be (null)
+      option3 should not be null
       option3 shouldBe defined
       option3.value should have(
         dsDate("2015_11_12"),
@@ -54,9 +51,9 @@ class NamingUtilSpec extends WordSpec with Matchers with Inspectors with OptionV
         probeDate("2013_07_29")
       )
 
-      val option4 = NamingUtil.datasetInfoFromName("2017_03_09_5HT_uncorrelated_octaflow_bypass_100k_97Hz_V8")
+      val option4 = DatasetConfig.datasetInfoFromPath("2017_03_09_5HT_uncorrelated_octaflow_bypass_100k_97Hz_V8")
 
-      option4 should not be (null)
+      option4 should not be null
       option4 shouldBe defined
       option4.value should have(
         dsDate("2017_03_09"),
@@ -65,12 +62,13 @@ class NamingUtilSpec extends WordSpec with Matchers with Inspectors with OptionV
         probeName("V8"),
         probeDate("")
       )
+
     }
 
     "parse uncorrelated dataset names" in {
-      val option1 = NamingUtil.datasetInfoFromName("2016_06_15_5HT_uncorrelated_100k_97Hz_A")
+      val option1 = DatasetConfig.datasetInfoFromPath("2016_06_15_5HT_uncorrelated_100k_97Hz_A")
 
-      option1 should not be (null)
+      option1 should not be null
       option1 shouldBe defined
       option1.value should have(
         dsDate("2016_06_15"),
@@ -80,9 +78,9 @@ class NamingUtilSpec extends WordSpec with Matchers with Inspectors with OptionV
         probeDate("")
       )
 
-      val option2 = NamingUtil.datasetInfoFromName("2017_03_09_5HT_uncorrelated_octaflow_bypass_100k_97Hz_V8")
+      val option2 = DatasetConfig.datasetInfoFromPath("2017_03_09_5HT_uncorrelated_octaflow_bypass_100k_97Hz_V8")
 
-      option2 should not be (null)
+      option2 should not be null
       option2 shouldBe defined
       option2.value should have(
         dsDate("2017_03_09"),
@@ -92,9 +90,9 @@ class NamingUtilSpec extends WordSpec with Matchers with Inspectors with OptionV
         probeDate("")
       )
 
-      val option3 = NamingUtil.datasetInfoFromName("2017_03_27_DA_uncorrelated_octaflow_100k_97Hz_S8")
+      val option3 = DatasetConfig.datasetInfoFromPath("2017_03_27_DA_uncorrelated_octaflow_100k_97Hz_S8")
 
-      option3 should not be (null)
+      option3 should not be null
       option3 shouldBe defined
       option3.value should have(
         dsDate("2017_03_27"),
@@ -104,9 +102,9 @@ class NamingUtilSpec extends WordSpec with Matchers with Inspectors with OptionV
         probeDate("")
       )
 
-      val option4 = NamingUtil.datasetInfoFromName("2016_06_15_DA_RBV1_100k_97Hz_J_EL_2016_06_10")
+      val option4 = DatasetConfig.datasetInfoFromPath("2016_06_15_DA_RBV1_100k_97Hz_J_EL_2016_06_10")
 
-      option4 should not be (null)
+      option4 should not be null
       option4 shouldBe defined
       option4.value should have(
         dsDate("2016_06_15"),
@@ -116,9 +114,9 @@ class NamingUtilSpec extends WordSpec with Matchers with Inspectors with OptionV
         probeDate("2016_06_10")
       )
 
-      val option5 = NamingUtil.datasetInfoFromName("2019_04_18_KYNA_uncorrelated_100k_97Hz_CF048")
+      val option5 = DatasetConfig.datasetInfoFromPath("2019_04_18_KYNA_uncorrelated_100k_97Hz_CF048")
 
-      option5 should not be (null)
+      option5 should not be null
       option5 shouldBe defined
       option5.value should have(
         dsDate("2019_04_18"),
@@ -128,9 +126,9 @@ class NamingUtilSpec extends WordSpec with Matchers with Inspectors with OptionV
         probeDate("")
       )
 
-      val option6 = NamingUtil.datasetInfoFromName("2019_05_15_pH_uncorrelated_100k_97Hz_CFR001")
+      val option6 = DatasetConfig.datasetInfoFromPath("2019_05_15_pH_uncorrelated_100k_97Hz_CFR001")
 
-      option6 should not be (null)
+      option6 should not be null
       option6 shouldBe defined
       option6.value should have(
         dsDate("2019_05_15"),
@@ -143,9 +141,9 @@ class NamingUtilSpec extends WordSpec with Matchers with Inspectors with OptionV
     }
 
     "parse three-transmitter dataset names" in {
-      val option1 = NamingUtil.datasetInfoFromName("2017_06_22_DA_5HT_NE_octaflow_400Vs_10Hz_X1_2017_01_01")
+      val option1 = DatasetConfig.datasetInfoFromPath("2017_06_22_DA_5HT_NE_octaflow_400Vs_10Hz_X1_2017_01_01")
 
-      option1 should not be (null)
+      option1 should not be null
       option1 shouldBe defined
       option1.value should have(
         dsDate("2017_06_22"),
@@ -155,9 +153,9 @@ class NamingUtilSpec extends WordSpec with Matchers with Inspectors with OptionV
         probeDate("2017_01_01")
       )
 
-      val option2 = NamingUtil.datasetInfoFromName("2017_06_22_DA_5HT_NE_octaflow_400Vs_10Hz_X1")
+      val option2 = DatasetConfig.datasetInfoFromPath("2017_06_22_DA_5HT_NE_octaflow_400Vs_10Hz_X1")
 
-      option2 should not be (null)
+      option2 should not be null
       option2 shouldBe defined
       option2.value should have(
         dsDate("2017_06_22"),
@@ -167,9 +165,9 @@ class NamingUtilSpec extends WordSpec with Matchers with Inspectors with OptionV
         probeDate("")
       )
 
-      val option3 = NamingUtil.datasetInfoFromName("2017_06_22_DA_5HT_NE_octaflow_400Vs_10Hz")
+      val option3 = DatasetConfig.datasetInfoFromPath("2017_06_22_DA_5HT_NE_octaflow_400Vs_10Hz")
 
-      option3 should not be (null)
+      option3 should not be null
       option3 shouldBe defined
       option3.value should have(
         dsDate("2017_06_22"),
@@ -182,9 +180,9 @@ class NamingUtilSpec extends WordSpec with Matchers with Inspectors with OptionV
     }
 
     "parse four-transmitter dataset names" in {
-      val option1 = NamingUtil.datasetInfoFromName("2018_03_27_DA_5HT_NE_pH_uncorrelated_100k_97Hz_CF003_2018_03_24")
+      val option1 = DatasetConfig.datasetInfoFromPath("2018_03_27_DA_5HT_NE_pH_uncorrelated_100k_97Hz_CF003_2018_03_24")
 
-      option1 should not be (null)
+      option1 should not be null
       option1 shouldBe defined
       option1.value should have(
         dsDate("2018_03_27"),
@@ -194,9 +192,9 @@ class NamingUtilSpec extends WordSpec with Matchers with Inspectors with OptionV
         probeDate("2018_03_24")
       )
 
-      val option2 = NamingUtil.datasetInfoFromName("2018_03_27_DA_5HT_NE_pH_uncorrelated_100k_97Hz_CF003")
+      val option2 = DatasetConfig.datasetInfoFromPath("2018_03_27_DA_5HT_NE_pH_uncorrelated_100k_97Hz_CF003")
 
-      option2 should not be (null)
+      option2 should not be null
       option2 shouldBe defined
       option2.value should have(
         dsDate("2018_03_27"),
@@ -206,9 +204,9 @@ class NamingUtilSpec extends WordSpec with Matchers with Inspectors with OptionV
         probeDate("")
       )
 
-      val option3 = NamingUtil.datasetInfoFromName("2018_03_27_DA_5HT_NE_pH_uncorrelated_100k_97Hz")
+      val option3 = DatasetConfig.datasetInfoFromPath("2018_03_27_DA_5HT_NE_pH_uncorrelated_100k_97Hz")
 
-      option3 should not be (null)
+      option3 should not be null
       option3 shouldBe defined
       option3.value should have(
         dsDate("2018_03_27"),
@@ -221,9 +219,9 @@ class NamingUtilSpec extends WordSpec with Matchers with Inspectors with OptionV
     }
 
     "parse five-transmitter dataset names" in {
-      val option1 = NamingUtil.datasetInfoFromName("2018_03_27_DA_5HT_NE_5HIAA_pH_uncorrelated_100k_97Hz_CF003_2018_03_24")
+      val option1 = DatasetConfig.datasetInfoFromPath("2018_03_27_DA_5HT_NE_5HIAA_pH_uncorrelated_100k_97Hz_CF003_2018_03_24")
 
-      option1 should not be (null)
+      option1 should not be null
       option1 shouldBe defined
       option1.value should have(
         dsDate("2018_03_27"),
@@ -233,9 +231,9 @@ class NamingUtilSpec extends WordSpec with Matchers with Inspectors with OptionV
         probeDate("2018_03_24")
       )
 
-      val option2 = NamingUtil.datasetInfoFromName("2018_03_27_DA_5HT_NE_5HIAA_pH_uncorrelated_100k_97Hz_CF003")
+      val option2 = DatasetConfig.datasetInfoFromPath("2018_03_27_DA_5HT_NE_5HIAA_pH_uncorrelated_100k_97Hz_CF003")
 
-      option2 should not be (null)
+      option2 should not be null
       option2 shouldBe defined
       option2.value should have(
         dsDate("2018_03_27"),
@@ -245,9 +243,9 @@ class NamingUtilSpec extends WordSpec with Matchers with Inspectors with OptionV
         probeDate("")
       )
 
-      val option3 = NamingUtil.datasetInfoFromName("2018_03_27_DA_5HT_NE_5HIAA_pH_uncorrelated_100k_97Hz")
+      val option3 = DatasetConfig.datasetInfoFromPath("2018_03_27_DA_5HT_NE_5HIAA_pH_uncorrelated_100k_97Hz")
 
-      option3 should not be (null)
+      option3 should not be null
       option3 shouldBe defined
       option3.value should have(
         dsDate("2018_03_27"),
@@ -260,9 +258,9 @@ class NamingUtilSpec extends WordSpec with Matchers with Inspectors with OptionV
     }
 
     "parse six-transmitter dataset names" in {
-      val option1 = NamingUtil.datasetInfoFromName("2018_03_27_DA_5HT_NE_5HIAA_KYNA_pH_uncorrelated_100k_97Hz_CF003_2018_03_24")
+      val option1 = DatasetConfig.datasetInfoFromPath("2018_03_27_DA_5HT_NE_5HIAA_KYNA_pH_uncorrelated_100k_97Hz_CF003_2018_03_24")
 
-      option1 should not be (null)
+      option1 should not be null
       option1 shouldBe defined
       option1.value should have(
         dsDate("2018_03_27"),
@@ -272,9 +270,9 @@ class NamingUtilSpec extends WordSpec with Matchers with Inspectors with OptionV
         probeDate("2018_03_24")
       )
 
-      val option2 = NamingUtil.datasetInfoFromName("2018_03_27_DA_5HT_NE_5HIAA_KYNA_pH_uncorrelated_100k_97Hz_CF003")
+      val option2 = DatasetConfig.datasetInfoFromPath("2018_03_27_DA_5HT_NE_5HIAA_KYNA_pH_uncorrelated_100k_97Hz_CF003")
 
-      option2 should not be (null)
+      option2 should not be null
       option2 shouldBe defined
       option2.value should have(
         dsDate("2018_03_27"),
@@ -284,9 +282,9 @@ class NamingUtilSpec extends WordSpec with Matchers with Inspectors with OptionV
         probeDate("")
       )
 
-      val option3 = NamingUtil.datasetInfoFromName("2018_03_27_DA_5HT_NE_5HIAA_KYNA_pH_uncorrelated_100k_97Hz")
+      val option3 = DatasetConfig.datasetInfoFromPath("2018_03_27_DA_5HT_NE_5HIAA_KYNA_pH_uncorrelated_100k_97Hz")
 
-      option3 should not be (null)
+      option3 should not be null
       option3 shouldBe defined
       option3.value should have(
         dsDate("2018_03_27"),
@@ -299,9 +297,9 @@ class NamingUtilSpec extends WordSpec with Matchers with Inspectors with OptionV
     }
 
     "parse same-day repeated probe dataset names" in {
-      val option1 = NamingUtil.datasetInfoFromName("2019_01_07_DA_5HT_NE_5HIAA_uncorrelated_100k_97Hz_MM001W10R13_2")
+      val option1 = DatasetConfig.datasetInfoFromPath("2019_01_07_DA_5HT_NE_5HIAA_uncorrelated_100k_97Hz_MM001W10R13_2")
 
-      option1 should not be (null)
+      option1 should not be null
       option1 shouldBe defined
       option1.value should have(
         dsDate("2019_01_07"),
@@ -311,9 +309,9 @@ class NamingUtilSpec extends WordSpec with Matchers with Inspectors with OptionV
         probeDate("")
       )
 
-      val option2 = NamingUtil.datasetInfoFromName("2018_03_27_5HT_5HIAA_pH_uncorrelated_100k_97Hz_CF003_2018_03_24_2")
+      val option2 = DatasetConfig.datasetInfoFromPath("2018_03_27_5HT_5HIAA_pH_uncorrelated_100k_97Hz_CF003_2018_03_24_2")
 
-      option2 should not be (null)
+      option2 should not be null
       option2 shouldBe defined
       option2.value should have(
         dsDate("2018_03_27"),
@@ -325,63 +323,92 @@ class NamingUtilSpec extends WordSpec with Matchers with Inspectors with OptionV
 
     }
 
+    "parse dataset names from full path" in {
+      val option1 = DatasetConfig.datasetInfoFromPath("path/to/data/2015_07_14_dopamine_A_EL_2015_07_07")
+
+      option1 should not be null
+      option1 shouldBe defined
+      option1.value should have(
+        dsDate("2015_07_14"),
+        dsClass("dopamine"),
+        dsProtocol("dopamine"),
+        probeName("A_EL"),
+        probeDate("2015_07_07")
+      )
+
+      val option2 = DatasetConfig.datasetInfoFromPath("path/to/data/2015_07_14_dopamine_A_EL_2015_07_07/")
+
+      option2 should not be null
+      option2 shouldBe defined
+      option2.value should have(
+        dsDate("2015_07_14"),
+        dsClass("dopamine"),
+        dsProtocol("dopamine"),
+        probeName("A_EL"),
+        probeDate("2015_07_07")
+      )
+
+    }
+
+    "parse dataset names from filename" in {
+      val option1 = DatasetConfig.datasetInfoFromPath("2015_07_14_dopamine_A_EL_2015_07_07.abf")
+
+      option1 should not be null
+      option1 shouldBe defined
+      option1.value should have(
+        dsDate("2015_07_14"),
+        dsClass("dopamine"),
+        dsProtocol("dopamine"),
+        probeName("A_EL"),
+        probeDate("2015_07_07")
+      )
+
+    }
+
+    "parse dataset names from directory+filename" in {
+      val option1 = DatasetConfig.datasetInfoFromPath("data/2015_07_14_dopamine_A_EL_2015_07_07.abf")
+
+      option1 should not be null
+      option1 shouldBe defined
+      option1.value should have(
+        dsDate("2015_07_14"),
+        dsClass("dopamine"),
+        dsProtocol("dopamine"),
+        probeName("A_EL"),
+        probeDate("2015_07_07")
+      )
+
+      val option2 = DatasetConfig.datasetInfoFromPath("/2015_07_14_dopamine_A_EL_2015_07_07.abf")
+
+      option2 should not be null
+      option2 shouldBe defined
+      option2.value should have(
+        dsDate("2015_07_14"),
+        dsClass("dopamine"),
+        dsProtocol("dopamine"),
+        probeName("A_EL"),
+        probeDate("2015_07_07")
+      )
+
+    }
+
+    "parse dataset names using dataset.conf as override" in {
+      val option1 = DatasetConfig.datasetInfoFromPath("src/test/data/full/2018_07_22_NE_400Vs_97Hz_CF007_2018_01_01")
+
+      option1 should not be null
+      option1 shouldBe defined
+      option1.value should have(
+        dsDate("2019-07-22"),
+        dsClass("DA"),
+        dsProtocol("rbv_100k_97Hz"),
+        probeName("CFR008"),
+        probeDate("2019-01-01")
+      )
+
+    }
+
   }
 
 }
 
-trait CustomMatchers {
-  def dsClass(expectedValue: String) =
-    new HavePropertyMatcher[InvitroDataset, String] {
-      def apply(info: InvitroDataset) =
-        HavePropertyMatchResult(
-          info.dsClass == expectedValue,
-          "dsClass",
-          expectedValue,
-          info.dsClass
-        )
-    }
 
-  def dsDate(expectedValue: String) =
-    new HavePropertyMatcher[InvitroDataset, String] {
-      def apply(info: InvitroDataset) =
-        HavePropertyMatchResult(
-          info.dsDate == expectedValue,
-          "dsDate",
-          expectedValue,
-          info.dsDate
-        )
-    }
-
-  def dsProtocol(expectedValue: String) =
-    new HavePropertyMatcher[InvitroDataset, String] {
-      def apply(info: InvitroDataset) =
-        HavePropertyMatchResult(
-          info.dsProtocol == expectedValue,
-          "dsProtocol",
-          expectedValue,
-          info.dsProtocol
-        )
-    }
-
-  def probeName(expectedValue: String) =
-    new HavePropertyMatcher[InvitroDataset, String] {
-      def apply(info: InvitroDataset) =
-        HavePropertyMatchResult(
-          info.probeName == expectedValue,
-          "probeName",
-          expectedValue,
-          info.probeName
-        )
-    }
-
-  def probeDate(expectedValue: String) =
-    new HavePropertyMatcher[InvitroDataset, String] {
-      def apply(info: InvitroDataset) =
-        HavePropertyMatchResult(
-          info.probeDate == expectedValue,
-          "probeDate",
-          expectedValue,
-          info.probeDate
-        )
-    }
-}
