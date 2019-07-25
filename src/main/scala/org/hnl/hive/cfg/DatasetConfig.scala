@@ -97,13 +97,28 @@ object DatasetConfig extends Logging {
     *         None if the file is not found
     */
   protected def findConfigFile(path: String): Option[File] = {
-    val configFile = Paths.get(path, configFileName).toFile
+    // "path" can be either a file or a directory...
+    val configFile = for {
+      // first, we'll get the real path (Right) or an exception (Left) if it doesn't exist
+      realPath <- Try(Paths.get(path).toRealPath()).toEither
 
-    if (configFile.exists())
-      Some(configFile)
-    else {
-      debug(s"dataset config file [$configFile] not found")
-      None
+      // next, if it's a directory, great; if not, get the parent
+      configDir <- Right(
+        if (realPath.toFile.isDirectory) realPath else realPath.getParent
+      )
+
+      // finally, add the config file to the directory and get *its* real path
+      configFile <- Try(
+        configDir.resolve(configFileName).toRealPath()
+      ).toEither
+    } yield configFile
+
+    // now, we just match...
+    configFile match {
+      case Right(file) => Some(file.toFile)
+      case Left(err)   =>
+        info(s"dataset config file not found: ${err.getMessage}")
+        None
     }
   }
 }

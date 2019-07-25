@@ -18,13 +18,14 @@ object NamingUtil extends Logging {
     val parts = Util.splitPath(fileName)
 
     parts.reverse match {
-      case "abf" :: "." :: name :: _ => Some(name) // abf file
-      case "h5" :: "." :: name :: _  => Some(name) // h5 file
-      case "/" :: name :: _          => Some(name) // dir ending in slash
-      case name :: "/" :: _          => Some(name) // dir or file with no extension
-      case name :: Nil               => Some(name) // string by itself
-      case _                         =>
-        warn(s"could not determine dataset name of [$fileName]")
+      case "abf" :: "." :: name :: _         => Some(name) // abf file: use filename
+      case "h5" :: "." :: name :: _          => Some(name) // h5 file: use filename
+      case _ :: "." :: _ :: "/" :: name :: _ => Some(name) // other file: use parent dir
+      case "/" :: name :: _                  => Some(name) // dir ending in slash: use dirname
+      case name :: "/" :: _                  => Some(name) // dir or file with no extension: use it
+      case name :: Nil                       => Some(name) // string by itself: use it
+      case _                                 =>
+        warn(s"could not determine dataset name of [$fileName]", new HiveConfigException())
         None
     }
   }
@@ -80,7 +81,7 @@ object NamingUtil extends Logging {
       case mixture(dsDate, dsProtocol, probeName, probeDate)   => Some(InvitroDataset(dsDate, "mixture", dsProtocol, probeName, probeDate))
 
       case _ =>
-        warn(s"could not parse dataset name [$dataset]")
+        warn(s"could not parse dataset name [$dataset]", new RuntimeException)
         None
     }
   }

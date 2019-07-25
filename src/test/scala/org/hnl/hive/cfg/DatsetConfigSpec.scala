@@ -390,6 +390,18 @@ class DatsetConfigSpec extends WordSpec with Matchers with Inspectors with Optio
         probeDate("2015_07_07")
       )
 
+      val option3 = DatasetConfig.datasetInfoFromPath("mono/2019_05_15_DA_uncorrelated_100k_97Hz_CFR001/run.csv")
+
+      option3 should not be null
+      option3 shouldBe defined
+      option3.value should have(
+        dsDate("2019_05_15"),
+        dsClass("dopamine"),
+        dsProtocol("DA_uncorrelated_100k_97Hz"),
+        probeName("CFR001"),
+        probeDate("")
+      )
+
     }
 
     "parse dataset names using dataset.conf as override" in {

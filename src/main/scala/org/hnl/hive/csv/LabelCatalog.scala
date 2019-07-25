@@ -2,13 +2,14 @@ package org.hnl.hive.csv
 
 import java.io.{File, FileWriter}
 
+import grizzled.slf4j.Logging
+import org.hnl.hive.cfg.matlab.{Chem, Chemical}
+import org.hnl.hive.cfg.{DatasetConfig, TreatmentConfig, Util}
+import resource.managed
+
 import scala.collection.mutable.ListBuffer
 import scala.math.Ordered
 import scala.util.{Failure, Success, Try}
-import org.hnl.hive.cfg.{NamingUtil, TreatmentConfig, Util}
-import org.hnl.hive.cfg.matlab.{Chem, Chemical}
-import grizzled.slf4j.Logging
-import resource.managed
 
 /**
   * LabelCatalog
@@ -157,8 +158,7 @@ class LabelCatalog(config: TreatmentConfig) extends Logging {
         val rawFiles = Util.findPaths(Util.dirname(file) + "/" + rawGlob).sorted
 
         val probeName = for {
-          dataset <- NamingUtil.datasetNameFromPath(file)
-          dsInfo <- NamingUtil.datasetInfoFromName(dataset)
+          dsInfo <- DatasetConfig.datasetInfoFromPath(file)
         } yield if (dsInfo.probeDate.isEmpty) dsInfo.probeName else dsInfo.probeDate + "_" + dsInfo.probeName
 
         val colIx = getColumnIndices(csvHdr)
