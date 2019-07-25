@@ -44,31 +44,27 @@ function analyzeDataset(this, dsIx)
         fSample = round(metadata.sampleFreq(1), 0);
         fSweep = round(metadata.sweepFreq(1), 0);
         info = this.cfg.infoCatalog{setId}{sourceId, 2};
-        probe = info.probeName;
+        sampleIx = this.cfg.getSetValue(this.cfg.vgramWindowList, setId);
+        sampleRange = round(max(sampleIx) - min(sampleIx), -3);
         
-        if isempty(probe)
+        if isempty(info.probeName)
             probe = info.acqDate;
-        end
-
-        if (~isempty(regexp(info.protocol, '_(uncorrelated|RBV[^_]*)_', 'once')))
-            vpsString = 'random burst';
         else
-            voltage = 2;
-            sampleIx = this.cfg.getSetValue(this.cfg.vgramWindowList, setId);
-            sampleRange = round(max(sampleIx) - min(sampleIx), -3);
-            seconds = sampleRange / fSample;
-            vps = round(voltage * 2 / seconds);
-            vpsString = sprintf('%dV/s', vps);
+            probe = info.probeName;
         end
-
+        
+        % use some (standard?) data to calculate the forcing function and probe names
+        forcingFn = hive.util.calculateProtocolTitle(info.protocol, sampleRange, fSample);
+        
+        % indicate shuffled dataset where appropriate
         if (~isempty(regexp(resultDir, '-shuffled', 'once')))
-            vpsString = sprintf('%s (shuffled)', vpsString);
+            forcingFn = sprintf('%s (shuffled)', forcingFn);
         end
-
+        
         subtitle = sprintf('probe %s  |  %s @ %dHz\n\\fontsize{8}%s  |  dataset %03d  |  set %02d  |  source %03d',...
-            strrep(regexprep(probe, '[_]+', '_'), '_', '\_'), vpsString, fSweep,...
+            strrep(regexprep(probe, '[_]+', '_'), '_', '\_'), forcingFn, fSweep,...
             strrep(info.protocol, '_', '\_'), dsIx, setId, sourceId);
-
+        
         suptitle(subtitle);
 
 
