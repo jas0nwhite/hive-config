@@ -1,4 +1,4 @@
-function CVerr = cvglmnet(x,y,family,options,type,nfolds,foldid,parallel,keep,grouped)
+function CVerr = cvglmnet(x,y,family,options,type,nfolds,foldid,parallel,keep,grouped,trainMask)
 
 %--------------------------------------------------------------------------
 % cvglmnet.m: cross-validation for glmnet
@@ -62,6 +62,9 @@ function CVerr = cvglmnet(x,y,family,options,type,nfolds,foldid,parallel,keep,gr
 %             This makes more efficient use of risk sets. With
 %             grouped=FALSE the log partial likelihood is computed only on
 %             the Kth fold.
+% trainMask   (HNL) Same as foldid, except that samples will be masked from
+%             training for the given fold -- testing is unaffected (i.e.
+%             controlled solely by foldid)
 %
 % OUTPUT ARGUMENTS:
 % A structure is returned with the following fields.
@@ -83,6 +86,7 @@ function CVerr = cvglmnet(x,y,family,options,type,nfolds,foldid,parallel,keep,gr
 %             entries can be NA, if that and subsequent values of lambda
 %             are not reached for that fold.
 % foldid      if keep=true, the fold assignments used.
+% trainMask   if keep=true, the training mask used.
 %
 % DETAILS:
 %    The function runs glmnet nfolds+1 times; the first to get the lambda
@@ -236,6 +240,9 @@ end
 if nargin < 10 || isempty(grouped)
     grouped = true;
 end
+if nargin < 11 || isempty(trainMask)
+    trainMask = [];
+end
 
 options = glmnetSet(options);
 
@@ -283,6 +290,16 @@ else
 end
 foldid = reshape(foldid, numel(foldid), 1);
 
+if isempty(trainMask)
+    trainMask = zeros(numel(foldid));
+else
+    if numel(trainMask) ~= numel(foldid)
+        error('trainMask must have the same number of elements as foldid');
+    end
+end
+trainMask = reshape(trainMask, numel(foldid), 1);
+    
+
 if (nfolds < 3)
     error('nfolds must be bigger than 3; nfolds=10 recommended');
 end
@@ -301,7 +318,7 @@ if (parallel == true)
     end
     
     parfor i = 1: nfolds
-        which = foldid==i;
+        which = (foldid==i) | (trainMask==i);
         opts = options;
         opts.weights = opts.weights(~which,:);
         opts.lambda = options.lambda;
@@ -321,7 +338,7 @@ if (parallel == true)
     end    
 else   
     for i = 1: nfolds        
-        which = foldid==i;
+        which = (foldid==i) | (trainMask==i);
         opts = options;
         opts.weights = opts.weights(~which,:);
         opts.lambda = options.lambda;
@@ -357,7 +374,7 @@ CVerr.cvm = transpose(cvm); CVerr.cvsd = transpose(cvsd);
 CVerr.cvup = transpose(cvm+cvsd); CVerr.cvlo = transpose(cvm-cvsd); CVerr.nzero = nz;
 CVerr.name = cvname; CVerr.glmnet_fit = glmfit;
 if (keep)
-    CVerr.fit_preval = cvstuff.fit_preval; CVerr.foldid = foldid;
+    CVerr.fit_preval = cvstuff.fit_preval; CVerr.foldid = foldid; CVerr.trainMask = trainMask;
 end
 if strcmp(type, 'auc')
     cvm = -cvm;

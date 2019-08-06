@@ -6,7 +6,7 @@
 #SBATCH --array=0-9
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=20
-#SBATCH --exclusive
+#XXXXXX --exclusive
 
 
 ######################

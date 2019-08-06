@@ -1,9 +1,9 @@
-function CVerr = trainModelForAlpha(voltammograms, labels, foldId, alphaRange, preprocFn, debug)
+function CVerr = trainModelForAlpha(voltammograms, labels, foldId, alphaRange, preprocFn, trainMask, debug)
 %TRAINMODELFORALPHA Summary of this function goes here
 %   Detailed explanation goes here
 
     % check args
-    narginchk(2, 6);
+    narginchk(2, 7);
     
     % default alpha == LASSO
     if nargin < 4
@@ -12,11 +12,16 @@ function CVerr = trainModelForAlpha(voltammograms, labels, foldId, alphaRange, p
     
     % default preprocess == diff
     if nargin < 5
-        preprocFn = @(x) diff(x, 1, 1);
+        preprocFn = @(x) hive.proc.model.first_diff(x, 1);
+    end
+    
+    % default training mask = []
+    if nargin < 6
+        trainMask = [];
     end
     
     % default debug == false
-    if nargin < 6
+    if nargin < 7
         debug = false;
     end
     
@@ -70,11 +75,11 @@ function CVerr = trainModelForAlpha(voltammograms, labels, foldId, alphaRange, p
         options.alpha = alpha;
         type = 'mse';
         parallel = ~debug; % if true (=1), then will run in parallel mode
-        keep = false;
+        keep = true;
         grouped = true;
         
         % this could take a long time, so try it out first with a small amount of data
-        CVerrList{alphaIx} = cvglmnet(X, Y, family, options, type, nFolds, foldId, parallel, keep, grouped);
+        CVerrList{alphaIx} = cvglmnet(X, Y, family, options, type, nFolds, foldId, parallel, keep, grouped, trainMask);
         CVerrList{alphaIx}.alpha = alpha;
     end
     

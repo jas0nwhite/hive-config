@@ -12,11 +12,11 @@ classdef DataPreprocessor < hive.util.Logging
             %   Detailed explanation goes here
             
             switch cfg.trainingStyleId
-                case 9
-                    this.preprocFn = @hive.proc.train.log_P1_fft;
+                case 10
+                    this.preprocFn = @hive.proc.model.log_P1_fft;
                     
                 otherwise
-                    this.preprocFn = @hive.proc.train.first_diff;
+                    this.preprocFn = @hive.proc.model.first_diff;
             end
         end
         

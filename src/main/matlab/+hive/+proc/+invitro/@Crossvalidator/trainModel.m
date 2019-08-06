@@ -20,26 +20,28 @@ function trainModel(this, dsIx)
     [nObvs, ~] = size(training.labels);
     
     switch this.treatment.trainingStyleId
-        % case 9
-        %     % generate folds by unique combinations of analytes
-        %     combos = unique(training.labels, 'rows');
-        %     nFolds = size(combos, 1);
-        %     foldId = nan(nObvs, 1);
-        % 
-        %     for fold = 1:nFolds
-        %         foldIx = ismember(training.labels, combos(fold, :), 'rows');
-        %         foldId(foldIx) = fold;
-        %     end
+        case 9
+            % generate masks for unique combinations of analytes
+            combos = unique(training.labels, 'rows');
+            nFolds = size(combos, 1);
+            trainMask = nan(nObvs, 1);
+            
+            for fold = 1:nFolds
+                foldIx = ismember(training.labels, combos(fold, :), 'rows');
+                trainMask(foldIx) = fold;
+            end
             
         otherwise
             % generate 10 randomly-selected folds
-            rng(032272);
             nFolds = 10;
-            foldId = randsample(...
-                1:nFolds,...
-                nObvs,...
-                true);
+            trainMask = [];
     end
+    
+    rng(032272);
+    foldId = randsample(...
+        1:nFolds,...
+        nObvs,...
+        true);
     
     % DETERMINE ALPHA RANGE
     switch this.treatment.alphaSelectId
@@ -56,7 +58,7 @@ function trainModel(this, dsIx)
     
     % TRAIN
     CVerr = hive.proc.train.trainModelForAlpha(...
-        training.voltammograms, training.labels, foldId, alphaRange, preprocFn, this.trainingDebug);
+        training.voltammograms, training.labels, foldId, alphaRange, preprocFn, trainMask, this.trainingDebug);
     
     save(cvModelFile, 'CVerr');
     hive.util.appendDatasetInfo(cvModelFile, name, id, setId, sourceId, this.treatment.name);
