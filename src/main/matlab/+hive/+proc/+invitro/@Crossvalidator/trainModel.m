@@ -17,27 +17,37 @@ function trainModel(this, dsIx)
     training = load(cvTrainFile);
     
     % DETERMINE CV FOLDS
+    rng(032272);
     [nObvs, ~] = size(training.labels);
+    nFolds = 10;
     
     switch this.treatment.trainingStyleId
         case 9
             % generate masks for unique combinations of analytes
-            combos = unique(training.labels, 'rows');
-            nFolds = size(combos, 1);
-            trainMask = nan(nObvs, 1);
+            allCombos = unique(training.labels, 'rows');
             
-            for fold = 1:nFolds
-                foldIx = ismember(training.labels, combos(fold, :), 'rows');
-                trainMask(foldIx) = fold;
+            % ...but let's not use min and max
+            comboIx = find(~all(allCombos == min(allCombos), 2) & ~all(allCombos == max(allCombos), 2));
+            
+            % ...and, let's set a maximum number of folds
+            nCombos = min(numel(comboIx), nFolds);
+            combos = allCombos(randsample(comboIx, nCombos, false), :);
+            
+            trainMask = zeros(nObvs, 1);
+            
+            for cIx = 1:nCombos
+                foldIx = ismember(training.labels, combos(cIx, :), 'rows');
+                trainMask(foldIx) = cIx;
             end
+            fprintf('    %03d: %03d-fold-cv .... (%d/%d combos masked)\n', id, nFolds, nCombos, size(allCombos, 1));
             
         otherwise
             % generate 10 randomly-selected folds
-            nFolds = 10;
             trainMask = [];
+            fprintf('    %03d: %03d-fold-cv ....\n', id, nFolds);
     end
     
-    rng(032272);
+
     foldId = randsample(...
         1:nFolds,...
         nObvs,...

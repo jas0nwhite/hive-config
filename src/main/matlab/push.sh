@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
-sudo rsync \
+    #--chown=10145:10026 \
+#sudo 
+rsync \
     -aiH \
     --safe-links \
     --exclude="*.m~" \
@@ -8,5 +10,4 @@ sudo rsync \
     --exclude=.DS_Store \
     --exclude=push.sh \
     --exclude=pull.sh \
-    --chown=10145:10026 \
-    $@ ./ /mnt/nfs/proj/pd/jason/iterate/src/
+    $@ ./ dirac-login:/mnt/nfs/proj/in-vitro/iterate/src/
