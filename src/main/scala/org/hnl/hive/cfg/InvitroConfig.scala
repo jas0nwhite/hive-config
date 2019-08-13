@@ -1,9 +1,8 @@
 package org.hnl.hive.cfg
 
-import org.hnl.hive.cfg.ConfigUtil.configToWrappedConfig
 import com.typesafe.config.Config
-
 import grizzled.slf4j.Logging
+import org.hnl.hive.cfg.ConfigUtil.configToWrappedConfig
 
 /**
   * InvitroConfig
@@ -46,7 +45,7 @@ class InvitroConfig protected(config: WrappedConfig) extends Logging {
   //
   val sourceCatalog: List[List[String]] = Util.findPaths(sourceSpecs)
   val datasetCatalog: List[List[String]] = sourceCatalog.map(Util.basenames)
-  val infoCatalog: List[List[Option[InvitroDataset]]] = sourceCatalog.map(_.map(DatasetConfig.datasetInfoFromPath))
+  val infoCatalog: List[List[Option[InvitroDataset]]] = sourceCatalog.map(_.map(DatasetConfig.datasetInfoFromPath).sorted)
 
 }
 

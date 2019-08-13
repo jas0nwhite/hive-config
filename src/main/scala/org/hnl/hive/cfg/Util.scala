@@ -26,7 +26,7 @@ object Util extends Logging {
     * @return list of matching file paths
     */
   def findPaths(spec: String): List[String] = try {
-    val list = GF.eglob(spec)
+    val list = GF.eglob(spec).sorted
 
     debug(s"found ${list.length} matches for '$spec'")
 
