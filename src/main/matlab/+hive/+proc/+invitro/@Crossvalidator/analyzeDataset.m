@@ -20,7 +20,7 @@ function analyzeDataset(this, dsIx)
     end
     
     cv = load(cvPredFile);
-    testing = load(cvTestFile, 'ix', 'sweepNumber');
+    testing = load(cvTestFile, 'ix', 'sweepNumber', 'novel');
     metadata = load(metadataFile, 'sampleFreq', 'sweepFreq');
     
     
@@ -31,13 +31,19 @@ function analyzeDataset(this, dsIx)
     chems = cv.chemical;
     stats = hive.proc.invitro.calcStepStats(stepIx, predictions, labels, chems);
     
+    if isfield(testing, 'novel') 
+        novel = testing.novel;
+    else
+        novel = false(numel(stepIx), 1);
+    end
+    
     
     % PLOT
     time = (testing.sweepNumber - 1) / metadata.sweepFreq(1);
     muRange = [this.muMin, this.muMax];
     
     for plotIx = 1:numel(chems)
-        hive.proc.invitro.multiPlotCalibration3(time, predictions, labels, stepIx, chems, muRange, stats, plotIx);
+        hive.proc.invitro.multiPlotCalibration3(time, predictions, labels, stepIx, chems, muRange, novel, stats, plotIx);
 
 
         % DECORATE

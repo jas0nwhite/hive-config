@@ -1,4 +1,4 @@
-function [ fig ] = multiPlotCalibration3( time, predictions, labels, stepIx, chems, muRange, stats, plotIx )
+function [ fig ] = multiPlotCalibration3( time, predictions, labels, stepIx, chems, muRange, novel, stats, plotIx )
 %MULTIPLOTCALIBRATION3 Summary of this function goes here
 %   Detailed explanation goes here
     
@@ -11,6 +11,6 @@ function [ fig ] = multiPlotCalibration3( time, predictions, labels, stepIx, che
     xstats.fullSnr = stats.fullSnr(plotIx);
     xstats.labels = stats.forChem(plotIx).labels;
     
-    fig = hive.proc.invitro.plotCalibration3(time, xpredictions, xlabels, stepIx, xchems, muRange, xstats);
+    fig = hive.proc.invitro.plotCalibration3(time, xpredictions, xlabels, stepIx, xchems, muRange, novel, xstats);
 end
 

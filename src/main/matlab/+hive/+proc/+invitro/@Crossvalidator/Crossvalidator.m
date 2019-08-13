@@ -9,9 +9,9 @@ classdef Crossvalidator < hive.proc.ProcessorBase
         muMax
         trainingDebug = false
         removeJitter = true
-        skipTrainingLabels = cell(Chem.count, 1)
         processSets = true
         processSources = true
+        holdOutMedianLabels = false
         preprocessor
     end
     
@@ -61,10 +61,6 @@ classdef Crossvalidator < hive.proc.ProcessorBase
             end
         end
         
-        function this = withSkipTrainingLabels(this, chem, labels)
-            this.skipTrainingLabels{chem.ix, 1} = labels;
-        end
-        
         function this = forSourcesOnly(this)
             this.processSources = true;
             this.processSets = false;
@@ -73,6 +69,14 @@ classdef Crossvalidator < hive.proc.ProcessorBase
         function this = forSetsOnly(this)
             this.processSources = false;
             this.processSets = true;
+        end
+        
+        function this = withMedianLabelHoldout(this, setting)
+            if nargin == 1
+                this.holdOutMedianLabels = true;
+            else
+                this.holdOutMedianLabels = setting;
+            end
         end
         
         function this = process(this)

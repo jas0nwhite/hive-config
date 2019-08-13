@@ -80,12 +80,30 @@ function buildDataset(this, dsIx)
     muCount = arrayfun(@(c) numel(unique(muVals(:, c))), 1:size(muVals, 2));
     chemIx = sort(find(muCount > 1));
     
+    
+    % FIND MEDIAN LABELS IF NEEDED
+    skipTrainingLabels = cell(1, max(chemIx));
+    if this.holdOutMedianLabels == true
+        for ix = chemIx
+            % we need to find the median deviance cM from the neutral
+            % concentration cN to account for pH, which can vary around 
+            % the neutral 7.4
+            c = Chem.get(ix);
+            cN = c.neutral();
+            cD = unique(muVals(:, chemIx) - cN);
+            cM = median(cD) + cN;
+            skipTrainingLabels{1, ix} = cM;
+        end
+    end
+            
+    
     % BUILD TRAINING AND TESTING DATASETS
     vgrams = horzcat(all.voltammograms{:});
     
     offset = 0;
     testIx = cell(nSteps, 1);
     trainIx = cell(nSteps, 1);
+    novel = false(nSteps, 1);
     
     % sample each step uniformly
     rng(1972);
@@ -101,10 +119,11 @@ function buildDataset(this, dsIx)
         stepValidN = numel(stepValidIx);
         
         stepLabels = unique(step, 'rows');
-        skipTraining = any(arrayfun(@(c) any(this.skipTrainingLabels{c, :} == stepLabels(c)), chemIx));
+        skipTraining = any(arrayfun(@(c) any(skipTrainingLabels{:, c} == stepLabels(c)), chemIx));
         
         if skipTraining
             trainN = 0;
+            novel(ix) = true;
         else
             if (this.trainingPct >= 1)
                 if (this.trainingPct >= stepValidN)
@@ -133,6 +152,7 @@ function buildDataset(this, dsIx)
     test.labels = muVals(ix, chemIx);
     test.chemical = all.chemicals(chemIx);
     test.sweepNumber = sweeps(ix);
+    test.novel = novel;
     
     offset = 0;
     test.ix = cell(nSteps, 1);
@@ -153,6 +173,7 @@ function buildDataset(this, dsIx)
     train.labels = muVals(ix, chemIx);
     train.chemical = all.chemicals(chemIx);
     train.sweepNumber = sweeps(ix);
+    train.novel = novel;
     
     offset = 0;
     train.ix = cell(nSteps, 1);

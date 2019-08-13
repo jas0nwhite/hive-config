@@ -1,4 +1,4 @@
-function [ fig ] = plotCalibration3( time, predictions, labels, stepIx, chems, muRange, stats )
+function [ fig ] = plotCalibration3( time, predictions, labels, stepIx, chems, muRange, novel, stats )
 %PLOTCALIBRATION3 Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -68,6 +68,7 @@ function [ fig ] = plotCalibration3( time, predictions, labels, stepIx, chems, m
         % predicitons
         %
         if numel(X) / nSteps > 100
+            % use alpha blending for large numbers of predictions
             hp = scatter(X, Y(:, chemIx), 5, colors(colorIx, :), 'filled');
             alpha(hp, alphaValue);
         else
@@ -81,6 +82,7 @@ function [ fig ] = plotCalibration3( time, predictions, labels, stepIx, chems, m
             selectIx = stepIx{ix};
             stepX = [min(X(selectIx)), max(X(selectIx))];
             stepY = [L(selectIx(1), chemIx), L(selectIx(1), chemIx)];
+            
             ha = plot(stepX, stepY, 'Color', labColor, 'LineWidth', 1);
         end
 
@@ -95,6 +97,31 @@ function [ fig ] = plotCalibration3( time, predictions, labels, stepIx, chems, m
         xtwix = diff(xl) / 20;
         ytwix = diff(yl) / 20;
 
+        %
+        % novel predictions
+        %
+        hn = 0;
+        
+        for ix = 1:nSteps
+            if novel(ix)
+                selectIx = stepIx{ix};
+                stepX0 = min(X(selectIx));
+                stepX1 = max(X(selectIx));
+                stepY0 = L(selectIx(1), chemIx) - 2*ytwix;
+                stepY1 = L(selectIx(1), chemIx) + 2*ytwix;
+                
+                
+                
+                % draw a yellow rectangle with transparency
+                hn = patch(...
+                    'XData', [stepX0, stepX1, stepX1, stepX0],...
+                    'YData', [stepY0, stepY0, stepY1, stepY1],...
+                    'FaceColor', [1, 1, 0],...
+                    'FaceAlpha', 0.25,...
+                    'EdgeColor', 'none');
+            end
+        end
+        
         %
         % time bar
         %
@@ -111,7 +138,11 @@ function [ fig ] = plotCalibration3( time, predictions, labels, stepIx, chems, m
         %
         % legend
         %
-        legend([hp, ha], {'predicted'; 'actual'}, 'Location', 'best');
+        if hn ~= 0
+            legend([hp, ha, hn], {'predicted'; 'actual'; 'novel'}, 'Location', 'best');
+        else
+            legend([hp, ha], {'predicted'; 'actual'}, 'Location', 'best');
+        end
 
         %
         % set limits
