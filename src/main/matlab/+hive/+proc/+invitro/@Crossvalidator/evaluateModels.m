@@ -54,7 +54,14 @@ function results = evaluateModels(this, setId, sourceId)
         x = preprocFn(testing.voltammograms', 2);
         
         % generate predictions
-        predictions = cvglmnetPredict(CVerr, x, 'lambda_min');
+        switch this.treatment.trainingStyleId
+            case 9
+                lambdaSelect = 'lambda_1se';
+            otherwise
+                lambdaSelect = 'lambda_min';
+        end
+        
+        predictions = cvglmnetPredict(CVerr, x, lambdaSelect);
         
         results.n(testId) = size(predictions, 1);
         
