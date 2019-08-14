@@ -291,7 +291,7 @@ end
 foldid = reshape(foldid, numel(foldid), 1);
 
 if isempty(trainMask)
-    trainMask = zeros(numel(foldid));
+    trainMask = zeros(numel(foldid), 1);
 else
     if numel(trainMask) ~= numel(foldid)
         error('trainMask must have the same number of elements as foldid');
