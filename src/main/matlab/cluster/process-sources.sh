@@ -4,8 +4,10 @@
 #SBATCH --output=log/iv-sources_%a.out
 #SBATCH --error=log/iv-sources_%a.err
 #SBATCH --array=0-9
-#SBATCH --ntasks=1
-#SBATCH --cpus-per-task=20
+#XXXXXX --ntasks=1
+#SBATCH --nodes=1
+#SBATCH --cpus-per-task=24
+#SBATCH --ntasks-per-node=2
 #XXXXXX --exclusive
 
 
