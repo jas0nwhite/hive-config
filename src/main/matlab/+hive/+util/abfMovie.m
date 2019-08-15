@@ -10,6 +10,7 @@ function abfMovie(abfFile, movieFile, varargin)
     addRequired(p, 'movieFile');
     addParameter(p, 'channel', 'FSCV_1');
     addParameter(p, 'seconds', 30, assertPosNum);
+    addParameter(p, 'truncate', 0, @isnumeric);
     addParameter(p, 'overwrite', false, assertLogical);
     addParameter(p, 'fps', 30, assertPosNum);
     addParameter(p, 'format', 'MPEG-4');
@@ -27,12 +28,29 @@ function abfMovie(abfFile, movieFile, varargin)
     if exist(movieFile, 'file') && ~cfg.overwrite
         error('Movie file %s already exists. Use overwrite = true to overwrite', cfg.movieFile);
     end
+
+    [~, abfFileName, ~] = fileparts(abfFile);
+    abfFileName = strrep(abfFileName, '_', '-');
     
+    fprintf('*** converting %s...', abfFileName);
     [d, si, ~] = hive.convert.AbfToMat.abfload(cfg.abfFile, 'channels', {cfg.channel});
+    fprintf(' done.\n');
     
     % DIM: samples x sweeps
     abf = squeeze(d);
     nSamples = size(abf, 1);
+    
+    %
+    % truncate if requested
+    %
+    if cfg.truncate > 0
+        fprintf('*** truncating at ±%.1f...', cfg.truncate);
+        abf(abs(abf) > cfg.truncate) = cfg.truncate;
+        fprintf(' done.\n');
+        yl = 1.05 * cfg.truncate;
+    else
+        yl = 2100;
+    end
     
     %
     % sweep timeline
@@ -57,7 +75,8 @@ function abfMovie(abfFile, movieFile, varargin)
     
     
     alpha = fliplr(exp(0.1 * (1:(sps + 1)))/exp(0.1 * (sps + 1)));
-    thickness = alpha;
+    thickness = 2 * alpha;
+    
     
     F(nFrames) = struct('cdata',[],'colormap',[]);
     
@@ -72,26 +91,30 @@ function abfMovie(abfFile, movieFile, varargin)
             hl = plot(abf(:, ss(s)), 'LineWidth', thickness(s)); %#ok<PFBNS>
             hl.Color = [0, 0, 1, alpha(s)]; %#ok<PFBNS>
         end
-        plot(abf(:, ss(1)), 'LineWidth', 1.5, 'Color', 'black');
+        plot(abf(:, ss(1)), 'LineWidth', 3, 'Color', 'black');
         
         xlim([0, nSamples - 1]);
-        ylim([-2500, 2500]);
+        ylim([-yl, yl]);
         xlabel('sample');
         ylabel('current (nA)');
         
-        title(sprintf('time: %04.1fs  |  frame %04d  |  sweep %04d', t, f, max(ss)));
+        title({abfFileName; sprintf('time: %04.1fs  |  frame %04d  |  sweep %04d', t, f, max(ss))});
+        set(gcf, ...
+            'Position', [-120 1274 1280 720],...
+            'Color', [1, 1, 1]...
+            );
         drawnow;
         F(f) = getframe(gcf);
         
         clf;
     end
-    fprintf('done.\n');
+    fprintf(' done.\n');
     
     fprintf('*** encoding video...')
     open(video);
     writeVideo(video, F);
     close(video);
-    fprintf('DONE\n');
+    fprintf('\n\n*** DONE\n');
 
 end
 
