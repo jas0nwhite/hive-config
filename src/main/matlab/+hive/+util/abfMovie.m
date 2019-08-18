@@ -11,6 +11,7 @@ function abfMovie(abfFile, movieFile, varargin)
     addParameter(p, 'channel', 'FSCV_1');
     addParameter(p, 'seconds', 30, assertPosNum);
     addParameter(p, 'truncate', 0, @isnumeric);
+    addParameter(p, 'process', 'none', @(x) any(validatestring(x, {'none', 'fft', 'diff'})));
     addParameter(p, 'overwrite', false, assertLogical);
     addParameter(p, 'fps', 30, assertPosNum);
     addParameter(p, 'format', 'MPEG-4');
@@ -26,7 +27,8 @@ function abfMovie(abfFile, movieFile, varargin)
     end
     
     if exist(movieFile, 'file') && ~cfg.overwrite
-        error('Movie file %s already exists. Use overwrite = true to overwrite', cfg.movieFile);
+        warning('Movie file %s already exists. Use overwrite = true to overwrite', cfg.movieFile);
+        return
     end
 
     [~, abfFileName, ~] = fileparts(abfFile);
@@ -38,14 +40,13 @@ function abfMovie(abfFile, movieFile, varargin)
     
     % DIM: samples x sweeps
     abf = squeeze(d);
-    nSamples = size(abf, 1);
     
     %
     % truncate if requested
     %
     if cfg.truncate > 0
         fprintf('*** truncating at ±%.1f...', cfg.truncate);
-        abf(abs(abf) > cfg.truncate) = cfg.truncate;
+        abf(abs(abf) > cfg.truncate) = -cfg.truncate;
         fprintf(' done.\n');
         yl = 1.05 * cfg.truncate;
     else
@@ -53,8 +54,25 @@ function abfMovie(abfFile, movieFile, varargin)
     end
     
     %
+    % process if requested
+    %
+    switch cfg.process
+        case 'fft'
+            fprintf('*** computing fft...');
+            abf = hive.proc.model.log_P1_fft(abf, 1);
+            yl = 1.05 * max(abs(abf), [], 'all');
+            fprintf(' done.\n');
+        case 'diff'
+            fprintf('*** computing diff...');
+            abf = hive.proc.model.first_diff(abf, 1);
+            yl = 1.05 * max(abs(abf), [], 'all');
+            fprintf(' done.\n');
+    end
+    
+    %
     % sweep timeline
     %
+    nSamples = size(abf, 1);
     tSample = si / 1e6; % seconds
     tSweep = tSample * nSamples;
     sweeps = 1:floor(cfg.seconds / tSweep);
