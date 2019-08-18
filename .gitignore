@@ -20,3 +20,9 @@ hiveConfig.jar
 /filter.sh
 /.idea
 /.project
+src/main/matlab/PtIrGeneralization.mlx
+src/main/matlab/movies.m
+src/main/matlab/report.csv
+src/main/matlab/resave6.m
+src/main/matlab/test.m
+src/main/matlab/vgramChangeDistribution_multianalyte.mlx
