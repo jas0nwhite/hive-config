@@ -1,6 +1,7 @@
 function abfMovie(abfFile, movieFile, varargin)
 %ABFMOVIE Summary of this function goes here
 %   Detailed explanation goes here
+    close all;
     
     assertLogical = @(x) islogical(x) && isscalar(x);
     assertPosNum = @(x) isnumeric(x) && isscalar(x) && (x > 0);
@@ -11,7 +12,7 @@ function abfMovie(abfFile, movieFile, varargin)
     addParameter(p, 'channel', 'FSCV_1');
     addParameter(p, 'seconds', 30, assertPosNum);
     addParameter(p, 'truncate', 0, @isnumeric);
-    addParameter(p, 'process', 'none', @(x) any(validatestring(x, {'none', 'fft', 'diff'})));
+    addParameter(p, 'process', 'none', @(x) any(validatestring(x, {'none', 'fft', 'diff', 'medfilt'})));
     addParameter(p, 'overwrite', false, assertLogical);
     addParameter(p, 'fps', 30, assertPosNum);
     addParameter(p, 'format', 'MPEG-4');
@@ -39,6 +40,8 @@ function abfMovie(abfFile, movieFile, varargin)
     fprintf(' done.\n');
     
     % DIM: samples x sweeps
+    samplewise = 1;
+    sweepwise = 2;
     abf = squeeze(d);
     
     %
@@ -48,9 +51,11 @@ function abfMovie(abfFile, movieFile, varargin)
         fprintf('*** truncating at ±%.1f...', cfg.truncate);
         abf(abs(abf) > cfg.truncate) = -cfg.truncate;
         fprintf(' done.\n');
-        yl = 1.05 * cfg.truncate;
+        ymax = 1.05 * cfg.truncate;
+        ymin = -1.05 * cfg.truncate;
     else
-        yl = 2100;
+        ymax = 2100;
+        ymin = -2100;
     end
     
     %
@@ -59,13 +64,30 @@ function abfMovie(abfFile, movieFile, varargin)
     switch cfg.process
         case 'fft'
             fprintf('*** computing fft...');
-            abf = hive.proc.model.log_P1_fft(abf, 1);
-            yl = 1.05 * max(abs(abf), [], 'all');
+            
+            abf = hive.proc.model.log_P1_fft(abf, samplewise);
+            
+            yrange = range(abf, 'all');
+            ymax = max(abf, [], 'all') + 0.05 * yrange;
+            ymin = min(abf, [], 'all') - 0.05 * yrange;
             fprintf(' done.\n');
         case 'diff'
             fprintf('*** computing diff...');
-            abf = hive.proc.model.first_diff(abf, 1);
-            yl = 1.05 * max(abs(abf), [], 'all');
+            
+            abf = hive.proc.model.first_diff(abf, samplewise);
+            
+            yrange = range(abf, 'all');
+            ymax = max(abf, [], 'all') + 0.05 * yrange;
+            ymin = min(abf, [], 'all') - 0.05 * yrange;
+            fprintf(' done.\n');
+        case 'medfilt'
+            order = 25;
+            fprintf('*** median filtering (n = %d)...', order);
+            
+            abf = medfilt1(abf, order, [], sweepwise, 'omitnan', 'truncate');
+            
+            ymax = 2100;
+            ymin = -2100;
             fprintf(' done.\n');
     end
     
@@ -112,7 +134,7 @@ function abfMovie(abfFile, movieFile, varargin)
         plot(abf(:, ss(1)), 'LineWidth', 3, 'Color', 'black');
         
         xlim([0, nSamples - 1]);
-        ylim([-yl, yl]);
+        ylim([ymin, ymax]);
         xlabel('sample');
         ylabel('current (nA)');
         
