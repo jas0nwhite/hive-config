@@ -12,7 +12,7 @@ function abfMovie(abfFile, movieFile, varargin)
     addParameter(p, 'channel', 'FSCV_1');
     addParameter(p, 'seconds', 30, assertPosNum);
     addParameter(p, 'truncate', 0, @isnumeric);
-    addParameter(p, 'process', 'none', @(x) any(validatestring(x, {'none', 'fft', 'diff', 'medfilt'})));
+    addParameter(p, 'process', 'none', @(x) any(validatestring(x, {'none', 'raw', 'fft', 'diff', 'medfilt'})));
     addParameter(p, 'overwrite', false, assertLogical);
     addParameter(p, 'fps', 30, assertPosNum);
     addParameter(p, 'format', 'MPEG-4');
@@ -28,10 +28,25 @@ function abfMovie(abfFile, movieFile, varargin)
     end
     
     if exist(movieFile, 'file') && ~cfg.overwrite
-        warning('Movie file %s already exists. Use overwrite = true to overwrite', cfg.movieFile);
+        doMovie = false;
+    else
+        doMovie = true;
+    end
+    
+    [d, f, x] = fileparts(movieFile);
+    spectrumFile = fullfile(d, [f '-spec' x]);
+    
+    if exist(spectrumFile, 'file') && ~cfg.overwrite
+        doSpectrum = false;
+    else
+        doSpectrum = true;
+    end
+    
+    if ~doSpectrum && ~doMovie
+        fprintf('    SKIP (%s, %s)\n\n', movieFile, spectrumFile);
         return
     end
-
+    
     [~, abfFileName, ~] = fileparts(abfFile);
     abfFileName = strrep(abfFileName, '_', '-');
     
@@ -109,52 +124,118 @@ function abfMovie(abfFile, movieFile, varargin)
     frameT = (frames - 1) * tFrame + tFrame;
     nFrames = numel(frames);
     
-    video = VideoWriter(cfg.movieFile, cfg.format);
-    video.FrameRate = cfg.fps;
-    video.Quality = cfg.quality;
-    
-    
-    alpha = fliplr(exp(0.1 * (1:(sps + 1)))/exp(0.1 * (sps + 1)));
-    thickness = 2 * alpha;
-    
-    
-    F(nFrames) = struct('cdata',[],'colormap',[]);
-    
-    fprintf('*** building frames...');
-    parfor f = frames
-        t = frameT(f);
-        ss = fliplr(sweeps((sweepT <= t) & (sweepT > t - 1))); %#ok<PFBNS>
+    %
+    % waveform
+    %
+    fprintf('*** building waveform frames...');
+    if doMovie
+        video = VideoWriter(cfg.movieFile, cfg.format);
+        video.FrameRate = cfg.fps;
+        video.Quality = cfg.quality;
         
+        alpha = fliplr(exp(0.1 * (1:(sps + 1)))/exp(0.1 * (sps + 1)));
+        thickness = 2 * alpha;
         
-        hold on;
-        for s = 2:numel(ss)
-            hl = plot(abf(:, ss(s)), 'LineWidth', thickness(s)); %#ok<PFBNS>
-            hl.Color = [0, 0, 1, alpha(s)]; %#ok<PFBNS>
+        F(nFrames) = struct('cdata',[],'colormap',[]);
+        
+        parfor f = frames
+            t = frameT(f);
+            ss = fliplr(sweeps((sweepT <= t) & (sweepT > t - 1))); %#ok<PFBNS>
+            
+            
+            hold on;
+            for s = 2:numel(ss)
+                hl = plot(abf(:, ss(s)), 'LineWidth', thickness(s)); %#ok<PFBNS>
+                hl.Color = [0, 0, 1, alpha(s)]; %#ok<PFBNS>
+            end
+            plot(abf(:, ss(1)), 'LineWidth', 3, 'Color', 'black');
+            
+            xlim([0, nSamples - 1]);
+            ylim([ymin, ymax]);
+            xlabel('sample');
+            ylabel('current (nA)');
+            
+            title({abfFileName; sprintf('time: %04.1fs  |  frame %04d  |  sweep %04d', t, f, max(ss))});
+            set(gcf, ...
+                'Position', [-120 1274 1280 720],...
+                'Color', [1, 1, 1]...
+                );
+            drawnow;
+            F(f) = getframe(gcf);
+            
+            clf;
         end
-        plot(abf(:, ss(1)), 'LineWidth', 3, 'Color', 'black');
+        fprintf(' done.\n');
         
-        xlim([0, nSamples - 1]);
-        ylim([ymin, ymax]);
-        xlabel('sample');
-        ylabel('current (nA)');
-        
-        title({abfFileName; sprintf('time: %04.1fs  |  frame %04d  |  sweep %04d', t, f, max(ss))});
-        set(gcf, ...
-            'Position', [-120 1274 1280 720],...
-            'Color', [1, 1, 1]...
-            );
-        drawnow;
-        F(f) = getframe(gcf);
-        
-        clf;
+        fprintf('*** encoding waveform video...')
+        open(video);
+        writeVideo(video, F);
+        close(video);
+        fprintf(' done.\n');
+    else
+        fprintf(' SKIP.\n');
     end
-    fprintf(' done.\n');
     
-    fprintf('*** encoding video...')
-    open(video);
-    writeVideo(video, F);
-    close(video);
+    
+    %
+    % spectrum
+    %
+    fprintf('*** building spectrum frames...');
+    if doSpectrum
+        wav = abf(:);
+        
+        nfft = 2048;
+        noverlap = 2040;
+        freqs = 0:.2:2400;
+        fs = 1/tSample;
+        spf = numel(wav)/nFrames;
+        
+        video = VideoWriter(spectrumFile, cfg.format);
+        video.FrameRate = cfg.fps;
+        video.Quality = cfg.quality;
+        
+        F(nFrames) = struct('cdata',[],'colormap',[]);
+        
+        parfor f = frames
+            t = frameT(f);
+            
+            i0 = floor((f - 1) * spf) + 1;
+            i1 = floor(f * spf);
+            x = wav(i0:i1); %#ok<PFBNS>
+            
+            if numel(x) < nfft
+                NFFT = nextpow2(floor(nfft/2));
+                NOVERLAP = floor(.9 * nfft);
+            else
+                NFFT = nfft;
+                NOVERLAP = noverlap;
+            end
+            
+            spectrogram(x, NFFT, NOVERLAP, freqs, fs, 'yaxis');
+            
+            title({abfFileName; sprintf('time: %04.1fs  |  frame %04d', t, f)});
+            set(gcf, ...
+                'Position', [-120 1274 1280 720],...
+                'Color', [1, 1, 1]...
+                );
+            drawnow;
+            F(f) = getframe(gcf);
+            
+            clf; 
+        end
+        fprintf(' done.\n');
+        
+        fprintf('*** encoding waveform video...')
+        open(video);
+        writeVideo(video, F);
+        close(video);
+        fprintf(' done.\n');
+    else
+        fprintf(' SKIP.\n');
+    end
+    
     fprintf('\n\n*** DONE\n');
+    
 
 end
 
