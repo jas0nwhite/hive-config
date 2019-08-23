@@ -5,7 +5,7 @@ function abfMovie(abfFile, movieFile, varargin)
     
     assertLogical = @(x) islogical(x) && isscalar(x);
     assertPosNum = @(x) isnumeric(x) && isscalar(x) && (x > 0);
-
+    
     p = inputParser;
     addRequired(p, 'abfFile');
     addRequired(p, 'movieFile');
@@ -18,7 +18,7 @@ function abfMovie(abfFile, movieFile, varargin)
     addParameter(p, 'format', 'MPEG-4');
     addParameter(p, 'quality', 90, @(x) assertPosNum(x) && (x <= 100));
     
-
+    
     parse(p, abfFile, movieFile, varargin{:});
     
     cfg = p.Results;
@@ -35,6 +35,7 @@ function abfMovie(abfFile, movieFile, varargin)
     
     [d, f, x] = fileparts(movieFile);
     spectrumFile = fullfile(d, [f '-spec' x]);
+    pgramFile = fullfile(d, [f '-pgram.png']);
     
     if exist(spectrumFile, 'file') && ~cfg.overwrite
         doSpectrum = false;
@@ -42,9 +43,14 @@ function abfMovie(abfFile, movieFile, varargin)
         doSpectrum = true;
     end
     
-    if ~doSpectrum && ~doMovie
-        fprintf('    SKIP (%s, %s)\n\n', movieFile, spectrumFile);
-        return
+    if exist(pgramFile, 'file') && ~cfg.overwrite
+        doPgram = false;
+    else
+        doPgram = true;
+    end
+    
+    if ~(doPgram || doSpectrum || doMovie)
+        fprintf('    SKIP. [%s][%s][%s]\n\n', movieFile, spectrumFile, pgramFile);
     end
     
     [~, abfFileName, ~] = fileparts(abfFile);
@@ -115,6 +121,7 @@ function abfMovie(abfFile, movieFile, varargin)
     sweeps = 1:floor(cfg.seconds / tSweep);
     sweepT = (sweeps - 1) * tSweep + tSweep;
     sps = floor(1 / tSweep);
+    fs = 1/tSample;
     
     %
     % frame timeline
@@ -187,7 +194,6 @@ function abfMovie(abfFile, movieFile, varargin)
         nfft = 2048;
         noverlap = 2040;
         freqs = 0:.2:2400;
-        fs = 1/tSample;
         spf = numel(wav)/nFrames;
         
         video = VideoWriter(spectrumFile, cfg.format);
@@ -221,7 +227,7 @@ function abfMovie(abfFile, movieFile, varargin)
             drawnow;
             F(f) = getframe(gcf);
             
-            clf; 
+            clf;
         end
         fprintf(' done.\n');
         
@@ -229,6 +235,25 @@ function abfMovie(abfFile, movieFile, varargin)
         open(video);
         writeVideo(video, F);
         close(video);
+        fprintf(' done.\n');
+    else
+        fprintf(' SKIP.\n');
+    end
+    
+    if doPgram
+        fprintf('*** plotting frequency response...')
+        N = numel(abf);
+        dF = fs/N;
+        freqs = 0:dF:200;
+        close all;
+        periodogram(abf(:), rectwin(N), freqs, fs);
+        title({abfFileName; 'Periodogram Power Spectral Density Estimate'});
+        s = hgexport('readstyle', 'PNG-4MP');
+        s.Format = 'png';
+        s.Width = 8;
+        s.Height = 4.5;
+        hgexport(gcf, pgramFile, s);
+        close all;
         fprintf(' done.\n');
     else
         fprintf(' SKIP.\n');
