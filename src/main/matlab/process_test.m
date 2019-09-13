@@ -2,8 +2,9 @@
 %!./make-config /data/hnl/iterate/results_103/100-full.conf
 %!./make-config treatment-burst.conf
 %!./make-config treatment-burst-008.conf
-!./make-config treatment-rodent-008.conf
+%!./make-config treatment-rodent-008.conf
 %!./make-config treatment-rodent-009.conf
+!./make-config treatment-cfr-009.conf
 
 %% init
 restoredefaultpath;

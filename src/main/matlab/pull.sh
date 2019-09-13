@@ -1,13 +1,19 @@
 #!/usr/bin/env bash
 
-sudo rsync \
+    #--chown=jwhite:admin \
+#sudo 
+rsync \
     -aiH \
     --safe-links \
     --exclude="*.m~" \
+    --exclude=".*.swp" \
     --exclude=log/ \
     --exclude=.DS_Store \
     --exclude=push.sh \
     --exclude=pull.sh \
     --exclude=.nfs.* \
-    --chown=jwhite:admin \
-    $@ /mnt/nfs/proj/pd/jason/iterate/src/ ./
+    --exclude=*.swp \
+    --no-p \
+    --no-o \
+    --no-g \
+    $@ dirac-login:/mnt/nfs/proj/in-vitro/iterate/src/ ./

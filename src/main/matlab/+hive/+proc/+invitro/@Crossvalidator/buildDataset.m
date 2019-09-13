@@ -80,18 +80,18 @@ function buildDataset(this, dsIx)
     muCount = arrayfun(@(c) numel(unique(muVals(:, c))), 1:size(muVals, 2));
     chemIx = sort(find(muCount > 1));
     
-    
-    % FIND MEDIAN LABELS IF NEEDED
+   % FIND MEDIAN LABELS IF NEEDED
     skipTrainingLabels = cell(1, max(chemIx));
     if this.holdOutMedianLabels == true
         for ix = chemIx
             % we need to find the median deviance cM from the neutral
             % concentration cN to account for pH, which can vary around 
             % the neutral 7.4
+            cU = unique(muVals(:, chemIx));
             c = Chem.get(ix);
             cN = c.neutral();
-            cD = unique(muVals(:, chemIx) - cN);
-            cM = median(cD) + cN;
+            cD = round(abs(cU - cN), 5);
+            cM = extantMedian(cD) + cN;
             skipTrainingLabels{1, ix} = cM;
         end
     end
@@ -119,7 +119,7 @@ function buildDataset(this, dsIx)
         stepValidN = numel(stepValidIx);
         
         stepLabels = unique(step, 'rows');
-        skipTraining = any(arrayfun(@(c) any(skipTrainingLabels{:, c} == stepLabels(c)), chemIx));
+        skipTraining = any(arrayfun(@(c) any(round(skipTrainingLabels{:, c}, 5) == round(stepLabels(c), 5)), chemIx));
         
         if skipTraining
             trainN = 0;
@@ -192,3 +192,11 @@ function buildDataset(this, dsIx)
     
     fprintf('    %03d: DONE (%.3fs) %s\n', id, toc(t), extraOutput);
 end
+
+function em = extantMedian(x)
+        X = sort(x);
+        n = length(x) / 2;
+        em = X(floor(n));
+end
+    
+    
