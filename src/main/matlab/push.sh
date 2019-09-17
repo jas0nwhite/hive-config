@@ -11,6 +11,11 @@ rsync \
     --exclude=.DS_Store \
     --exclude=push.sh \
     --exclude=pull.sh \
+    --exclude=Chem.m \
+    --exclude=Config.m \
+    --exclude=TargetCatalog.m \
+    --exclude=TestingCatalog.m \
+    --exclude=TrainingCatalog.m \
     --no-p \
     --no-o \
     --no-g \

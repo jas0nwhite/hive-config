@@ -6,13 +6,19 @@ rsync \
     -aiH \
     --safe-links \
     --exclude="*.m~" \
-    --exclude=".*.swp" \
+    --exclude="*.swp" \
     --exclude=log/ \
     --exclude=.DS_Store \
     --exclude=push.sh \
     --exclude=pull.sh \
     --exclude=.nfs.* \
-    --exclude=*.swp \
+    --exclude=target/ \
+    --exclude=Chem.m \
+    --exclude=Config.m \
+    --exclude=TargetCatalog.m \
+    --exclude=TestingCatalog.m \
+    --exclude=TrainingCatalog.m \
+    --exclude=process_test.m \
     --no-p \
     --no-o \
     --no-g \
