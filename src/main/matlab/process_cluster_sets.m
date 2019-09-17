@@ -1,4 +1,4 @@
-function process_cluster_sets( nodeId, nodeCount, cpuCount )
+function process_cluster_sets( nodeId, nodeCount, cpuCount, threadCount )
 
     %% init
     cfg = Config.init();
@@ -24,7 +24,7 @@ function process_cluster_sets( nodeId, nodeCount, cpuCount )
         end
         
         pc.JobStorageLocation = jobDir;
-        pc.NumThreads = 1;
+        pc.NumThreads = threadCount;
         pc.NumWorkers = cpuCount;
         
         disp(pc);
