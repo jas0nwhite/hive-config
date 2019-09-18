@@ -16,7 +16,7 @@ rsync \
     --exclude=TargetCatalog.m \
     --exclude=TestingCatalog.m \
     --exclude=TrainingCatalog.m \
-    --no-p \
     --no-o \
+    --no-p \
     --no-g \
     $@ ./ dirac-login:/mnt/nfs/proj/in-vitro/iterate/src/

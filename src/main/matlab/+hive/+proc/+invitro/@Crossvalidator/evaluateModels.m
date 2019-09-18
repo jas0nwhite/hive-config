@@ -54,7 +54,7 @@ function results = evaluateModels(this, setId, sourceId)
         x = preprocFn(testing.voltammograms', 2);
         
         % generate predictions
-        switch this.treatment.trainingStyleId
+        switch this.treatment.trainingStyleId % for lambda_min or lambda_1se
             case {9, 10}
                 lambdaSelect = 'lambda_1se';
             otherwise

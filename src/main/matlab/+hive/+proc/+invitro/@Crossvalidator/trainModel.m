@@ -21,7 +21,7 @@ function trainModel(this, dsIx)
     [nObvs, ~] = size(training.labels);
     nFolds = 10;
     
-    switch this.treatment.trainingStyleId
+    switch this.treatment.trainingStyleId % for train masking
         case {9, 10}
             % generate masks for unique combinations of analytes
             allCombos = unique(training.labels, 'rows');

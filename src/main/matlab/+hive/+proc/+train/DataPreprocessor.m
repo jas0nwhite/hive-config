@@ -11,8 +11,8 @@ classdef DataPreprocessor < hive.util.Logging
             %DATAPREPROCESSOR Construct an instance of this class
             %   Detailed explanation goes here
             
-            switch cfg.trainingStyleId
-                case 10
+            switch cfg.trainingStyleId % for waveform processing
+                case 500
                     this.preprocFn = @hive.proc.model.log_P1_fft;
                     
                 otherwise
