@@ -9,11 +9,11 @@
 #SBATCH --job-name=iv-sources
 #SBATCH --output=log/iv-sources_%a.out
 #SBATCH --error=log/iv-sources_%a.err
-#SBATCH --array=0-19
+#SBATCH --array=0-9
 #SBATCH --nodes=1-5
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=12
-#SBATCH --mem-per-cpu=1536
+#SBATCH --cpus-per-task=24
+#SBATCH --mem-per-cpu=2048
 #SBATCH --hint=compute_bound
 
 
@@ -22,7 +22,7 @@
 ######################
 
 # task-specific values
-CPUS_PER_WORKER=1
+CPUS_PER_WORKER=2
 MAX_WORKERS=10
 
 # provide defaults if we're not running via sbatch

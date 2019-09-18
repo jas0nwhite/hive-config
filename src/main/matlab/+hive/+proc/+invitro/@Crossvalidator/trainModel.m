@@ -22,7 +22,7 @@ function trainModel(this, dsIx)
     nFolds = 10;
     
     switch this.treatment.trainingStyleId
-        case 9
+        case {9, 10}
             % generate masks for unique combinations of analytes
             allCombos = unique(training.labels, 'rows');
             
@@ -66,9 +66,12 @@ function trainModel(this, dsIx)
     % DETERMINE PREPROCESSING FUNCTION
     preprocFn = this.preprocessor.getPreprocessFn();
     
+    % PROCESS LABELS
+    labels = this.labelProcessor.apply(training.labels);
+    
     % TRAIN
     CVerr = hive.proc.train.trainModelForAlpha(...
-        training.voltammograms, training.labels, foldId, alphaRange, preprocFn, trainMask, this.trainingDebug);
+        training.voltammograms, labels, foldId, alphaRange, preprocFn, trainMask, this.trainingDebug);
     
     save(cvModelFile, 'CVerr');
     hive.util.appendDatasetInfo(cvModelFile, name, id, setId, sourceId, this.treatment.name);

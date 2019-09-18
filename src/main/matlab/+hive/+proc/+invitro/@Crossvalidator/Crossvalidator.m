@@ -13,6 +13,7 @@ classdef Crossvalidator < hive.proc.ProcessorBase
         processSources = true
         holdOutMedianLabels = false
         preprocessor
+        labelProcessor
     end
     
     %
@@ -26,6 +27,7 @@ classdef Crossvalidator < hive.proc.ProcessorBase
             this.testCfg = cfg.testing;
             this.actionLabel = 'Cross-validating';
             this.preprocessor = hive.proc.train.DataPreprocessor(cfg);
+            this.labelProcessor = hive.proc.model.LabelTransformer.forTrainingStyle(this.treatment.trainingStyleId);
             
             % defaults
             this.trainingPct = .1;

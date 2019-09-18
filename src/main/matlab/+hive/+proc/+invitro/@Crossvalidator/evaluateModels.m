@@ -55,13 +55,16 @@ function results = evaluateModels(this, setId, sourceId)
         
         % generate predictions
         switch this.treatment.trainingStyleId
-            case 9
+            case {9, 10}
                 lambdaSelect = 'lambda_1se';
             otherwise
                 lambdaSelect = 'lambda_min';
         end
         
         predictions = cvglmnetPredict(CVerr, x, lambdaSelect);
+        
+        % (UN)TRANSFORM PREDICTIONS
+        predictions = this.labelProcessor.unapply(predictions);
         
         results.n(testId) = size(predictions, 1);
         
