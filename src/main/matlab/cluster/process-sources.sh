@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
 
+
+
+######################
+# CONFIGURATION      #
+######################
+
 #SBATCH --job-name=iv-sources
 #SBATCH --output=log/iv-sources_%a.out
 #SBATCH --error=log/iv-sources_%a.err
@@ -10,49 +16,53 @@
 #SBATCH --mem-per-cpu=1536
 #SBATCH --hint=compute_bound
 
-###SBATCH --exclusive=user
-###SBATCH --ntasks-per-node=2
 
 ######################
-# Begin work section #
+# SETUP              #
 ######################
 
-# collect job information
-NUM_THREADS=1
-NUM_FOLDS=10
+# task-specific values
+CPUS_PER_WORKER=1
+MAX_WORKERS=10
 
-NODE_ID=${SLURM_ARRAY_TASK_ID:-0}
-NUM_NODES=${SLURM_ARRAY_TASK_COUNT:-1}
+# provide defaults if we're not running via sbatch
+TASK_ID=${SLURM_ARRAY_TASK_ID:-0}
+NUM_TASKS=${SLURM_ARRAY_TASK_COUNT:-1}
 
+# calculate how many workers to use for this task
 if [[ -z $SLURM_CPUS_PER_TASK ]]
 then
-    NUM_CPUS=-1
+    # not running via sbatch
+    NUM_WORKERS=-1
 else
-    NUM_CPUS=$(( $SLURM_CPUS_PER_TASK / $NUM_THREADS ))
+    NUM_WORKERS=$(( $SLURM_CPUS_PER_TASK / $CPUS_PER_WORKER ))
 
-    if [[ $NUM_CPUS -gt $NUM_FOLDS ]]
+    if [[ $NUM_WORKERS -gt $MAX_WORKERS ]]
     then
-        NUM_CPUS=$NUM_FOLDS
+        NUM_WORKERS=$MAX_WORKERS
     fi
 fi
 
-
-# print this sub-job's task ID
+# print summary lines to log file
 echo "BEGIN BATCH $SLURM_JOB_NAME"
-echo "[$(hostname)] nodeId=$NODE_ID numNodes=$NUM_NODES cpuCount=$NUM_CPUS (of $SLURM_JOB_CPUS_PER_NODE) threadCount=$NUM_THREADS"
-sleep 1
+echo "[$(hostname)] taskID=$TASK_ID numTasks=$NUM_TASKS numWorkers=$NUM_WORKERS (of $SLURM_JOB_CPUS_PER_NODE) cpusPerWorker=$CPUS_PER_WORKER"
+
+
+######################
+# TASK               #
+######################
 
 # load MATLAB module
 module load MATLAB || exit 1
 
-# get rid of default java options (not sure where this is coming from)
+# get rid of default java options
 unset _JAVA_OPTIONS
 
 # run matlab
 matlab -nodisplay -nosplash -nodesktop << EOF
 T=tic;
 try
-    process_cluster_sources( $NODE_ID, $NUM_NODES, $NUM_CPUS, $NUM_THREADS );
+    process_cluster_sources( $TASK_ID, $NUM_TASKS, $NUM_WORKERS, $CPUS_PER_WORKER );
 catch e
     disp(getReport(e));
     delete(gcp('nocreate'));
@@ -63,6 +73,10 @@ fprintf('\n\nDONE (%.1fs)\n', toc(T));
 exit(0)
 EOF
 
-sleep 1
+
+######################
+# TEAR-DOWN          #
+######################
+
 echo "END BATCH $SLURM_JOB_NAME"
 
