@@ -7,7 +7,7 @@ function [fig, ax1, ax2, ax3] = plotPerformance3(P)
     %
     % SETUP
     %
-    colors = lines(8);
+    colors = hive.util.morelines();
     
     if P.Chem == Chem.pH
         units = '';

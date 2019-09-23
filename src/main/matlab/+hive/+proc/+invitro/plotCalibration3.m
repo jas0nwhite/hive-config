@@ -9,9 +9,9 @@ function [ fig ] = plotCalibration3( time, predictions, labels, stepIx, chems, m
     muMax = max(muRange);
 
     desat = @(c) hsv2rgb(min([1, 1, 1], rgb2hsv(c) .* [1.0 0.3 1.2]));
-    colors = lines(8);
+    colors = hive.util.morelines();
     labColor = colors(3, :);
-    colors = colors([1 4 5 7 6 2], :);
+    colors = colors([1 4 5 7 6 2 8:end], :);
 
     rows = 3;
     cols = nChems * 2;
