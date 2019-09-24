@@ -26,7 +26,7 @@ function generatePredictions(this, dsIx)
     labels = testing.labels;
     
     % generate predictions
-    predictions = cvglmnetPredict(CVerr, x, 'lambda_min');
+    predictions = this.labelProcessor.unapply(cvglmnetPredict(CVerr, x, 'lambda_min'));
     chemical = testing.chemical;
     
     save(cvPredFile, 'predictions', 'labels', 'chemical');

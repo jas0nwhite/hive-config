@@ -22,4 +22,4 @@ rsync \
     --no-p \
     --no-o \
     --no-g \
-    $@ dirac-login:/mnt/nfs/proj/in-vitro/iterate/src/ ./
+    $@ hnl02:/mnt/nfs/proj/in-vitro/iterate/src/ ./
