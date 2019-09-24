@@ -3,7 +3,7 @@ function c = morelines( m )
     %   taken from http://colorbrewer2.org
 
     % start with default matlab pallette
-    matlab = lines(8);
+    matlab = lines(7);
     
     % add these from colorbrewer -- more pastel
     colorbrewer = [
@@ -28,7 +28,7 @@ function c = morelines( m )
     
     % fail if too many colors are requested
     if m > s
-        error('Too many colors! (%d > %d)', m, s);
+        error('Too many colors requested! (want %d, have %d)', m, s);
     end
     
     % return requested subset
