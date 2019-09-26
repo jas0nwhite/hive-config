@@ -5,6 +5,8 @@
 #SBATCH --error=log/iv-sets.err
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=36
+#SBATCH --mail-type=END,FAIL
+#SBATCH --mail-user=jas0nw@vtc.vt.edu
 
 
 ######################
