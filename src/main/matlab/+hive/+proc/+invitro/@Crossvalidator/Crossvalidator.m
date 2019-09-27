@@ -11,7 +11,7 @@ classdef Crossvalidator < hive.proc.ProcessorBase
         removeJitter = true
         processSets = true
         processSources = true
-        holdOutMedianLabels = false
+        holdOutMeanLabels = false
         preprocessor
         labelProcessor
     end
@@ -73,11 +73,11 @@ classdef Crossvalidator < hive.proc.ProcessorBase
             this.processSets = true;
         end
         
-        function this = withMedianLabelHoldout(this, setting)
+        function this = withMeanLabelHoldout(this, setting)
             if nargin == 1
-                this.holdOutMedianLabels = true;
+                this.holdOutMeanLabels = true;
             else
-                this.holdOutMedianLabels = setting;
+                this.holdOutMeanLabels = setting;
             end
         end
         
