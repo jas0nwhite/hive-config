@@ -4,7 +4,7 @@
 %!./make-config treatment-burst-008.conf
 %!./make-config treatment-rodent-008.conf
 %!./make-config treatment-rodent-009.conf
-!./make-config treatment-cfr-009.conf
+!./make-config treatment-010-008.conf
 
 %% init
 restoredefaultpath;

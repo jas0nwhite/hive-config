@@ -24,8 +24,8 @@
 ######################
 
 # task-specific values
-CPUS_PER_WORKER=2
-MAX_WORKERS=10
+CPUS_PER_WORKER=1
+MAX_WORKERS=20
 
 # provide defaults if we're not running via sbatch
 TASK_ID=${SLURM_ARRAY_TASK_ID:-0}
