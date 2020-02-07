@@ -17,6 +17,7 @@ function abfMovie(abfFile, movieFile, varargin)
     addParameter(p, 'fps', 30, assertPosNum);
     addParameter(p, 'format', 'MPEG-4');
     addParameter(p, 'quality', 90, @(x) assertPosNum(x) && (x <= 100));
+    addParameter(p, 'zoompct', 100, @(x) assertPosNum(x) && (x <= 100));
     
     
     parse(p, abfFile, movieFile, varargin{:});
@@ -124,6 +125,7 @@ function abfMovie(abfFile, movieFile, varargin)
     tSample = si / 1e6; % seconds
     tSweep = tSample * nSamples;
     sweeps = 1:floor(cfg.seconds / tSweep);
+    sampleWindow = 1:(floor(cfg.zoompct / 100 * nSamples));
     
     %
     % handle file smaller than requested numer of seconds
@@ -166,15 +168,15 @@ function abfMovie(abfFile, movieFile, varargin)
             
             hold on;
             for s = 2:numel(ss)
-                hl = plot(abf(:, ss(s)), 'LineWidth', thickness(s)); %#ok<PFBNS>
+                hl = plot(abf(sampleWindow, ss(s)), 'LineWidth', thickness(s)); %#ok<PFBNS>
                 hl.Color = [0, 0, 1, alpha(s)]; %#ok<PFBNS>
             end
             
             if ~isempty(ss)
-                plot(abf(:, ss(1)), 'LineWidth', 3, 'Color', 'black');
+                plot(abf(sampleWindow, ss(1)), 'LineWidth', 3, 'Color', 'black');
             end
             
-            xlim([0, nSamples - 1]);
+            xlim([0, numel(sampleWindow) - 1]);
             ylim([ymin, ymax]);
             xlabel('sample');
             ylabel('current (nA)');
