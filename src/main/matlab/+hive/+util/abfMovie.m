@@ -60,6 +60,10 @@ function abfMovie(abfFile, movieFile, varargin)
     [d, si, ~] = hive.convert.AbfToMat.abfload(cfg.abfFile, 'channels', {cfg.channel});
     fprintf(' done.\n');
     
+    if isempty(d)
+        error('    no data read from channel %s', cfg.channel);
+    end
+    
     % DIM: samples x sweeps
     samplewise = 1;
     sweepwise = 2;
@@ -115,10 +119,20 @@ function abfMovie(abfFile, movieFile, varargin)
     %
     % sweep timeline
     %
-    nSamples = size(abf, 1);
+    nSamples = size(abf, samplewise);
+    nSweeps = size(abf, sweepwise);
     tSample = si / 1e6; % seconds
     tSweep = tSample * nSamples;
     sweeps = 1:floor(cfg.seconds / tSweep);
+    
+    %
+    % handle file smaller than requested numer of seconds
+    %
+    if numel(sweeps) > nSweeps
+        sweeps = 1:nSweeps;
+        cfg.seconds = nSweeps * tSweep;
+    end
+    
     sweepT = (sweeps - 1) * tSweep + tSweep;
     sps = floor(1 / tSweep);
     fs = 1/tSample;
@@ -155,7 +169,10 @@ function abfMovie(abfFile, movieFile, varargin)
                 hl = plot(abf(:, ss(s)), 'LineWidth', thickness(s)); %#ok<PFBNS>
                 hl.Color = [0, 0, 1, alpha(s)]; %#ok<PFBNS>
             end
-            plot(abf(:, ss(1)), 'LineWidth', 3, 'Color', 'black');
+            
+            if ~isempty(ss)
+                plot(abf(:, ss(1)), 'LineWidth', 3, 'Color', 'black');
+            end
             
             xlim([0, nSamples - 1]);
             ylim([ymin, ymax]);
