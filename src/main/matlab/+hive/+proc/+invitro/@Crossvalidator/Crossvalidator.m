@@ -122,19 +122,19 @@ classdef Crossvalidator < hive.proc.ProcessorBase
             %
             % TEST LABEL PERMUTATION
             %
-            if this.processSources
-                g = tic;
-                
-                fprintf('*** NODE %d: VERIFYING LABELS FOR %d DATASETS...\n\n', this.nodeId, nDatasets);
-                
-                for ix = 1:nDatasets
-                    this.validateLabelsForDataset(processList(ix));
-                end
-                
-                fprintf('\n*** DONE (%.3fs)\n\n\n', toc(g));
-            else
-                fprintf('*** NODE %d: SKIP ASSEMBLE DATASETS (forSetsOnly)\n\n', this.nodeId);
-            end
+            %if this.processSources
+            %    g = tic;
+            %    
+            %    fprintf('*** NODE %d: VERIFYING LABELS FOR %d DATASETS...\n\n', this.nodeId, nDatasets);
+            %    
+            %    for ix = 1:nDatasets
+            %        this.validateLabelsForDataset(processList(ix));
+            %    end
+            %    
+            %    fprintf('\n*** DONE (%.3fs)\n\n\n', toc(g));
+            %else
+            %    fprintf('*** NODE %d: SKIP ASSEMBLE DATASETS (forSetsOnly)\n\n', this.nodeId);
+            %end
             
             %
             % TRAIN
