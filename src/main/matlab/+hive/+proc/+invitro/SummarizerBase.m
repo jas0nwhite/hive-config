@@ -48,21 +48,13 @@ classdef (Abstract) SummarizerBase < hive.proc.ProcessorBase
                 end
                 
                 parfor (jobIx = 1:nSources, this.getNumWorkers())
-                %for (jobIx = 1:nSources)
+                %for jobIx = 1:nSources
                     sourceIx = sourceIxsToProcess(jobIx);
                     
                     [id, name, ~] = this.cfg.getSourceInfo(setIx, sourceIx); %#ok<PFBNS>
                     
                     fprintf('    dataset %03d: %s... ', id, name);
                     t = tic;
-                    
-                    plotFile = fullfile(outPath, name, 'mono-steps.pdf');
-                    figFile = fullfile(outPath, name, 'mono-steps.fig');
-                    
-                    if (~this.overwrite && exist(plotFile, 'file'))
-                        fprintf(' SKIP. %0.3fs\n', toc(t));
-                        continue;
-                    end
                     
                     sumFile = fullfile(outPath, name, this.cfg.summaryFile);
                     metadataFile = fullfile(inPath, name, this.cfg.metaFile);
@@ -76,65 +68,91 @@ classdef (Abstract) SummarizerBase < hive.proc.ProcessorBase
                     y = cell2mat(summary.steps.median');
                     labels = cell2mat(labs.labels);
                     
-                    muCounts = arrayfun(@(i) numel(unique(labels(:, i))), 1:size(labels, 2));
-                    chemIx = find(muCounts > 1);
+                    % find the neutral ("zero") status of each label
+                    nChem = size(labels, 2);
+                    neutrals = cellfun(@(s) Chem.get(s).neutral, labs.chemicals);
                     
-                    if (numel(chemIx) > 1)
-                        % mixture
-                        fprintf(' SKIP. %0.3fs\n', toc(t));
-                        continue;
-                    end
-                    
-                    nSteps = size(y, 2);
-                    stepIx = find(arrayfun(@(ix) size(labs.labels{ix}, 1) > 0, 1:nSteps));
-                    nSteps = length(stepIx);
-                    mu = arrayfun(@(ix) labs.labels{stepIx(ix)}(1, chemIx), 1:nSteps);
-                    muList = sort(unique(mu));
-                    nMus = numel(muList);
-                    
-                    ticks = linspace(min(muList), max(muList), 5);
-                    tickLabels = arrayfun(@(n) num2str(n), ticks, 'uniformOutput', false);
-                    
-                    chem = Chem.get(chemIx);
-                    
-                    colorbarLabel = ''; %#ok<NASGU>
-                    switch chem
-                        case Chem.pH
-                            colorbarLabel = 'pH';
-                        otherwise
-                            colorbarLabel = sprintf('[%s] (%s)', chem.label, chem.units);
-                    end
-                    
-                    figure;
-                    hold all;
-                    colors = jet(nMus);
-                    colormap(colors);
-                    
-                    
-                    for ix = nSteps:-1:1
-                        colorIx = muList == mu(ix);
+                    for chemIx = 1:nChem
+                        % find column index of other chemicals
+                        otherIx = setdiff(1:nChem, chemIx);
                         
-                        xs = sort(x);
-                        if (isequaln(x, xs) && max(diff(xs)) == 1)
-                            plot(x, y(:, ix), 'Color', colors(colorIx, :));
-                        else
-                            plot(xs, y(:, ix), '.', 'Color', colors(colorIx, :));
+                        % find concentrations for each step
+                        nSteps = size(y, 2);
+                        stepMu = cell2mat(arrayfun(@(ix) labs.labels{ix}(1, :)', 1:nSteps, 'UniformOutput', false))';
+                        
+                        % find the steps for which the other chemicals are at a neutral concentration
+                        stepIx = find(not(any(bsxfun(@minus, stepMu(:, otherIx), neutrals(otherIx))')'));
+                        nSteps = length(stepIx);
+                        mu = arrayfun(@(ix) labs.labels{stepIx(ix)}(1, chemIx), 1:nSteps);
+                        
+                        if all(mu == neutrals(chemIx))
+                            continue;
                         end
+                        
+                        % see if we need to re-do this plot
+                        chem = Chem.get(labs.chemicals{chemIx});
+                        
+                        plotFile = fullfile(outPath, name, sprintf('mono-steps-%s.pdf', chem.label));
+                        figFile = fullfile(outPath, name, sprintf('mono-steps-%s.fig', chem.label));
+                        
+                        if (~this.overwrite && exist(plotFile, 'file'))
+                            fprintf(' SKIP. %0.3fs\n', toc(t));
+                            continue;
+                        end
+                        
+                        
+                        
+                        muList = sort(unique(mu));
+                        nMus = numel(muList);
+                        
+                        ticks = linspace(min(muList), max(muList), 5);
+                        tickLabels = arrayfun(@(n) num2str(n), ticks, 'uniformOutput', false);
+
+                        
+
+                        colorbarLabel = ''; %#ok<NASGU>
+                        switch chem
+                            case Chem.pH
+                                colorbarLabel = 'pH';
+                            otherwise
+                                colorbarLabel = sprintf('[%s] (%s)', chem.label, chem.units);
+                        end
+
+                        figure;
+                        hold all;
+                        colors = jet(nMus);
+                        colormap(colors);
+
+
+                        for ix = nSteps:-1:1
+                            colorIx = muList == mu(ix);
+
+                            xs = sort(x);
+                            if (isequaln(x, xs) && max(diff(xs)) == 1)
+                                plot(x, y(:, ix), 'Color', colors(colorIx, :));
+                            else
+                                plot(xs, y(:, ix), '.', 'Color', colors(colorIx, :));
+                            end
+                        end
+
+                        title(sprintf('%03d  |  %s  |  %s', id, name, chem.label), 'interpreter', 'none');
+                        xlabel('sample #');
+                        ylabel('current (nA)');
+                        axis tight;
+                        ylim([-2100 2100]);
+                        c = colorbar(...
+                            'Ticks', (ticks - min(ticks)) / (max(ticks) - min(ticks)),...
+                            'TickLabels', tickLabels);
+                        c.Label.String = colorbarLabel;
+                        % set(gca, 'Color', [0.9, 0.9, 0.9]);
+                        savefig(gcf, figFile);
+                        hgexport(gcf, plotFile, s);
+                        close;
                     end
                     
-                    title(sprintf('%03d: %s', id, name), 'interpreter', 'none');
-                    xlabel('sample #');
-                    ylabel('current (nA)');
-                    axis tight;
-                    ylim([-2100 2100]);
-                    c = colorbar('Ticks', (ticks - min(ticks)) / (max(ticks) - min(ticks)), 'TickLabels', tickLabels);
-                    c.Label.String = colorbarLabel;
-                    % set(gca, 'Color', [0.9, 0.9, 0.9]);
-                    savefig(gcf, figFile);
-                    hgexport(gcf, plotFile, s);
-                    close;
                     
                     fprintf(' %0.3fs\n', toc(t));
+                    
                 end
                 
             end
