@@ -5,6 +5,7 @@ BATCH_HOME=cluster
 # start jobs that process sources
 RES=$(sbatch "$@" $BATCH_HOME/process-sources.sh) || exit 1
 
+# get the job ID
 jid=${RES##* }
 
 # queue job to proces sets after the sources have been processed correctly

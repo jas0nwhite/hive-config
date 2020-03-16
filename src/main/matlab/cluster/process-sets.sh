@@ -7,6 +7,7 @@
 #SBATCH --cpus-per-task=36
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=jas0nw@vtc.vt.edu
+#SBATCH --exclude=cnode005,cnode006
 
 
 ######################

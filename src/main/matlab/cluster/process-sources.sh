@@ -17,7 +17,7 @@
 #SBATCH --hint=compute_bound
 #SBATCH --mail-type=FAIL,ARRAY_TASKS
 #SBATCH --mail-user=jas0nw@vtc.vt.edu
-
+#SBATCH --exclude=cnode005,cnode006
 
 ######################
 # SETUP              #
