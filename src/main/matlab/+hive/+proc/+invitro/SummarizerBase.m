@@ -96,7 +96,7 @@ classdef (Abstract) SummarizerBase < hive.proc.ProcessorBase
                         figFile = fullfile(outPath, name, sprintf('mono-steps-%s.fig', chem.label));
                         
                         if (~this.overwrite && exist(plotFile, 'file'))
-                            fprintf(' SKIP. %0.3fs\n', toc(t));
+                            fprintf(' SKIP (%s)', chem.label);
                             continue;
                         end
                         
