@@ -45,7 +45,7 @@ class InvitroConfig protected(config: WrappedConfig) extends Logging {
   //
   val sourceCatalog: List[List[String]] = Util.findPaths(sourceSpecs)
   val datasetCatalog: List[List[String]] = sourceCatalog.map(Util.basenames)
-  val infoCatalog: List[List[Option[InvitroDataset]]] = sourceCatalog.map(_.map(DatasetConfig.datasetInfoFromPath).sorted)
+  val infoCatalog: List[List[Option[InvitroDataset]]] = sourceCatalog.map(_.map(DatasetConfig.datasetInfoFromPath))
 
 }
 

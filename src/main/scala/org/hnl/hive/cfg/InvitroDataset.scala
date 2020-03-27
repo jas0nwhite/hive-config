@@ -10,9 +10,4 @@ package org.hnl.hive.cfg
   */
 case class InvitroDataset(dsDate: String, dsClass: String, dsProtocol: String, probeName: String, probeDate: String)
 
-// for ordering
-object InvitroDataset {
-  implicit val ord = Ordering.by(unapply)
-}
-
 
