@@ -14,6 +14,9 @@ function summarize(this)
         if nSources == 0
             continue;
         end
+        
+        % summarize probe responses
+        hive.proc.analyze.summarizeTrainingProbeResponses(this.treatment, setId);
 
         chemicals = Chem.names;
         nChem = Chem.count;
