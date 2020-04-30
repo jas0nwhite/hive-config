@@ -27,9 +27,6 @@ function datasets = summarizeTrainingProbeResponses(cfg, setIx, parallel)
     % sort it nicely for processing
     datasets = sortrows(datasets, {'probeName', 'acqDate', 'dsIx'});
     
-    % get some general data
-    cfg.training.summaryFile
-    
     % get list of probes participating in this set
     probeList = unique(datasets.probeName);
     
@@ -37,7 +34,8 @@ function datasets = summarizeTrainingProbeResponses(cfg, setIx, parallel)
     % process each probe
     %
     if parallel
-        parfor probe = probeList'
+        parfor probeIx = 1:numel(probeList)
+            probe = probeList(probeIx);
             plotProbe(cfg, setIx, datasets, probe);
         end
     else 
@@ -60,21 +58,32 @@ function plotProbe(cfg, setIx, datasets, probe)
     probeDatasets = datasets(datasets.probeName == probe, :);
     
     % get the summary from each dataset
+    acqDate = nan(size(probeDatasets, 1), 1);
+    dsNote = cell(size(acqDate));
     meanResponse = nan(size(probeDatasets, 1), 1000);
     stdResponse = nan(size(meanResponse));
     
     for rowIx = 1:size(probeDatasets, 1)
         ds = probeDatasets(rowIx, :);
-        fprintf('    %03d (%s)\n', ds.dsIx, datestr(ds.acqDate, 'yyyy-mm-dd'));
         
         [~, sourceIx] = cfg.training.getSourceIxByDatasetId(ds.dsIx);
         [~, dsName, ~] = cfg.training.getSourceInfo(setIx, sourceIx);
         
+        
         summaryFile = fullfile(outPath, dsName, cfg.training.summaryFile);
         
         summary = load(summaryFile);
+        acqDate(rowIx) = datenum(ds.acqDate);
         meanResponse(rowIx, :) = summary.grand.mean';
         stdResponse(rowIx, :) = summary.grand.std';
+        
+        % add note for mono-mix datasets
+        dsParts = strsplit(dsName, '_');
+        if any(ismember(dsParts, 'mix'))
+            dsNote{rowIx} = ['/' dsParts{5}];
+        else
+            dsNote{rowIx} = '';
+        end
     end
     
     %
@@ -105,14 +114,22 @@ function plotProbe(cfg, setIx, datasets, probe)
     ylim([-2050, 2050]);
     title(sprintf('%s  |  %s', setName, probe));
     colormap(jet(nLines));
-    hc = colorbar('Ticks', (1:nLines)' / nLines - 1/(2*nLines), 'TickLabels', num2str((1:nLines)', '%02d'));
-    hc.Label.String = 'dataset';
+
+    % colorbar ==> acquisition day
+    tickLabs = arrayfun(...
+        @(i) [num2str(acqDate(i) - acqDate(1), '%02d') dsNote{i}], ...
+        1:nLines, 'UniformOutput', false);
+    hc = colorbar(...
+        'Ticks', (1:nLines)' / nLines - 1/(2*nLines),...
+        'TickLabels', tickLabs,...
+        'Direction', 'reverse');
+    hc.Label.String = 'acquisition';
     
     %
     % SAVE
     %
     figFile = fullfile(outPath, sprintf('%s.pdf', probe));
-    fprintf('    ==> %s\n', figFile);
+    fprintf('%s\n', probe);
     
     % format figure
     fig.PaperPositionMode = 'manual';
