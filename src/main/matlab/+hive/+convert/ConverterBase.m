@@ -22,6 +22,16 @@ classdef (Abstract) ConverterBase < hive.util.Logging
         jitterCorrector = []
         doParfor = false
         doStability = true
+        doUnderflowCorrection = false
+    end
+    
+    properties (Constant = true)
+        Samplewise = 1;
+        Sweepwise = 2;
+
+        RawSamplewise = 1;
+        RawChannelwise = 2;
+        RawSweepwise = 3;
     end
     
     %
@@ -78,6 +88,10 @@ classdef (Abstract) ConverterBase < hive.util.Logging
         
         function this = withStabilitySearch(this, flag)
             this.doStability = flag;
+        end
+        
+        function this = withUnderflowCorrection(this, flag)
+            this.doUnderflowCorrection = flag;
         end
     end
     
@@ -174,15 +188,31 @@ classdef (Abstract) ConverterBase < hive.util.Logging
             data = squeeze(raw(:, vgramChannelIx, :)); % extract voltammogram data
             sweepInterval = sampInterval * unique(round(diff(header.sweepStartInPts), 6));
             
+            % correct underflow clipping if requested
+            if this.doUnderflowCorrection
+                data = hive.convert.correctUnderflowClipping(data, this.RawSamplewise);
+                
+                if ismatrix(otherData)
+                    % only one (squeezed) channel
+                    otherData = hive.convert.correctUnderflowClipping(otherData, this.RawSamplewise);
+                else
+                    for chIx = 1:size(otherData, this.RawChannelwise)
+                        % correct one channel at a time
+                        otherData(:, chIx, :) = hive.convert.correctUnderflowClipping(...
+                            squeeze(otherData(:, chIx, :)), this.RawSamplewise);
+                    end
+                end
+            end
+            
             % calculate the time window
             if isnan(this.timeWindow)
-                sweepWindow = 1:size(data, 2);
+                sweepWindow = 1:size(data, this.Sweepwise);
             else
                 sweepStart = min(this.timeWindow);
                 sweepEnd = max(this.timeWindow);
                 
                 sweepStartIx = max(1, round(sweepStart / sweepInterval) + 1);
-                sweepEndIx = min(size(data, 2), round(sweepEnd / sweepInterval));
+                sweepEndIx = min(size(data, this.Sweepwise), round(sweepEnd / sweepInterval));
                 
                 sweepWindow = sweepStartIx:sweepEndIx;
             end
@@ -248,7 +278,7 @@ classdef (Abstract) ConverterBase < hive.util.Logging
             
             % extract the samples
             if sum(isnan(this.sampleWindow)) > 0
-                sampWindow = 1:size(data, 1);
+                sampWindow = 1:size(data, this.Samplewise);
             else
                 sampWindow = this.sampleWindow;
             end
@@ -260,7 +290,7 @@ classdef (Abstract) ConverterBase < hive.util.Logging
                     this.warn( ...
                         'BadSampleWindow', ...
                         'sample window [%d:%d] exceeds data dimensions [%d]', ...
-                        min(sampWindow), max(sampWindow), size(data, 1));
+                        min(sampWindow), max(sampWindow), size(data, this.Samplewise));
                 end
             end
             

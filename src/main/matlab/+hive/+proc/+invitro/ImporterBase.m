@@ -6,6 +6,7 @@ classdef (Abstract) ImporterBase < hive.proc.ProcessorBase
         labels
         vgramChannel = 'FSCV'
         jitterCorrector = []
+        doUnderflowCorrection = false
     end
     
     %
@@ -22,6 +23,14 @@ classdef (Abstract) ImporterBase < hive.proc.ProcessorBase
         
         function this = purgeExcludedData(this)
             this.labels = this.labels(strcmpi(this.labels.exclude, 'false'), :);
+        end
+        
+        function this = withUnderflowCorrection(this, setting)
+            if nargin == 1
+                this.doUnderflowCorrection = true;
+            else
+                this.doUnderflowCorrection = setting;
+            end
         end
     end
     
@@ -96,6 +105,7 @@ classdef (Abstract) ImporterBase < hive.proc.ProcessorBase
                     .withLabels(rawLabels, rawChemNames, labelFile)...
                     .withDatasetInfo(name, id, setIx, sourceIx, this.treatment.name)...
                     .withJitterCorrector(this.jitterCorrector)...
+                    .withUnderflowCorrection(this.doUnderflowCorrection)...
                     .inParallel(this.doParfor)...
                     .convert;
             end
