@@ -30,6 +30,12 @@ function V = correctUnderflowClipping(V, dim, posthresh, negthresh)
     % end of underflow is where diff > posthresh
     E = find(D > posthresh);
     
+    % check to see we have the same number of entries in S and E
+    if numel(S) ~= numel(E)
+        fprintf(' -- no undeflow correction (%d S, %d E) -- ', numel(S), numel(E));
+        return
+    end
+    
     % since S and E are in terms of diff, we need to identify the sweep
     % number to adjust the positions in terms of V
     sweep = floor(S ./ size(D, dim));
