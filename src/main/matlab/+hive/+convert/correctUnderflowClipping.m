@@ -4,11 +4,11 @@ function V = correctUnderflowClipping(V, dim, posthresh, negthresh)
 
     % default values
     if nargin < 4
-        negthresh = -3800;
+        negthresh = -3500;
     end
     
     if nargin < 3
-        posthresh = 3800;
+        posthresh = 3500;
     end
     
     if nargin < 2
@@ -33,6 +33,7 @@ function V = correctUnderflowClipping(V, dim, posthresh, negthresh)
     % check to see we have the same number of entries in S and E
     if numel(S) ~= numel(E)
         fprintf(' -- no undeflow correction (%d S, %d E) -- ', numel(S), numel(E));
+        save('debug.mat', 'V', 'dim', 'posthresh', 'negthresh');
         return
     end
     
