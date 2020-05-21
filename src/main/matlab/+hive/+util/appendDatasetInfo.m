@@ -4,7 +4,7 @@ function appendDatasetInfo(filename, name, id, setId, sourceId, treatment)
     datasetInfo.id = id;
     datasetInfo.setId = setId;
     datasetInfo.sourceId = sourceId;
-    datasetInfo.treatment = treatment; %#ok<STRNU>
+    datasetInfo.treatment = treatment;
     
     save(filename, 'datasetInfo', '-append');
 

@@ -3,13 +3,16 @@ classdef (Abstract) CharacterizerBase < hive.proc.ProcessorBase
     %   Detailed explanation goes here
     
     properties (Access = protected)
+        characterizer = []
     end
     
     %
     % API
     %
-    methods
-               
+    methods (Access = protected)
+        function this = withCharacterizer(this, fn)
+            this.characterizer = fn;
+        end
     end
     
     %
@@ -34,20 +37,20 @@ classdef (Abstract) CharacterizerBase < hive.proc.ProcessorBase
             outfile = fullfile(outPath, name, this.cfg.characterizationFile);
             
             if this.overwrite || ~exist(outfile, 'file')
-                load(infile);
+                I = load(infile);
                 
-                nSteps = length(voltammograms); %#ok<USENS>
+                nSteps = length(I.voltammograms);
                 
                 vgramChar = cell(nSteps, 1);
                 
                 fprintf('%d steps...', nSteps);
                 
                 for stepIx = 1:nSteps
-                    vgramChar{stepIx} = this.processStep(voltammograms{stepIx});
+                    vgramChar{stepIx} = this.processStep(I.voltammograms{stepIx});
                 end
                 
                 save(outfile, 'vgramChar');
-                hive.util.appendDatasetInfo(cvTestFile, name, id, setIx, sourceIx, this.treatment.name);
+                hive.util.appendDatasetInfo(outfile, name, id, setIx, sourceIx, this.treatment.name);
                 
                 fprintf(' %0.3fs\n', toc(t));
             else
@@ -55,17 +58,19 @@ classdef (Abstract) CharacterizerBase < hive.proc.ProcessorBase
             end
         end
         
-        function c = processStep(~, vgrams)
+        function c = processStep(this, vgrams)
             nVgrams = size(vgrams, 2);
             
-            c = nan(nVgrams, 2);
+            c = cell(nVgrams, 1);
             
-            for vgramIx = 1:nVgrams
-                [x, y] = hive.proc.analyze.characterizeVoltammogram(vgrams(:, vgramIx));
-                c(vgramIx, :) = [x, y];
+            if ~isempty(this.characterizer)
+                for vgramIx = 1:nVgrams
+                    x = this.characterizer(vgrams(:, vgramIx));
+                    c{vgramIx} = x;
+                end
             end
         end
-        
+
     end
     
 end

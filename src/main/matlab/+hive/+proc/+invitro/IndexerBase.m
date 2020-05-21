@@ -23,7 +23,7 @@ classdef (Abstract) IndexerBase < hive.proc.ProcessorBase
                 
                 fprintf('\n***\n*** Plotting set %d from %s\n***\n\n', setIx, outPath);
                 
-                parfor sourceIx = 1:nSources
+                parfor (sourceIx = 1:nSources, this.getNumWorkers())
                     this.plotSource(setIx, sourceIx, outPath); %#ok<PFBNS>
                 end
                 
@@ -44,13 +44,6 @@ classdef (Abstract) IndexerBase < hive.proc.ProcessorBase
                 };
         end
         
-        function displayProcessSetHeader(this, setIx, nSources)
-            outPath = this.cfg.getSetValue(this.cfg.resultPathList, setIx);
-            
-            fprintf('\n***\n*** %s set %d (%d sources) in %s\n***\n\n',...
-                this.actionLabel, setIx, nSources, outPath);
-        end
-        
         function processSource(this, setIx, sourceIx, path)
             [id, name, ~] = this.cfg.getSourceInfo(setIx, sourceIx);
             
@@ -62,27 +55,27 @@ classdef (Abstract) IndexerBase < hive.proc.ProcessorBase
             outfile = fullfile(directory, this.cfg.clusterIndexFile);
             
             if this.overwrite || ~exist(outfile, 'file')
-                load(infile);
+                C = load(infile);
                 
-                nSteps = length(vgramChar); %#ok<USENS>
+                nSteps = length(C.vgramChar);
                 stepClusters = cell(nSteps, 1);
                 medianChars = cell(nSteps, 1);
                 
                 fprintf('%d steps...', nSteps);
                 
                 for stepIx = 1:nSteps
-                    i = hive.proc.cluster.DBSCAN.cluster(vgramChar{stepIx}, this.minPoints, this.epsilon);
+                    i = hive.proc.cluster.DBSCAN.cluster(C.vgramChar{stepIx}, this.minPoints, this.epsilon);
                     stepClusters{stepIx} = i;
-                    medianChars{stepIx} = median(vgramChar{stepIx}, 1);
+                    medianChars{stepIx} = median(C.vgramChar{stepIx}, 1);
                 end
                 
                 medianChars = cell2mat(medianChars);
                 
                 datasetCluster = hive.proc.cluster.DBSCAN.cluster(...
-                    medianChars, 3, 1.5 * this.epsilon); %#ok<NASGU>
+                    medianChars, 3, 1.5 * this.epsilon);
                 
                 save(outfile, 'stepClusters', 'datasetCluster');
-                hive.util.appendDatasetInfo(cvTestFile, name, id, setIx, sourceIx, this.treatment.name);
+                hive.util.appendDatasetInfo(outfile, name, id, setIx, sourceIx, this.treatment.name);
                 
                 fprintf(' %0.3fs\n', toc(t));
             else
@@ -112,16 +105,16 @@ classdef (Abstract) IndexerBase < hive.proc.ProcessorBase
             end
             
             clusterFile = fullfile(outPath, name, this.cfg.clusterIndexFile);
-            load(clusterFile);
+            C = load(clusterFile);
             
             % plot dataset cluster
-            datasetCluster.plot2D('time (ms)', 'current (nA)');
-            suptitle(sprintf('%03d: %s', id, strrep(name, '_', '-')));            
+            C.datasetCluster.plot2D('time (ms)', 'current (nA)');
+            suptitle(sprintf('%03d: %s', id, strrep(name, '_', '-')));
             hgexport(gcf, datasetFile, s);
             close;
             
             % plot vgram clusters
-            nSteps = length(stepClusters); %#ok<USENS>
+            nSteps = length(C.stepClusters);
             rows = ceil(sqrt(nSteps) * 11 / 8.5);
             cols = ceil(nSteps / rows);
             
@@ -131,17 +124,17 @@ classdef (Abstract) IndexerBase < hive.proc.ProcessorBase
             for ix = 1:nSteps
                 ax = subplot(rows, cols, ix);
                 
-                if (datasetCluster.clustIx(ix) == -1)
+                if (C.datasetCluster.clustIx(ix) == -1)
                     set(ax, 'Color', [0.9 0.9 0.9]);
                 end
                 
-                stepClusters{ix}.plot2D('', '', ax);
+                C.stepClusters{ix}.plot2D('', '', ax);
                 title(sprintf('%03d', ix));
             end
             
             s.FontSizeMin = 2;
             s.ScaledFontSize = 50;
-            suptitle(sprintf('%03d: %s', id, strrep(name, '_', '-')));            
+            suptitle(sprintf('%03d: %s', id, strrep(name, '_', '-')));
             hgexport(gcf, stepFile, s);
             close;
             
