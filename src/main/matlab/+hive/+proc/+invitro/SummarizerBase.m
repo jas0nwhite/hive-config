@@ -48,7 +48,7 @@ classdef (Abstract) SummarizerBase < hive.proc.ProcessorBase
                 end
                 
                 parfor (jobIx = 1:nSources, this.getNumWorkers())
-                %for jobIx = 1:nSources
+                    % for jobIx = 1:nSources
                     sourceIx = sourceIxsToProcess(jobIx);
                     
                     [id, name, ~] = this.cfg.getSourceInfo(setIx, sourceIx); %#ok<PFBNS>
@@ -68,6 +68,26 @@ classdef (Abstract) SummarizerBase < hive.proc.ProcessorBase
                     y = cell2mat(summary.steps.median');
                     labels = cell2mat(labs.labels);
                     
+                    nSteps = size(y, 2);
+                    
+                    % plot all steps
+                    plotFile = fullfile(outPath, name, 'all-steps.pdf');
+                    figFile = fullfile(outPath, name, 'all-steps.fig');
+                    
+                    if (~this.overwrite && exist(plotFile, 'file'))
+                        fprintf(' SKIP (all)');
+                    else
+                        plotTitle = sprintf('%03d  |  %s  |  all steps', id, name);
+                        
+                        colorbarLabel = 'step';
+                        
+                        this.plotSteps(x, y, 1:nSteps, 1:nSteps, plotTitle, colorbarLabel);
+                        
+                        savefig(gcf, figFile);
+                        hgexport(gcf, plotFile, s);
+                        close;
+                    end
+                    
                     % find the neutral ("zero") status of each label
                     nChem = size(labels, 2);
                     neutrals = cellfun(@(s) Chem.get(s).neutral, labs.chemicals);
@@ -77,7 +97,6 @@ classdef (Abstract) SummarizerBase < hive.proc.ProcessorBase
                         otherIx = setdiff(1:nChem, chemIx);
                         
                         % find concentrations for each step
-                        nSteps = size(y, 2);
                         stepMu = cell2mat(arrayfun(@(ix) labs.labels{ix}(1, :)', 1:nSteps, 'UniformOutput', false))';
                         
                         % find the steps for which the other chemicals are at a neutral concentration
@@ -100,16 +119,14 @@ classdef (Abstract) SummarizerBase < hive.proc.ProcessorBase
                             continue;
                         end
                         
+                        % muList = sort(unique(mu));
+                        % nMus = numel(muList);
+                        %
+                        % ticks = linspace(min(muList), max(muList), 5);
+                        % tickLabels = arrayfun(@(n) num2str(n), ticks, 'uniformOutput', false);
                         
+                        plotTitle = sprintf('%03d  |  %s  |  %s', id, name, chem.label);
                         
-                        muList = sort(unique(mu));
-                        nMus = numel(muList);
-                        
-                        ticks = linspace(min(muList), max(muList), 5);
-                        tickLabels = arrayfun(@(n) num2str(n), ticks, 'uniformOutput', false);
-
-                        
-
                         colorbarLabel = ''; %#ok<NASGU>
                         switch chem
                             case Chem.pH
@@ -117,37 +134,41 @@ classdef (Abstract) SummarizerBase < hive.proc.ProcessorBase
                             otherwise
                                 colorbarLabel = sprintf('[%s] (%s)', chem.label, chem.units);
                         end
-
-                        figure;
-                        hold all;
-                        colors = jet(nMus);
-                        colormap(colors);
-
-
-                        for ix = nSteps:-1:1
-                            colorIx = muList == mu(ix);
-
-                            xs = sort(x);
-                            if (isequaln(x, xs) && max(diff(xs)) == 1)
-                                plot(x, y(:, ix), 'Color', colors(colorIx, :));
-                            else
-                                plot(xs, y(:, ix), '.', 'Color', colors(colorIx, :));
-                            end
-                        end
-
-                        title(sprintf('%03d  |  %s  |  %s', id, name, chem.label), 'interpreter', 'none');
-                        xlabel('sample #');
-                        ylabel('current (nA)');
-                        axis tight;
-                        ylim([-2100 2100]);
-                        c = colorbar(...
-                            'Ticks', (ticks - min(ticks)) / (max(ticks) - min(ticks)),...
-                            'TickLabels', tickLabels);
-                        c.Label.String = colorbarLabel;
-                        % set(gca, 'Color', [0.9, 0.9, 0.9]);
+                        
+                        % figure;
+                        % hold all;
+                        % colors = jet(nMus);
+                        % colormap(colors);
+                        %
+                        %
+                        % for ix = nSteps:-1:1
+                        %     colorIx = muList == mu(ix);
+                        %
+                        %     xs = sort(x);
+                        %     if (isequaln(x, xs) && max(diff(xs)) == 1)
+                        %         plot(x, y(:, ix), 'Color', colors(colorIx, :));
+                        %     else
+                        %         plot(xs, y(:, ix), '.', 'Color', colors(colorIx, :));
+                        %     end
+                        % end
+                        %
+                        % title(plotTitle, 'interpreter', 'none');
+                        % xlabel('sample #');
+                        % ylabel('current (nA)');
+                        % axis tight;
+                        % ylim([-2100 2100]);
+                        % c = colorbar(...
+                        %     'Ticks', (ticks - min(ticks)) / (max(ticks) - min(ticks)),...
+                        %     'TickLabels', tickLabels);
+                        % c.Label.String = colorbarLabel;
+                        % % set(gca, 'Color', [0.9, 0.9, 0.9]);
+                        
+                        this.plotSteps(x, y, stepIx, mu, plotTitle, colorbarLabel);
+                        
                         savefig(gcf, figFile);
                         hgexport(gcf, plotFile, s);
                         close;
+                        
                     end
                     
                     
@@ -246,6 +267,44 @@ classdef (Abstract) SummarizerBase < hive.proc.ProcessorBase
             summary.grand.n = size(grand, 2);
             
             status = hive.Status.Success;
+        end
+        
+        
+        function plotSteps(~, x, y, stepIx, groups, plotTitle, colorbarLabel)
+            nSteps = length(stepIx);
+            
+            groupList = sort(unique(groups));
+            nGroups = numel(groupList);
+            
+            ticks = linspace(min(groupList), max(groupList), 5);
+            tickLabels = arrayfun(@(n) num2str(n), ticks, 'uniformOutput', false);
+            
+            figure;
+            hold all;
+            colors = jet(nGroups);
+            colormap(colors);
+            
+            
+            for ix = nSteps:-1:1
+                colorIx = groupList == groups(ix);
+                
+                xs = sort(x);
+                if (isequaln(x, xs) && max(diff(xs)) == 1)
+                    plot(x, y(:, ix), 'Color', colors(colorIx, :));
+                else
+                    plot(xs, y(:, ix), '.', 'Color', colors(colorIx, :));
+                end
+            end
+            
+            title(plotTitle, 'interpreter', 'none');
+            xlabel('sample #');
+            ylabel('current (nA)');
+            axis tight;
+            ylim([-2100 2100]);
+            c = colorbar(...
+                'Ticks', (ticks - min(ticks)) / (max(ticks) - min(ticks)),...
+                'TickLabels', tickLabels);
+            c.Label.String = colorbarLabel;
         end
         
     end
