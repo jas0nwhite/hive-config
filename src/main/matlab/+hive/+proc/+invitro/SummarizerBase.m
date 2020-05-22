@@ -97,6 +97,7 @@ classdef (Abstract) SummarizerBase < hive.proc.ProcessorBase
                         otherIx = setdiff(1:nChem, chemIx);
                         
                         % find concentrations for each step
+                        nSteps = size(y, 2);
                         stepMu = cell2mat(arrayfun(@(ix) labs.labels{ix}(1, :)', 1:nSteps, 'UniformOutput', false))';
                         
                         % find the steps for which the other chemicals are at a neutral concentration
