@@ -1,4 +1,4 @@
-classdef Aggregator
+classdef Aggregator < hive.proc.ProcessorBase
     %AGGREGATOR Summary of this class goes here
     %   Detailed explanation goes here
     
@@ -6,8 +6,6 @@ classdef Aggregator
     end
     
     properties (Access = protected)
-        treatment
-        cfg
     end
     
     %
@@ -175,7 +173,7 @@ classdef Aggregator
                 return;
             end
             
-            clusterFile = fullfile(outPath, name, this.indexFile);
+            clusterFile = fullfile(outPath, name, this.cfg.clusterIndexFile);
             load(clusterFile);
             
             % plot dataset cluster
