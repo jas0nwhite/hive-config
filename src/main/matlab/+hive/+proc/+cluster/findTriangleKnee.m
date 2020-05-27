@@ -1,4 +1,4 @@
-function [ x, y ] = characterizeVoltammogram( voltammogram )
+function [ x, y ] = findTriangleKnee( voltammogram )
 %CHARACTERIZEVOLTAMMOGRAM Performs a basic characterization of the given voltammogram
 %   [ x, y ] = CHARACTERIZEVOLTAMMOGRAM( voltammogram ) returns coordinates of the first "knee"
 %

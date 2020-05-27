@@ -10,8 +10,13 @@ classdef (Abstract) CharacterizerBase < hive.proc.ProcessorBase
     % API
     %
     methods (Access = protected)
-        function this = withCharacterizer(this, fn)
-            this.characterizer = fn;
+        function fn = getCharacterizerForTreatment(this)
+            
+            switch this.treatment.clusterStyleId
+                case 0
+                    fn = 
+            
+            
         end
     end
     
