@@ -7,11 +7,6 @@ function summarize(this)
     % read in all datasets
     nSets = numel(this.cfg.sourceCatalog);
     
-    % summarize probe responses
-    for setId = 1:nSets
-        hive.proc.analyze.summarizeTrainingProbeResponses(this.treatment, setId, this.doParfor);
-    end
-
     parfor (setId = 1:nSets, this.getNumWorkers())
         nSources = size(this.cfg.sourceCatalog{setId}, 1); %#ok<PFBNS>
 

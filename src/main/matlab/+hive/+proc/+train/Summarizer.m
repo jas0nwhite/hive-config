@@ -25,5 +25,30 @@ classdef Summarizer < hive.proc.invitro.SummarizerBase
         
     end
     
+    %
+    % OVERRIDES
+    %
+    methods
+        
+        function this = plot(this)
+            plot@hive.proc.invitro.SummarizerBase(this)
+            
+            % summarize training probe responses
+            nSets = length(this.cfg.sourceCatalog);
+            
+            for setIx = 1:nSets
+                t = tic;
+                fprintf('\n***\n*** NODE %d: Summarizing probes in set %d\n***\n\n', ...
+                    this.nodeId, setIx);
+                
+                hive.proc.analyze.summarizeTrainingProbeResponses(this.treatment, setIx, this.doParfor);
+                
+                toc(t);
+            end
+            
+        end
+        
+    end
+    
 end
 
