@@ -30,7 +30,9 @@ class TreatmentConfig protected(config: WrappedConfig) extends Logging {
   val clusterStyleId: String = config.getString("treatment.cluster-style")
   val alphaSelectId: String = config.getString("treatment.alpha-select")
   val muSelectId: String = config.getString("treatment.mu-select")
-  val name: String = config.getString("treatment.name", s"$trainingSetId-$trainingStyleId-$clusterStyleId-$alphaSelectId-$muSelectId")
+  val name: String = config.getString(
+    "treatment.name",
+    s"$trainingSetId-$trainingStyleId-$clusterStyleId-$alphaSelectId-$muSelectId")
 
   /*
    * project settings
