@@ -17,20 +17,30 @@ function process_cluster_sets( nodeId, nodeCount, cpuCount, threadCount )
     % set up and configure parallel pool
     if parallel && isempty(gcp('nocreate'))
         pc = parcluster('local');
-        
+
         jobDir = fullfile(pc.JobStorageLocation, sprintf('job%03d', nodeId));
         if ~exist(jobDir, 'dir')
             mkdir(jobDir);
         end
-        
+
         pc.JobStorageLocation = jobDir;
         pc.NumThreads = threadCount;
         pc.NumWorkers = cpuCount;
-        
+
         disp(pc);
-        
+
         parpool(pc, cpuCount, 'IdleTimeout', Inf);
     end
+
+
+    %% summarize training probes
+    t = tic;
+    hive.proc.train.Summarizer(cfg)...
+        .inParallel(parallel)...
+        .withOverwrite(overwrite)...
+        .forNodeSpec(nodeId, nodeCount)...
+        .summarizeTrainingProbes();
+    toc(t);
 
 
     %% run cross-validation analyses

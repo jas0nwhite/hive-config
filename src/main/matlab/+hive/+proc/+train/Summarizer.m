@@ -30,9 +30,7 @@ classdef Summarizer < hive.proc.invitro.SummarizerBase
     %
     methods
         
-        function this = plot(this)
-            plot@hive.proc.invitro.SummarizerBase(this)
-            
+        function this = summarizeTrainingProbes(this)
             % summarize training probe responses
             nSets = length(this.cfg.sourceCatalog);
             
