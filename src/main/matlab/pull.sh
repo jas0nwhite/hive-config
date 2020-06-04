@@ -22,4 +22,4 @@ rsync \
     --no-p \
     --no-o \
     --no-g \
-    $@ hnl02:/mnt/nfs/proj/in-vitro/iterate/src/ ./
+    $@ gootch:/mnt/nfs/proj/in-vitro/iterate/src/ ./
