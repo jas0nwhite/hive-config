@@ -108,6 +108,7 @@ function buildDataset(this, dsIx)
     testIx = cell(nSteps, 1);
     trainIx = cell(nSteps, 1);
     novel = false(nSteps, 1);
+    testN = 25; % TODO: figure out a better way to limit testing?
     
     % sample each step uniformly
     rng(1972);
@@ -143,7 +144,10 @@ function buildDataset(this, dsIx)
         end
         
         trainIx{ix} = datasample(index, trainN, 'Replace', false);
-        testIx{ix} = setdiff(index, trainIx{ix});
+        
+        nonTrainIx = setdiff(index, trainIx{ix});
+        k = min(testN, numel(nonTrainIx));
+        testIx{ix} = datasample(nonTrainIx, k, 'Replace', false);
         
         offset = offset + stepN;
     end
