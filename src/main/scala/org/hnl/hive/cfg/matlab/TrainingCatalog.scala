@@ -79,7 +79,7 @@ case class TrainingCatalog(name: String, treatmentCfg: TreatmentConfig) extends 
       )
 
   override val mClass: ClassDef =
-    ClassDef(name).from("hive.cfg.CatalogBase")
+    ClassDef(name).from("hive.cfg.InvitroCatalogBase")
       .%(
         s"training catalog for HIVE treatment '${treatmentCfg.name}'",
         "",

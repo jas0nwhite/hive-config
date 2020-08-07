@@ -9,6 +9,10 @@ classdef FigureStyle
         lineWidthScale
         lineWidthFixed
         
+        markerSizeMin
+        markerSizeScale
+        markerSizeFixed
+
         fontSizeMin
         fontSizeScale
         fontSizeFixed
@@ -22,6 +26,14 @@ classdef FigureStyle
                 this.lineWidthFixed
                 this.lineWidthMin
                 this.lineWidthScale
+                }));
+        end
+        
+        function tf = isMarkerConfigured(this)
+            tf = any(cellfun(@(x) ~isempty(x), {
+                this.markerSizeFixed
+                this.markerSizeMin
+                this.markerSizeScale
                 }));
         end
         
@@ -56,6 +68,24 @@ classdef FigureStyle
             this.lineWidthMin = [];
             this.lineWidthScale = [];
         end
+        
+        
+        function this = withMinimumMarkerSize(this, ms)
+            this.markerSizeMin = ms;
+            this.markerSizeFixed = [];
+        end
+        
+        function this = withScaledMarkerSize(this, s)
+            this.markerSizeScale = s;
+            this.markerSizeFixed = [];
+        end
+        
+        function this = withFixedMarkerSize(this, ms)
+            this.markerSizeFixed = ms;
+            this.markerSizeMin = [];
+            this.markerSizeScale = [];
+        end
+        
         
         function this = withMinimumFontSize(this, fs)
             this.fontSizeMin = fs;
@@ -97,6 +127,22 @@ classdef FigureStyle
                 
                 if ~isempty(this.lineWidthFixed)
                     arrayfun(@(l) set(l, 'LineWidth', this.lineWidthFixed), lines);
+                end
+            end
+            
+            if this.isMarkerConfigured()
+                markers = findobj(fig, '-property', 'MarkerSize');
+                
+                if ~isempty(this.markerSizeScale)
+                    arrayfun(@(l) set(l, 'MarkerSize', this.markerSizeScale * get(l, 'MarkerSize')), markers);
+                end
+                
+                if ~isempty(this.markerSizeMin)
+                    arrayfun(@(l) set(l, 'MarkerSize', max(this.markerSizeMin, get(l, 'MarkerSize'))), markers);
+                end
+                
+                if ~isempty(this.markerSizeFixed)
+                    arrayfun(@(l) set(l, 'MarkerSize', this.markerSizeFixed), markers);
                 end
             end
             

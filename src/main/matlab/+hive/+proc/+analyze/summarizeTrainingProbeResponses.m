@@ -1,31 +1,10 @@
-function datasets = summarizeTrainingProbeResponses(cfg, setIx, parallel)
+function datasets = summarizeProbeResponses(ivCfg, setIx, parallel)
     %SUMMARIZEPROBERESPONSES Summarizes current responses by probe for the
     %given training set
     %   Detailed explanation goes here
     
-    % get the array of dataset indices for this set
-    dsIx = arrayfun(@(s) s, vertcat(cfg.training.infoCatalog{setIx}{:, 1}));
-    
-    % get the array of InvitroDataset objects for this set
-    s = arrayfun(@(s) s, vertcat(cfg.training.infoCatalog{setIx}{:, 2}));
-    
-    % convert the array of objects into a table by coercing each object
-    % into a structure
-    w = warning('off', 'MATLAB:structOnObject');
-    datasets = struct2table(arrayfun(@struct, s));
-    warning(w);
-    
-    % convert column types
-    vn = datasets.Properties.VariableNames;
-    datasets = varfun(@string, datasets);
-    datasets.Properties.VariableNames = vn;
-    datasets.acqDate = datetime(datasets.acqDate, 'InputFormat', 'yyyy-MM-dd');
-    
-    % add index
-    datasets.dsIx = dsIx;
-    
-    % sort it nicely for processing
-    datasets = sortrows(datasets, {'probeName', 'acqDate', 'dsIx'});
+    % get a table of InvitroDataset values for this set
+    datasets = ivCfg.getDatasetTable(setIx);
     
     % get list of probes participating in this set
     probeList = unique(datasets.probeName);
@@ -36,20 +15,19 @@ function datasets = summarizeTrainingProbeResponses(cfg, setIx, parallel)
     if parallel
         parfor probeIx = 1:numel(probeList)
             probe = probeList(probeIx);
-            plotProbe(cfg, setIx, datasets, probe);
+            plotProbe(ivCfg, setIx, datasets, probe);
         end
     else 
         for probe = probeList'
-            plotProbe(cfg, setIx, datasets, probe);
+            plotProbe(ivCfg, setIx, datasets, probe);
         end
     end
     
-    
 end
 
-function plotProbe(cfg, setIx, datasets, probe)
+function plotProbe(ivCfg, setIx, datasets, probe)
     % output path for figs and data
-    outPath = cfg.training.getSetValue(cfg.training.resultPathList, setIx);
+    outPath = ivCfg.getSetValue(ivCfg.resultPathList, setIx);
     
     % name of the set (for title)
     [~, setName, ~] = fileparts(outPath);
@@ -66,11 +44,10 @@ function plotProbe(cfg, setIx, datasets, probe)
     for rowIx = 1:size(probeDatasets, 1)
         ds = probeDatasets(rowIx, :);
         
-        [~, sourceIx] = cfg.training.getSourceIxByDatasetId(ds.dsIx);
-        [~, dsName, ~] = cfg.training.getSourceInfo(setIx, sourceIx);
+        [~, sourceIx] = ivCfg.getSourceIxByDatasetId(ds.dsIx);
+        [~, dsName, ~] = ivCfg.getSourceInfo(setIx, sourceIx);
         
-        
-        summaryFile = fullfile(outPath, dsName, cfg.training.summaryFile);
+        summaryFile = fullfile(outPath, dsName, ivCfg.summaryFile);
         
         summary = load(summaryFile);
         acqDate(rowIx) = datenum(ds.acqDate);

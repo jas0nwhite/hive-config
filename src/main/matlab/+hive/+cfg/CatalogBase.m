@@ -1,4 +1,4 @@
-classdef (Abstract) CatalogBase
+classdef (Abstract) CatalogBase < hive.util.Logging
     % base class for catalogs
     
     properties (Abstract, Constant)
