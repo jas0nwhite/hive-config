@@ -32,20 +32,42 @@ function plotProbe(ivCfg, setIx, datasets, probe)
     % output path for figs and data
     outPath = ivCfg.getSetValue(ivCfg.resultPathList, setIx);
     
-    % root directory for finding vgram files
-    vgramRoot = ivCfg.resultPathList{setIx};
+    % root directory for finding vgram and metadata files
+    dataRoot = ivCfg.resultPathList{setIx};
     
     % find the datasets for this specific probe
     probeDatasets = datasets(datasets.probeName == probe, :);
-    
-    % set up our iteration
     nRows = size(probeDatasets, 1);
+    
+    
+    %
+    % ADD TIMESTAMPS TO DATASETS
+    %
+    dsTimes = nan(nRows, 1);
+    
+    for rowIx = 1:nRows
+        ds = probeDatasets(rowIx, :);
+        
+        [~, name, ~] = ivCfg.getSourceInfo(ds.dsIx);
+        
+        metaFile = fullfile(dataRoot, name, ivCfg.metaFile);
+        load(metaFile, 'headers');
+        
+        dsTimes(rowIx) = min(cellfun(@(h) h.abfTimestamp, headers));
+    end
+    
+    % this will properly sort datasets acquired on the same day
+    probeDatasets = sortrows(...
+        addvars(probeDatasets, dsTimes, 'NewVariableNames', {'acqStart'}),...
+        {'acqDate', 'acqStart'});
+    
+    
+    %
+    % PLOT PUSHES FOR EACH DATASET
+    %
     push = 0;
     dsLastPush = nan(nRows, 1);
-    
-    %
-    % PLOT PUSHES
-    %
+
     fig = figure;
     hold on;
     
@@ -54,7 +76,7 @@ function plotProbe(ivCfg, setIx, datasets, probe)
         
         [~, name, ~] = ivCfg.getSourceInfo(ds.dsIx);
         
-        vgramFile = fullfile(vgramRoot, name, ivCfg.vgramFile);
+        vgramFile = fullfile(dataRoot, name, ivCfg.vgramFile);
         load(vgramFile, 'voltammograms');
         
         nPush = numel(voltammograms);
