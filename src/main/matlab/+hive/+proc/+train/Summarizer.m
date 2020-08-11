@@ -39,7 +39,8 @@ classdef Summarizer < hive.proc.invitro.SummarizerBase
                 fprintf('\n***\n*** NODE %d: Summarizing probes in set %d\n***\n\n', ...
                     this.nodeId, setIx);
                 
-                hive.proc.analyze.summarizeTrainingProbeResponses(this.treatment, setIx, this.doParfor);
+                hive.proc.analyze.summarizeProbeResponses(this.cfg, setIx, this.doParfor);
+                hive.proc.analyze.summarizeProbeHistory(this.cfg, setIx, this.doParfor);
                 
                 toc(t);
             end
