@@ -29,11 +29,9 @@ function plotProbe(ivCfg, setIx, datasets, probe)
     % output path for figs and data
     outPath = ivCfg.getSetValue(ivCfg.resultPathList, setIx);
     
-    % name of the set (for title)
-    [~, setName, ~] = fileparts(outPath);
-    
     % find the datasets for this specific probe
     probeDatasets = datasets(datasets.probeName == probe, :);
+    nRows = size(probeDatasets, 1);
     
     % get the summary from each dataset
     acqDate = nan(size(probeDatasets, 1), 1);
@@ -41,7 +39,7 @@ function plotProbe(ivCfg, setIx, datasets, probe)
     meanResponse = nan(size(probeDatasets, 1), 1000);
     stdResponse = nan(size(meanResponse));
     
-    for rowIx = 1:size(probeDatasets, 1)
+    for rowIx = 1:nRows
         ds = probeDatasets(rowIx, :);
         
         [~, sourceIx] = ivCfg.getSourceIxByDatasetId(ds.dsIx);
@@ -85,11 +83,23 @@ function plotProbe(ivCfg, setIx, datasets, probe)
         line(x, y, 'Color', c, 'LineWidth', 1.5);
     end
     
-    % decorate
+     %
+    % DECORATE
+    %
+    protocol = strrep(unique(probeDatasets.protocol), '_', ' @ ');
+    acqStart = datestr(min(probeDatasets.acqDate), 'yyyy-mm-dd');
+    acqEnd = datestr(max(probeDatasets.acqDate), 'yyyy-mm-dd');
+    
     xlabel('sample');
     ylabel('current, mean ± sd (nA)');
+    title({
+        sprintf(...
+        '%s  |  %s  |  %d datasets', ...
+        probe, protocol, nRows)
+        sprintf('%s - %s', acqStart, acqEnd)
+        });
+    axis tight;
     ylim([-2050, 2050]);
-    title(sprintf('%s  |  %s', setName, probe));
     colormap(jet(nLines));
 
     % colorbar ==> acquisition day

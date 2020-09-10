@@ -26,9 +26,6 @@ function datasets = summarizeProbeHistory(ivCfg, setIx, parallel)
 end
 
 function plotProbe(ivCfg, setIx, datasets, probe)
-    %SUMMARIZEPROBEHISTORY Summary of this function goes here
-    %   Detailed explanation goes here
-    
     % output path for figs and data
     outPath = ivCfg.getSetValue(ivCfg.resultPathList, setIx);
     
@@ -103,9 +100,17 @@ function plotProbe(ivCfg, setIx, datasets, probe)
     % DECORATE
     %
     protocol = strrep(unique(probeDatasets.protocol), '_', ' @ ');
-    title(sprintf(...
+    acqStart = datestr(min(probeDatasets.acqDate), 'yyyy-mm-dd');
+    acqEnd = datestr(max(probeDatasets.acqDate), 'yyyy-mm-dd');
+    
+    xlabel('recording');
+    ylabel('RMS current (nA)');
+    title({
+        sprintf(...
         '%s  |  %s  |  %d datasets  |  %d recordings', ...
-        probe, protocol, nRows, push));
+        probe, protocol, nRows, push)
+        sprintf('%s - %s', acqStart, acqEnd)
+        });
     axis tight;
     ylim([0, 2000]);
     hold off;
