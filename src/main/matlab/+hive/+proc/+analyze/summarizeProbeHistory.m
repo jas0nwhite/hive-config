@@ -67,6 +67,7 @@ function plotProbe(ivCfg, setIx, datasets, probe)
 
     fig = figure;
     hold on;
+    colors = jet(nRows);
     
     for rowIx = 1:nRows
         ds = probeDatasets(rowIx, :);
@@ -80,8 +81,9 @@ function plotProbe(ivCfg, setIx, datasets, probe)
         x = push + (1:nPush)';
         y = cellfun(@(v) mean(rms(v, 1)), voltammograms);
         e = cellfun(@(v) std(rms(v, 1)), voltammograms);
+        c = colors(rowIx, :);
         
-        errorbar(x, y, e, '.');
+        errorbar(x, y, e, '.', 'Color', c);
         
         dsLastPush(rowIx) = push + nPush;
         push = push + nPush;
@@ -118,7 +120,7 @@ function plotProbe(ivCfg, setIx, datasets, probe)
     %
     % SAVE
     %
-    figFile = fullfile(outPath, sprintf('%s-history.pdf', probe));
+    figFile = fullfile(outPath, sprintf('%s.%s-history.pdf', acqStart, probe));
     
     % format figure
     fig.PaperPositionMode = 'manual';

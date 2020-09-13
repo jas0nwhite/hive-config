@@ -115,7 +115,7 @@ function plotProbe(ivCfg, setIx, datasets, probe)
     %
     % SAVE
     %
-    figFile = fullfile(outPath, sprintf('%s.pdf', probe));
+    figFile = fullfile(outPath, sprintf('%s.%s.pdf', acqStart, probe));
     fprintf('%s\n', probe);
     
     % format figure
