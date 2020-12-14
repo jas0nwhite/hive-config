@@ -3,6 +3,8 @@ package org.hnl.matlab
 import org.hnl.matlab.M._
 import org.hnl.matlab.MExp._
 import org.scalatest._
+import wordspec._
+import matchers.should._
 
 // scalastyle:off magic.number
 // scalastyle:off null
@@ -16,7 +18,7 @@ import org.scalatest._
  *
  * @author Jason White
  */
-class MExpSpec extends WordSpec with Matchers with Inspectors with Helpers {
+class MExpSpec extends AnyWordSpec with Matchers with Inspectors with Helpers {
 
   /*
    * NUMBERS
@@ -539,14 +541,14 @@ class MExpSpec extends WordSpec with Matchers with Inspectors with Helpers {
 }
 
 trait Helpers {
-  this: WordSpec with Matchers with Inspectors =>
+  this: AnyWordSpec with Matchers with Inspectors =>
 
   protected def test(obj: MatRender, expected: String): Unit = {
     val actual = obj.toMatlab
 
     actual should not be (null)
-    actual should not be empty
-    actual shouldBe expected
+    actual should not be (empty)
+    actual shouldBe (expected)
   }
 
   protected def test(obj: MatRender, expected: List[String]): Unit = test(obj, expected.mkString("\n"))

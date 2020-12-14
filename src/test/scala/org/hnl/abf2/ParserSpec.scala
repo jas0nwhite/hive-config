@@ -7,6 +7,8 @@ import org.hnl.abf2.values._
 import org.json4s._
 import org.json4s.native.Serialization
 import org.scalatest._
+import wordspec._
+import matchers.should._
 import scodec.codecs._
 import scodec.stream.{StreamDecoder, decode => D}
 
@@ -20,7 +22,7 @@ import scala.language.implicitConversions
  *
  * @author Jason White
  */
-class ParserSpec extends WordSpec with Matchers with Inspectors {
+class ParserSpec extends AnyWordSpec with Matchers with Inspectors {
 
   // scalastyle:off token
 
@@ -37,16 +39,16 @@ class ParserSpec extends WordSpec with Matchers with Inspectors {
 
         val headers: Vector[Header] = stream.runLog.unsafeRun()
 
-        headers should not be empty
-        headers should have length 1
+        headers should not be (empty)
+        headers should have length (1)
         val header = headers(0)
 
-        header.uFileSignature shouldBe Header.signature
-        header.uFileInfoSize shouldBe Header.size
+        header.uFileSignature shouldBe (Header.signature)
+        header.uFileInfoSize shouldBe (Header.size)
 
         val bits = Header.codec.encode(header).require
 
-        bits.bytes.length shouldBe Header.size
+        bits.bytes.length shouldBe (Header.size)
 
         implicit val formats: Formats = DefaultFormats + FileType.format
         println(Serialization.writePretty(header))
@@ -62,17 +64,17 @@ class ParserSpec extends WordSpec with Matchers with Inspectors {
 
         val protocols: Vector[ProtocolInfo] = stream.runLog.unsafeRun()
 
-        protocols should not be empty
-        protocols should have length 1
+        protocols should not be (empty)
+        protocols should have length (1)
         val protocol = protocols(0)
 
-        protocol.bEnableFileCompression shouldBe false
+        protocol.bEnableFileCompression shouldBe (false)
 
         protocol.OperationMode shouldBe OperationMode.ABF_WAVEFORMFILE
 
         val bits = ProtocolInfo.codec.encode(protocol).require
 
-        bits.bytes.length shouldBe ProtocolInfo.size
+        bits.bytes.length shouldBe (ProtocolInfo.size)
 
         implicit val formats: Formats = DefaultFormats + OperationMode.format
         println(Serialization.writePretty(protocol))
@@ -88,13 +90,13 @@ class ParserSpec extends WordSpec with Matchers with Inspectors {
 
         val stringsList: Vector[Strings] = stream.runLog.unsafeRun()
 
-        stringsList should not be empty
-        stringsList should have length 1
+        stringsList should not be (empty)
+        stringsList should have length (1)
 
         val strings = stringsList(0)
 
-        strings.values should not be empty
-        strings.values should contain("Clampex")
+        strings.values should not be (empty)
+        strings.values should contain ("Clampex")
 
         println(strings.values)
       }
@@ -109,16 +111,16 @@ class ParserSpec extends WordSpec with Matchers with Inspectors {
 
         val adcList: Vector[Vector[ADCInfo]] = stream.runLog.unsafeRun()
 
-        adcList should not be empty
-        adcList should have length 1
+        adcList should not be (empty)
+        adcList should have length (1)
         val adcs = adcList(0)
 
-        adcs should not be empty
-        adcs should have length 2
+        adcs should not be (empty)
+        adcs should have length (2)
         val adc0 = adcs(0)
 
-        adc0.nADCNum shouldBe 0
-        adc0.nTelegraphEnable shouldBe 1
+        adc0.nADCNum shouldBe (0)
+        adc0.nTelegraphEnable shouldBe (1)
 
         implicit val formats: Formats = DefaultFormats
         println(Serialization.writePretty(adcs))
@@ -134,16 +136,16 @@ class ParserSpec extends WordSpec with Matchers with Inspectors {
 
         val dacList: Vector[Vector[DACInfo]] = stream.runLog.unsafeRun()
 
-        dacList should not be empty
-        dacList should have length 1
+        dacList should not be (empty)
+        dacList should have length (1)
         val dacs = dacList(0)
 
-        dacs should not be empty
-        dacs should have length 8
+        dacs should not be (empty)
+        dacs should have length (8)
         val dac0 = dacs(0)
 
-        dac0.nDACNum shouldBe 0
-        dac0.nTelegraphDACScaleFactorEnable shouldBe 1
+        dac0.nDACNum shouldBe (0)
+        dac0.nTelegraphDACScaleFactorEnable shouldBe (1)
 
         implicit val formats: Formats = DefaultFormats
         println(Serialization.writePretty(dacs))

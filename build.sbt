@@ -30,6 +30,6 @@ libraryDependencies ++= {
     "org.clapper"                      %% "grizzled-slf4j"         % "1.3.4",
     "ch.qos.logback"                    % "logback-classic"        % "1.2.3",
 
-    "org.scalatest"                    %% "scalatest"              % "3.0.9"       % "test"
+    "org.scalatest"                    %% "scalatest"              % "3.2.2"       % "test"
   )
 }
