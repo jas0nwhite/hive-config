@@ -16,7 +16,9 @@ import org.scalatest.wordspec._
   *
   * @author Jason White
   */
-class MatClassFileSpec extends AnyWordSpec with Matchers with Inspectors with Helpers {
+//noinspection ScalaUnnecessaryParentheses
+class MatClassFileSpec extends AnyWordSpec
+  with Matchers with Inspectors with Helpers {
 
   "MatClassFile" should {
 
