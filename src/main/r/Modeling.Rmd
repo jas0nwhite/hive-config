@@ -1,0 +1,321 @@
+---
+title: "Elastic Net in R"
+author: "Jason White"
+date: "`r Sys.Date()`"
+output: html_notebook
+---
+
+### Libraries used:
+
+```{r setup}
+library(glmnet)       # our modeling engine
+library(doFuture)     # foreach parallel adaptor using futures
+library(furrr)        # parallel functional programming using futures
+library(data.table)   # faster alternative to data.frame
+library(dtplyr)       # more legible operations on data.table
+library(tidyverse)    # everyone's first choice for data wrangling
+library(lubridate)    # everyone's first choice for date wrangling
+library(fs)           # everyone's first choice for file wrangling
+library(readABF)      # reads ABF files
+library(hdf5r)        # reads H5 files
+library(checkmate)    # argument checking
+library(tidymodels)   # everyone's first choice for model wrangling
+
+# include functions from preprocessing.R -- will be a library some day.
+source('preprocessing.R', local = knitr::knit_global())
+source('datasets.R', local = knitr::knit_global())
+```
+
+
+```{r parallel}
+# set up cores for parallel processing
+num_cores <- parallel::detectCores(logical = FALSE)
+setDTthreads(threads = num_cores)
+registerDoFuture()
+plan(multisession, workers = num_cores)
+```
+
+## Load the data
+
+The `load_dataset_dir` function returns a tidy (i.e. long) data.table with current, lables, and metadata on each row, one row per sample. Sweep-wise operations can be done by grouping by the `sweep` variable.
+
+```{r data, warning=F}
+data_root <- '/Volumes/external/hnl/in-vitro/datasets'
+dir_list <- dir_ls(
+  data_root, 
+  regexp = '20.*DA_mix__400Vs_10Hz__CF120([_234]*)?$',
+)
+
+data <- dir_list %>% 
+  map2_dfr(
+    seq_along(.),
+    ~load_dataset_dir(
+      directory = .x,
+      data.pattern = '*.h5',
+      label.pattern = '*.csv',
+      sweep.window.seconds = c(45.0, 45.9),
+      dataset.id = .y
+    )
+  )
+
+glimpse(data, width = 80)
+```
+
+## Preprocess the data
+
+There is at least one operation that we have to perform on these data before we submit them for training, namely fixing the overflow artifacts (if any) using the `fix_overflow` function.
+
+We may also use the time-derivative of the current samples as training data, which would be another step in our preprocessing recipe.
+
+```{r preprocess}
+##
+## CALCULATIONS
+## 
+
+# these are done using data.table as back-end for efficiency
+data_pre <- data %>% 
+  
+  # for troubleshooting... remove below to conserve memory
+  copy() %>% 
+  
+  # fix overflow artifacts (modifies raw data.table)
+  fix_overflow() %>% 
+  
+  # use dtplyr for performance with readability
+  lazy_dt(
+    immutable = TRUE  # perform operations in-place for efficiency
+  ) %>%  
+  
+  # exclude any bad files
+  filter(y.exclude == FALSE) %>% 
+  
+  # remove and rename some columns
+  select(
+    -overflow,
+    -y.exclude,
+    file.notes = y.notes) %>% 
+  
+  # for each sweep of each file (index)...
+  group_by(dataset, index, sweep) %>% 
+  mutate(
+    sample = sample - min(sample) + 1,    # renumber samples
+    d.current = current - lag(current)    # calculate time derivative
+  ) %>% 
+  
+  # re-order columns
+  select(dataset, index, sweep, everything()) %>% 
+  
+  # sort
+  arrange(dataset, index, sweep) %>% 
+  ungroup() %>% 
+  compute()
+
+
+##
+## RESHAPE
+## 
+
+# as of now, pivot_wider doesn't work (well) with dtplyr, so we'll use
+# tibble / data.frame with dplyr from here out
+data_wide <- data_pre %>% 
+  as_tibble() %>% 
+  pivot_wider(
+    names_from = sample,
+    names_glue = 'x.{.value}.{sprintf("%04d", sample)}',
+    names_sort = TRUE,
+    values_from = c(current, d.current)
+  ) %>% 
+  relocate(
+    dataset, 
+    index, 
+    sweep
+  )
+```
+
+
+## Modeling
+
+```{r}
+set.seed(7272)
+data_split <- data_wide %>% 
+  mutate(stratum = dataset * (max(index) + 1) + index) %>% 
+  initial_split(prop = 4/5, strata = stratum, breaks = floor(nrow(.) / 20))
+
+data_train <- training(data_split)
+data_test <- testing(data_split)
+
+data_test %>% 
+  ggplot(aes(x = stratum)) + 
+  geom_histogram(binwidth = 1)
+```
+
+
+```{r}
+mono_DA_diff_rec <- data_train %>% 
+  recipe() %>% 
+  step_rm(x.d.current.0001) %>% 
+  update_role(dataset, index, sweep, new_role = 'id') %>% 
+  update_role(y.DA, new_role = 'outcome') %>% 
+  update_role(starts_with('x.d.current.'), new_role = 'predictor')
+
+mono_DA_diff <- mono_DA_diff_rec %>% 
+  prep()
+
+train_diff <- juice(mono_DA_diff)
+
+train_x <- train_diff %>% 
+  select(starts_with('x.d.current.')) %>% 
+  as.matrix()
+
+train_y <- train_diff %>% 
+  select(y.DA) %>% 
+  as.matrix()
+
+diff_lasso_fit <- linear_reg(mixture = 1, penalty = 0.1) %>% 
+  set_engine('glmnet', family = 'gaussian') %>% 
+  fit_xy(x = train_x, y = train_y)
+
+diff_lasso_fit %>% tidy() 
+```
+```{r}
+train_y_m <- train_diff %>% 
+  select(starts_with('y.')) %>% 
+  as.matrix()
+
+glmnet_fit <- glmnet::glmnet(
+  x = train_x,
+  y = train_y_m,
+  family = 'mgaussian',
+  alpha = 1.0
+)
+
+glmnet_fit %>% tidy() %>% 
+  filter(term != '(Intercept)') %>% 
+  ggplot(aes(x = lambda, y = estimate, group = term, color = term)) +
+  geom_point() +
+  scale_x_log10() +
+  theme(legend.position = 'none')
+```
+
+
+```{r}
+diff_lasso_fit_m <- linear_reg(
+  mixture = 1.0
+) %>% 
+  set_engine('glmnet', family = 'mgaussian') %>% 
+  fit_xy(x = train_x, y = train_y_m)
+
+diff_lasso_fit_m %>% tidy() %>% 
+  filter(term != '(Intercept)') %>% 
+  ggplot(aes(x = step, y = estimate, group = term, color = term)) +
+  geom_point() +
+  theme(legend.position = 'none')
+```
+
+
+
+```{r}
+lasso_spec <- linear_reg(
+  mixture = 1.0,
+  penalty = 0.01
+) %>% 
+  set_mode('regression') %>% 
+  set_engine(
+    'glmnet', 
+    family = 'gaussian'
+  )
+
+wf <- workflow() %>% 
+  add_recipe(mono_DA_diff_rec)
+
+lasso_fit <- wf %>% 
+  add_model(lasso_spec) %>% 
+  fit(data = data_train)
+
+lasso_fit %>% 
+  pull_workflow_fit() %>% 
+  tidy() %>% 
+  filter(estimate != 0)
+```
+
+
+```{r}
+tune_spec <- linear_reg(
+  mixture = tune(), penalty = tune()
+) %>% 
+  set_engine('glmnet', family = 'gaussian')
+
+tune_grid <- grid_regular(
+  mixture(), penalty(), 
+  levels = c(mixture = 11, penalty = 1))
+
+set.seed(1972)
+data_cv <- vfold_cv(data_train, v = 10, strata = stratum)
+
+set.seed(2020)
+alpha_tune <- tune_grid(
+  wf %>% add_model(tune_spec),
+  resamples = data_cv,
+  grid = tune_grid
+)
+
+alpha_tune %>% 
+  collect_metrics()
+```
+
+
+```{r}
+alpha_tune %>%
+  collect_metrics() %>%
+  ggplot(aes(mixture, mean, color = .metric)) +
+  geom_errorbar(
+    aes(
+      ymin = mean - std_err,
+      ymax = mean + std_err
+    ),
+    alpha = 0.5) +
+  geom_line(size = 1.5) +
+  facet_wrap(~.metric, scales = "free", nrow = 2) +
+  theme(legend.position = "none")
+```
+
+
+```{r}
+alpha_best_rsq <- alpha_tune %>% 
+  select_best('rsq')
+
+final_alpha_wf <- finalize_workflow(
+  wf %>% add_model(tune_spec),
+  alpha_best_rsq
+)
+
+final_model <- final_alpha_wf %>% 
+  fit(rbind(data_train, data_test))
+```
+
+
+```{r}
+data_test %>% 
+  bind_cols(predict(final_model, new_data = .)) %>% 
+  group_by(y.DA) %>% 
+  summarize(
+    mean_prediction = mean(.pred),
+    sd_prediction = sd(.pred),
+    n_prediction = n(),
+    .groups = 'drop'
+  ) %>% 
+  ggplot(aes(x = y.DA, y = mean_prediction)) +
+  geom_abline(linetype = 'dashed', color = 'gray60') +
+  geom_point() +
+  geom_errorbar(aes(
+    ymin = mean_prediction - sd_prediction,
+    ymax = mean_prediction + sd_prediction
+  ))
+```
+
+
+
+
+
+
+

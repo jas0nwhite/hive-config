@@ -1,31 +1,36 @@
-import org.hnl.hive.cfg.TreatmentConfig
+import com.typesafe.config.ConfigFactory
+import org.hnl.hive.cfg._
+import org.hnl.hive.cfg.matlab._
+import org.json4s._
+import org.json4s.native.Serialization
 
-object scratch {
-  import com.typesafe.config._
-  import collection.JavaConversions._
+import java.io.File
 
-  object quiet {
-    val config = ConfigFactory.load()
-    val tc = new TreatmentConfig(config)
-  }
-  
-  val paths = quiet.config.getList("training.source-path")
-                                                  //> paths  : com.typesafe.config.ConfigList = SimpleConfigList([["hive-data","re
-                                                  //| sults_00A","training"]])
-  val kind = paths.get(0).valueType               //> kind  : com.typesafe.config.ConfigValueType = LIST
-  val list = paths.unwrapped().toList             //> list  : List[Object] = List([hive-data, results_00A, training])
-  
-  val list0 = list(0)                             //> list0  : Object = [hive-data, results_00A, training]
-  val arr = list0.asInstanceOf[java.util.ArrayList[String]]
-                                                  //> arr  : java.util.ArrayList[String] = [hive-data, results_00A, training]
-  val lst = arr.toList                            //> lst  : List[String] = List(hive-data, results_00A, training)
-  
-  val x = paths.unwrapped().toList.map{_.asInstanceOf[java.util.ArrayList[String]].toList}
-                                                  //> x  : List[List[String]] = List(List(hive-data, results_00A, training))
+val cfgPath = "/data/hnl/iterate/src/treatment-011-008.conf"
 
-	quiet.tc                                  //> res0: org.hnl.hive.cfg.TreatmentConfig = 00A-00B-00C-00D-00E @ /Applications
-                                                  //| /Eclipse.app/Contents/MacOS/hive-data
-	quiet.tc.trainingSourcePaths              //> res1: List[String] = List(/Applications/Eclipse.app/Contents/MacOS/hive-data
-                                                  //| /results_00A/training)
-                                                  
-}
+/*
+ * load configuration
+ */
+val config = ConfigFactory.load(ConfigFactory.parseFile(new File(cfgPath)))
+
+/*
+ * process configuration
+ */
+val treatmentConfig = TreatmentConfig.fromConfig(config)
+
+val chemConfig = Chem.fromConfig("Chem", treatmentConfig)
+val testingCat = TestingCatalog("TestingCatalog", treatmentConfig)
+val trainingCat = TrainingCatalog("TrainingCatalog", treatmentConfig)
+val targetCat = TargetCatalog("TargetCatalog", treatmentConfig)
+val hiveConfig = Config("Config", treatmentConfig, trainingCat, testingCat, targetCat)
+
+
+/*
+ * get up off of that thing
+ */
+implicit val formats: Formats = DefaultFormats +
+                                FieldSerializer[TreatmentConfig]() +
+                                FieldSerializer[InvitroDataset]() +
+                                FieldSerializer[Chemical]()
+
+println(Serialization.writePretty(treatmentConfig))

@@ -1,0 +1,228 @@
+---
+title: "Test current response extraction"
+output: html_notebook
+---
+
+
+
+```{r include=FALSE, eval=FALSE}
+rm(list = ls(all.names = TRUE))
+```
+
+
+## Read ABF files in R
+
+To read some ABF files into R, we need to use the readABF package.
+
+
+```{r setup}
+library(data.table) # fast implementation of dataframe
+library(tidyfast)   # fast manipulation of data.table
+library(dtplyr)     # multithreaded data.table back-end for dplyr
+library(tidyverse,  # everyone's first choice for data wrangling
+        warn.conflicts = FALSE)
+library(readABF)    # reads ABF files
+library(checkmate)  # argument checking
+library(tictoc)     # matlab-like execution timing
+```
+
+
+### Read ABF
+
+```{r data1}
+abf <- readABF('../../../dat/2017_03_09_5HT_run_0000.abf')
+abf
+```
+
+
+```{r data2}
+as.data.frame(abf, sweep = 1)
+```
+###### NOTE
+...the convention of this library is to stamp the measurement with the end of
+the first sample, but our convention is to put it at the beginning...
+
+
+### Extract sweeps
+
+We need to extract the FSCV data
+```{r extraction}
+# find the channel number with FSCV data (name can be FSCV or FCSV_1)
+fscv_ch <- which(str_detect(abf$channelNames, fixed('FSCV')))
+
+# if there are multiple FSCV channels, we need to split things up
+if (length(fscv_ch) != 1) 
+  stop(sprintf(
+    'Found %d FSCV channels in ABF %s, expected 1',
+    length(fscv_ch),
+    abf$path))
+
+# we'll use the standard 1000-sample voltammogram window, which depends on 
+# the sweep size
+sweep_size <- toString(dim(abf$data[[1]])[1])
+sample_win <- switch(
+  sweep_size,
+  '1032' = 16:1015,
+  '10000' = 160:1159,
+  stop(sprintf(
+    'Found unexpected sweep length %s in ABF %s',
+    sweep_size,
+    abf$path)))
+
+# now that we know the channel number, we can extract FSCV data by mapping
+# a function onto each element of the data list (i.e. sweep)
+fscv_raw <- abf$data %>% 
+  map(
+    function(sweep) {
+      return(sweep[sample_win , fscv_ch])
+    })
+
+# to get the data in a dataframe, we must first convert it to a matrix (sweep-per-row)
+fscv_mat <- do.call(rbind, fscv_raw)
+
+# we then need to give each sample column a name
+colnames(fscv_mat) <- paste0('S', 1:(dim(fscv_mat)[2])) # S1, S2, etc.
+```
+
+
+### Melt to data.frame using dplyr
+```{r extraction2.0}
+#
+# using dplyr, we can convert it to a dataframe with one sweep per row
+#
+melt_with_dplyr <- function(M) {
+  as_tibble(M) %>% 
+    mutate(  
+      sweep = row_number()        # add sweep numbers
+    ) %>% 
+    pivot_longer(                 # tidy up so we have one sample per row...
+      cols = -sweep,              # ...by converting all columns but 'sweep'...
+      values_to = 'current',      # ...putting values in 'current' column...
+      names_to = 'sample',        # ...putting colnames in 'sample' column...
+      names_prefix = 'S',         # ...removing the initial "S"...
+      names_transform = list(  
+        sample = as.integer       # ...and converting result to integers.
+      )
+    ) %>% 
+    arrange(sweep, sample) %>%   # sort by sweep and sample
+    as.data.table()              # convert to data.table
+}
+
+tic()
+fscv.0 <- melt_with_dplyr(fscv_mat)
+toc()
+```
+
+
+### Melt to data.table using dtplyr
+```{r extraction2.1}
+#
+# using dtplyr, we can try to do it faster...
+#
+melt_with_dtplyr <- function(M) {
+  lazy_dt(M) %>%                  # convert to lazy data.table
+    mutate(  
+      sweep = row_number()        # add sweep numbers
+    ) %>% 
+    collect() %>%                 # collect results into a native data.table...
+    dt_pivot_longer(              # tidy up so we have one sample per row...
+      cols = -sweep,              # ...by converting all columns but 'sweep'...
+      values_to = 'current',      # ...putting values in 'current' column...
+      names_to = 'variable'       # ...and we'll ignore the column names
+    ) %>% 
+    lazy_dt() %>%                 # convert back to lazy data.table...
+    group_by(sweep) %>%           # ...and group by sweep... 
+    mutate(
+      sample = row_number()       # ...add the sample numbers (pre-ordered)
+    ) %>% 
+    select(                       # order the output columns...
+      sweep,
+      sample, 
+      current                     # ...excluding the extra column
+    ) %>%         
+    arrange(sweep, sample) %>%    # sort by sweep and sample
+    as.data.table()               # convert to data.table
+}
+
+tic()
+fscv.1 <- melt_with_dtplyr(fscv_mat)
+toc()
+```
+
+
+### Melt to data.table using data.table native code
+```{r extraction2.2}
+#
+# just for kicks, here's raw datatable code
+#
+melt_with_dt <- function(M) {
+  check_matrix(M, 
+               mode = 'double', 
+               all.missing = FALSE, 
+               min.rows = 150,
+               ncols = 1000,
+               null.ok = FALSE)
+  
+  DT <- as.data.table(M)[         # convert to data.table 
+    , sweep := 1:.N               # add sweep numbers
+  ] %>% 
+    melt(                         # tidy up so we have one sample per row...
+      id.vars = c('sweep'),       # ...by converting all columns but 'sweep'...
+      value.name = 'current',     # ...putting values in 'current' column...
+      variable.name = 'dummy'     # ...and we'll ignore the column names
+    ) 
+  
+  setkey(DT, sweep)               # set a key on the sweep for easy grouping
+  
+  DT[ ,
+     sample := 1:.N,              # add sample numbers...
+     by = sweep                   # ...for each sweep
+  ]
+  
+  DT[
+    order(sweep, sample),         # order by sweep and sample...
+    .(sweep, sample, current)     # ...and return "correct" column position
+  ]
+}
+
+
+tic()
+fscv.2 <- melt_with_dt(fscv_mat)
+toc()
+```
+
+
+```{r equality}
+# We have to skip checking of attributes because they keys are not set the same
+# across the different methods
+
+# - the dplyr method (fscv.0) does not create a key
+key(fscv.0)
+
+# - the dtplyr method (fscv.1) adds a key on column "sweep"
+key(fscv.1)
+
+# - the dt method (fscv.2) adds a key on column "sweep"
+key(fscv.2)
+
+
+all.equal(fscv.0, fscv.1, check.attributes = FALSE)
+all.equal(fscv.1, fscv.2)
+all.equal(fscv.2, fscv.0, check.attributes = FALSE) 
+```
+
+
+```{r benchmark}
+# now we can test
+results <- bench::mark(
+  melt_with_dplyr(fscv_mat),
+  melt_with_dtplyr(fscv_mat),
+  melt_with_dt(fscv_mat),
+  check     = FALSE,
+  filter_gc = FALSE,
+  min_iterations = 10
+)
+
+results %>% 
+  mutate(expression = map_chr(expression, toString))
+```

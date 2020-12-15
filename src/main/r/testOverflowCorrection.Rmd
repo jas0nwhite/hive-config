@@ -1,0 +1,327 @@
+---
+title: "Comparison of overflow correction algorithms"
+author: "Jason White"
+date: "`r Sys.Date()`"
+output: html_notebook
+---
+
+```{r include=FALSE, eval=FALSE}
+rm(list = ls(all.names = TRUE))
+```
+
+### Libraries
+
+```{r setup}
+library(data.table)   # faster alternative to data.frame
+library(tidyverse)    # everyone's first choice for data wrangling
+library(readABF)      # reads ABF files
+library(tictoc)       # matlab-like execution timing
+library(checkmate)    # argument checking
+library(matrixStats)  # for fast matrix ops
+
+# include functions from preprocessing.R -- will be a library some day.
+knitr::read_chunk('preprocessing.R')
+```
+
+### Load and preprocess data
+
+```{r fn_read, echo=FALSE}
+```
+
+```{r fn_melt, echo=FALSE}
+```
+
+```{r}
+tic()
+abf1 <- read_abf('dat/ABF1.abf')
+toc()
+
+tic()
+abf2 <- read_abf('dat/ABF2.abf')
+toc()
+
+# save some copies in case we need them
+I1.raw <- copy(abf1$data)
+I2.raw <- copy(abf2$data)
+```
+
+### Matlab function
+
+##### (as of `r Sys.Date()`)
+
+This function (not run here) is how the Matlab preprocessing pipeline corrects overflow.
+
+It calculates the time difference of the recorded current $i_{rec}$, then looks for large negative values of $\Delta i_{rec}$, i.e. when $i_{rec}$ goes from $i_{max}$ to $i_{min}$ in one sample. These are marked as overflow startpoints. Similarly, it marks large positive values of $\Delta i_{rec}$ as overflow endpoints. It then sets $i_{rec}$ to 2000 nA between the start and end points.
+
+```{octave, matlab_alg, eval=FALSE}
+function V = correctOverflowClipping(V, dim, posthresh, negthresh)
+    %CORRECTOVERFLOWCLIPPING Summary of this function goes here
+    %   Detailed explanation goes here
+
+    % default values
+    if nargin < 4
+        negthresh = -3500;
+    end
+    
+    if nargin < 3
+        posthresh = 3500;
+    end
+    
+    if nargin < 2
+        dim = 1;
+    end
+    
+    % check arguments
+    validateattributes(V, {'double'}, {'2d'}, 1);
+    validateattributes(dim, {'double'}, {'scalar', 'positive', 'integer'}, 2);
+    validateattributes(posthresh, {'double'}, {'scalar'}, 3);
+    validateattributes(negthresh, {'double'}, {'scalar'}, 4);
+    
+    % use the diff to find overflow
+    D = diff(V, 1, dim);
+    
+    % start of overflow is where diff is < negthresh
+    S = find(D < negthresh);
+    
+    % end of overflow is where diff > posthresh
+    E = find(D > posthresh);
+    
+    % check to see we have the same number of entries in S and E
+    if numel(S) ~= numel(E)
+        fprintf(' -- no undeflow correction (%d S, %d E) -- ', numel(S), numel(E));
+        save('debug.mat', 'V', 'dim', 'posthresh', 'negthresh');
+        return
+    end
+    
+    % since S and E are in terms of diff, we need to identify the sweep
+    % number to adjust the positions in terms of V
+    sweep = floor(S ./ size(D, dim));
+    
+    % start of correction is one sample after S + sweep correction
+    S = S + 1 + sweep;
+    
+    % end of correction is sample S + sweep correction
+    E = E + sweep;
+    
+    % perform correction
+    for ix = 1:numel(sweep)
+        V(S(ix):E(ix)) = 2000;
+    end
+end
+```
+
+### Port above to R
+
+```{r ported_fn}
+correctOverflowClipping <- function(V, dimension = 1, posthresh = 3500, negthresh = -3500) {
+  #CORRECTUNDERFLOWCLIPPING Summary of this function goes here
+  #   Detailed explanation goes here
+  
+  # check arguments
+  assert_matrix(V, mode = 'double', min.rows = 1, ncols = 1000)
+  assert_integerish(dimension, len = 1, lower = 1, upper = 2)
+  assert_number(posthresh, lower = 0, upper = 4000)
+  assert_number(negthresh, lower = -4000, upper = 0)
+  
+  # use the diff to find overflow
+  if (dimension == 1) {
+    D <- rowDiffs(V)
+  }
+  else {
+    D <- colDiffs(V)
+  }
+  
+  # start of overflow is where diff is < negthresh
+  S <- which(D < negthresh)
+  
+  # end of overflow is where diff > posthresh
+  E <- which(D > posthresh)
+  
+  # check to see we have the same number of entries in S and E
+  if (length(S) != length(E)) {
+    stop(sprintf(
+      ' -- no undeflow correction (%d S, %d E) -- ', length(S), length(E)))
+  }
+  
+  # since S and E are in terms of diff, we need to identify the sweep
+  # number to adjust the positions in terms of V
+  sweep <- floor(S / dim(D)[dimension])
+  
+  # start of correction is one sample after S + sweep correction
+  S <- S + 1 + sweep
+  
+  # end of correction is sample S + sweep correction
+  E <- E + sweep
+  
+  # perform correction
+  for (ix in seq_along(sweep)) {
+    V[S[ix]:E[ix]] <- 2000
+  }
+  
+  V
+}
+```
+
+### Try it
+
+```{r fig1a, fig.width=6}
+test.matlab <- function(M) {
+  fixed.matlab <- tryCatch(
+    correctOverflowClipping(M),
+    error = function(e) e
+  )
+  
+  if (is.matrix(fixed.matlab)) {
+    print(
+      fixed.matlab %>% 
+        as_melted_data_table() %>% 
+        as_tibble() %>% 
+        filter(sweep == 100) %>% 
+        ggplot(aes(x = sample, y = current)) +
+        geom_line() +
+        geom_point(size = 1/2, color = 'blue') +
+        labs(title = 'Matlab method') +
+        theme_minimal()
+    )
+  } else {
+    print(glue::glue('ERROR: {fixed.matlab$message}'))
+  }
+  
+  invisible(fixed.matlab)
+}
+
+test.matlab(abf1$data)
+```
+
+The matlab algorithm breaks for this case, but the R algorithm works fine...
+
+### R algorithm
+
+```{r fn_fix}
+```
+
+```{r fig2a, fig.width=6}
+test.r <- function(M){
+  # first, melt the matrix into a data.table
+  fixed.r <- M %>% 
+    as_melted_data_table()
+  
+  fixed.r <- tryCatch(
+    fix_overflow(fixed.r),
+    error = function(e) e
+  )
+  
+  if (is.data.table(fixed.r)) {
+    print(
+      fixed.r %>% 
+        as_tibble() %>% 
+        filter(sweep == 100) %>% 
+        ggplot(aes(x = sample, y = current)) +
+        geom_line() +
+        geom_point(size = 1/2, color = 'blue') +
+        labs(title = 'R method') +
+        theme_minimal()
+    )
+  } else {
+    print(glue::glue('ERROR: {fixed.matlab$message}'))
+  }
+  
+  invisible(fixed.r)
+}
+
+test.r(abf1$data)
+```
+
+### Here's what the original looks like
+
+```{r fig2c, fig.width=6}
+I1.raw %>% 
+  as_melted_data_table() %>% 
+  as_tibble() %>% 
+  filter(sweep == 100) %>% 
+  ggplot(aes(x = sample, y = current)) +
+  geom_line() +
+  geom_point(size = 1/2, color = 'blue') +
+  labs(title = 'Raw data') +
+  theme_minimal()
+```
+
+### Here's a case where both methods complete, but the answer is different
+
+```{r fig3, fig.width=6, fig.show="hold", out.width="50%"}
+res.matlab <- test.matlab(abf2$data) %>% 
+  as_melted_data_table() # melt for comparison
+
+res.r <- test.r(abf2$data)[ 
+  , 
+  .(sweep, sample, current)  # remove extra columns for comparison
+]
+
+# compare
+all.equal(res.r, res.matlab)
+```
+
+### Zoom in to see what's different
+
+```{r fig4, fig.width=6}
+cmp2 <- merge(
+  x = res.r,
+  y = res.matlab, 
+  by = c('sweep', 'sample')
+)
+
+cmp <- merge(
+  x = cmp2,
+  y = as_melted_data_table(I2.raw),
+  by = c('sweep', 'sample')
+)
+
+cmp %>% 
+  as_tibble() %>% 
+  filter(sweep == 100) %>% 
+  ggplot(aes(x = sample)) +
+  geom_line(aes(y = current, color = '(none)')) +
+  geom_point(aes(y = current, color = '(none)'), size = 1/2) +
+  geom_line(aes(y = current.y, color = 'Matlab')) +
+  geom_point(aes(y = current.y, color = 'Matlab'), size = 1/2) +
+  geom_line(aes(y = current.x, color = 'R')) +
+  geom_point(aes(y = current.x, color = 'R'), size = 1/2) +
+  coord_cartesian(xlim = c(100, 500)) +
+  scale_color_manual(
+    name = 'method', 
+    values = c('Matlab' = 'red', 'R' = 'black', '(none)' = 'lightblue')) +
+  labs(title = 'Overflow correction comparison of first half', y = 'current') +
+  theme_minimal()
+```
+
+We can see by this that the Matlab method is overeager when it comes to detecting overflow.
+
+------------------------------------------------------------------------
+
+###### Notebook produced with the these R libraries
+
+::: {style="width:33%; height:auto; margin-left:0%; margin-right:auto"}
+```{r versions, echo=FALSE, rows.print=50}
+ver <- paste0(version$major, '.', version$minor)
+
+rbind(
+  tribble(
+    ~library, ~version, 
+    'R',       str_remove(version$version.string, 'R version '),
+    'RStudio', toString(RStudio.Version()$version)
+  ),
+  tibble(library = .packages()) %>% 
+    mutate(version = map_chr(library, ~ toString(packageVersion(.x)))) %>% 
+    arrange(library) %>% 
+    filter(library %in% c(
+      'data.table',
+      'tidyverse',
+      'readABF',
+      'tictoc',
+      'checkmate',
+      'matrixStats'
+    )) 
+) %>% 
+  knitr::kable()
+```
+:::

@@ -1,0 +1,175 @@
+---
+title: "Electrochemistry preprocessing in R"
+author: "Jason White"
+date: "`r Sys.Date()`"
+output: html_notebook
+---
+
+```{r include=FALSE, eval=FALSE}
+rm(list = ls(all.names = TRUE))
+```
+
+
+### Libraries used:
+```{r setup}
+library(data.table) # faster alternative to data.frame
+library(tidyverse)  # everyone's first choice for data wrangling
+library(readABF)    # reads ABF files
+library(checkmate)  # argument checking
+
+# include functions from preprocessing.R -- will be a library some day.
+knitr::read_chunk('preprocessing.R')
+```
+
+
+
+### First, we read a matrix of "trimmed" data from an ABF file.
+
+Our electrochemistry protocols have (to this point) recorded 1000 current samples during the "active" portion of the forcing function. For efficiency, we trim off the samples where the forcing function is quiescent and the potential is set to the constant "holding" value (usually -0.6 V).
+
+This function will read an ABF file, extract the recording from the channel matching the specified name pattern, trim the sweeps to 1000 samples, and return a matrix with a 1000-sample sweep in each row.
+
+###### (imported from preprocessing.R)
+```{r fn_read}
+```
+
+
+```{r read}
+abf <- read_abf(
+  path = 'dat/ABF2.abf',
+  chan.pattern = '^FSCV')
+```
+
+The `data` field holds the current response samples, 1 sweep per row.
+```{r eval=FALSE}
+abf$data[1:10, ]
+```
+
+```{r echo=FALSE}
+# FOR OUTPUT FORMATTING ONLY
+abf$data[1:10, ] %>% as_tibble()
+```
+
+The `header` field holds metadata.
+```{r eval=FALSE}
+abf$header
+```
+
+```{r echo=FALSE}
+# FOR OUTPUT FORMATTING ONLY
+tibble(
+  field = names(abf$header), 
+  value = abf$header %>% map_chr(toString)) %>% 
+  mutate(value = case_when(
+    str_length(value) > 60 ~ paste0(str_sub(value, end = 60), '...'),
+    TRUE                   ~ value
+  ))
+```
+
+
+
+### Next, we convert the data matrix to "tidy" data.table.
+
+Tidy data is an efficient way to pass data through a processing pipeline. The goal is to have one datapoint per row, so we transform each value in the provided matrix into a row containing the value and its sweep and sample indices. This process is often called "melting".
+
+This function uses data.table rather than data.frame due to data.table's large performance advantage.
+
+###### (imported from preprocessing.R)
+```{r fn_melt}
+```
+
+
+```{r melt}
+DT <- as_melted_data_table(abf$data) # returns a new data.table
+
+DT
+```
+
+Plot the 100th sweep with $i_{rec}$ values in blue.
+```{r fig1, fig.width=6}
+DT %>% 
+  as_tibble() %>% 
+  filter(sweep == 100) %>% 
+  ggplot(aes(x = sample, y = current)) +
+  geom_point(na.rm = TRUE, size = 1/2, color = 'blue') +
+  geom_line(na.rm = TRUE) +
+  theme_minimal()
+```
+
+
+
+### Now, we need to fix the overflow.
+
+Our electrochemistry hardware can measure actual current $i_{act} \in [i_{min}, i_{max}]$, where:
+$$i_{min} = -2000 \text{ nA} + \epsilon$$
+$$i_{max} = 2000 \text{ nA} - \epsilon$$
+$$0.0 < \epsilon < 0.1$$ 
+
+When the actual current $i_{act}$ exceeds $i_{max}$, our DAQ exhibits overflow, i.e. the recorded current $i_{rec}$ "rolls over" from $i_{rec} \le i_{max}$ to $i_{rec} = i_{min}$. However, the opposite is not true, i.e. if $i_{act} < i_{min}$, then the recorded current is exactly ${i_{min}}$. Thus,
+
+$$i_{rec} = 
+  \begin{cases}
+      i_{min}   & \quad \text{if } i_{act} \gt i_{max}\\
+      i_{rec}   & \quad \text{if } i_{min} \le i_{act} \le i_{max}\\
+      i_{min}   & \quad \text{if } i_{act} \lt i_{min}
+  \end{cases}
+$$
+
+To fix this, we need to identify the onsets of overflow by detecting large negative-going changes in $i_{rec}$. This can be achieved by calculating the time difference of $i_{rec}$. Then, we set the current to 2000 nA starting at each onset and continuing until $i_{rec} > i_{min}$
+
+###### (imported from preprocessing.R)
+```{r fn_fix}
+```
+
+```{r fix_clipping}
+fix_overflow(DT) # modifies data.table in place for efficiency
+```
+
+Plot the same sweep as above. Here, the corrected values of $i_{rec}$ have been moved from their overflow position in red to their clipped position highlighted in yellow.
+
+```{r fig2, fig.width=6}
+DT %>%
+  as_tibble() %>% 
+  filter(sweep == 100) %>% 
+  mutate(highlight = ifelse(overflow == TRUE, 2000, NA_real_)) %>% 
+  ggplot(aes(x = sample, y = current)) +
+  geom_point(aes(y = highlight), na.rm = TRUE, color = 'yellow') +
+  geom_point(aes(y = -highlight), na.rm = TRUE, color = 'red', size = 1/2, alpha = .1) +
+  geom_point(na.rm = TRUE, size = 1/2, color = 'blue') +
+  geom_line(na.rm = TRUE) +
+  theme_minimal()
+```
+
+
+
+
+
+
+***
+
+###### Notebook produced with the these R libraries
+<div style = "width:33%; height:auto; margin-left:0%; margin-right:auto">
+```{r versions, echo=FALSE, rows.print=50}
+ver <- paste0(version$major, '.', version$minor)
+
+rbind(
+  tribble(
+    ~library, ~version, 
+    'R',       str_remove(version$version.string, 'R version '),
+    'RStudio', toString(RStudio.Version()$version)
+  ),
+  tibble(library = .packages()) %>% 
+    mutate(version = map_chr(library, ~ toString(packageVersion(.x)))) %>% 
+    arrange(library) %>% 
+    filter(library %in% c(
+      'data.table',
+      'tidyverse',
+      'readABF',
+      'tictoc',
+      'checkmate'
+    )) 
+) %>% 
+  knitr::kable()
+```
+</div>
+

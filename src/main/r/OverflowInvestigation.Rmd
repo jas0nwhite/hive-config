@@ -1,0 +1,324 @@
+---
+title: "Current responses of MMA probes"
+author: "Jason White"
+date: "`r Sys.Date()`"
+output: html_notebook
+---
+
+```{r include=FALSE, eval=FALSE}
+rm(list = ls(all.names = TRUE))
+```
+
+### Libraries
+
+```{r setup}
+library(furrr)        # parallel functional programming
+library(data.table)   # faster alternative to data.frame
+library(tidyverse)    # everyone's first choice for data wrangling
+library(lubridate)    # everyone's first choice for date wrangling
+library(readABF)      # reads ABF files
+library(tictoc)       # matlab-like execution timing
+library(checkmate)    # argument checking
+library(RColorBrewer) # for better palette management
+
+# include functions from preprocessing.R -- will be a library some day.
+knitr::read_chunk('preprocessing.R')
+
+plan(multisession, workers = 8)
+```
+
+### Load and preprocess data
+
+```{r fn_read, echo=FALSE}
+```
+
+```{r fn_melt, echo=FALSE}
+```
+
+```{r fn_fix, echo=FALSE}
+```
+
+
+### Read in the first 100 sweeps from several probes
+```{r load_fn}
+load_probe_data <- function(
+  path, 
+  chan.pattern = 'FSCV_%d',
+  sweep_select = M[ , ]
+) {
+  
+  if (file.exists(path)) {
+    root <- dirname(path)
+    file <- basename(path)
+  } else {
+    root <- '/Volumes/external/hnl/in-vitro/incoming/'
+    file <- path
+  }
+  
+  assert_file(file.path(root, file), access = 'r')
+  assert_string(chan.pattern, min.chars = 2)
+  
+  sweep_exp <- substitute(sweep_select)
+  
+  # parse decorations
+  decorations <- str_remove(file, '_[0-9]+[.]abf$')
+  parts <- str_split(decorations, fixed('__'), simplify = TRUE)
+  
+  date <- as_date(parts[1], '%Y_%m_%d', tz = NULL)
+  rig <- tolower(parts[2])
+  schedule <- parts[3]
+  protocol <- parts[4]
+  probelist <- parts[5]
+  notes <- ifelse(is.na(parts[6]), 'A', LETTERS[as.integer(parts[6])])
+  
+  # parse probes
+  probes <- probelist %>% 
+    str_remove_all('W[0-9]+R[0-9]+') %>% 
+    str_split(fixed('#'), simplify = TRUE)
+  
+  # read data for each probe/channel
+  data <- imap(probes, function(probe, ix) {
+    if (probe != '') {
+      
+      probeParts <- str_split(probe, '[_]+', simplify = TRUE)
+      probeName <- probeParts[1]
+      isResistor <- !is.na(probeParts[2])
+      
+      abf <- read_abf(
+        path = file.path(root, file), 
+        chan.pattern = sprintf(chan.pattern, ix)
+      )
+      
+      ffn <- abf$header$protocolPath %>% 
+        str_replace_all(fixed('\\'), '/') %>% 
+        basename()
+      
+      m <- abf$data
+      
+      sweeps <- eval(sweep_exp, list(M = m))
+      
+      as_melted_data_table(sweeps)[
+        ,
+        `:=`(
+          'probe' = probeName,
+          'resistor' = isResistor,
+          'date' = date,
+          'rig' = rig,
+          'ffn' = ffn,
+          'schedule' = schedule,
+          'protocol' = protocol,
+          'notes' = notes
+        )
+      ]
+    }
+  })
+  
+  data.ix <- !(data %>% map_lgl(is_empty))
+  
+  DT <- rbindlist(data[data.ix])
+  
+  setkey(DT, probe, ffn, date, sweep, sample)
+  
+  DT[
+    ,
+    .(sweep, sample, current, 
+      probe, resistor, date, 
+      ffn, rig, schedule, protocol, notes)
+  ]
+}
+```
+
+
+```{r load}
+files <- dir(
+  path = '/Volumes/external/hnl/in-vitro/incoming/',
+  pattern = '000[01].abf$',
+  full.names = TRUE,
+  recursive = TRUE
+)
+
+sweeps_from_middle <- function(M) {
+  M[seq(from = floor(dim(M)[1] / 2), length.out = 150), ]
+}
+
+I <- rbindlist(
+  future_map(
+    files,
+    function(f) (
+      load_probe_data(
+        f,
+        sweep_select = sweeps_from_middle(M)
+      ) %>% 
+        fix_overflow()
+    )[
+      ,
+      .(
+        `mean.current` = mean(current),
+        `sd.current` = sd(current),
+        dataset = paste(probe, ifelse(resistor, 'R', ''), date, notes)
+      ),
+      keyby = .(probe, resistor, date, sample, 
+                ffn, rig, schedule, protocol, notes)
+    ]
+  )
+)
+```
+
+
+```{r fig1, fig.width = 8}
+plot_data <- I %>% 
+  as_tibble() %>% 
+  mutate(
+    ffn = case_when(
+      ffn == 'wetlab_FSCV_uncorrelated_100k_97Hz_2ch.pro' ~ 'RBE 100%',
+      ffn == 'wetlab_FSCV_RBE025_97Hz_2ch.pro'            ~ 'RBE 25%',
+      TRUE                                                ~ ffn
+    ),
+    resistor = ifelse(resistor, '+ 500k', '')
+  )
+
+colorCount <- plot_data %>% distinct(probe) %>% nrow()
+getPalette <- colorRampPalette(brewer.pal(8, 'Dark2'))
+
+fig1 <- plot_data %>% 
+  group_by_at(vars(-sample, -mean.current, -sd.current)) %>% 
+  summarise(rms.current = sqrt(mean(mean.current ^ 2)), .groups = 'drop') %>% 
+  ggplot(aes(
+    x = dataset, 
+    y = rms.current, 
+    color = probe,
+    shape = resistor,
+    group = paste(probe, resistor))) + 
+  geom_line() +
+  geom_point(size = 3) +
+  facet_grid(rows = vars(ffn, resistor)) +
+  labs(
+    x = 'dataset',
+    y = 'RMS current (nA)',
+    color = 'probe',
+    title = 'RMS current response',
+    subtitle = 'first acquisition (0000.abf, 0001.abf)'
+  ) +
+  scale_color_manual(values = getPalette(colorCount)) +
+  coord_cartesian(ylim = c(0, 2000)) +
+  # theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+
+ggsave('fig1.pdf', plot = fig1, 
+       device = 'pdf', width = 11, height = 8.5, units = 'in')
+
+fig1
+```
+
+
+
+
+
+
+### Let's look at the command voltage
+```{r}
+V <- rbindlist(
+  future_map(
+    files,
+    function(f) (
+      load_probe_data(
+        f,
+        sweep_select = sweeps_from_middle(M),
+        chan.pattern = 'Cmd_%d'
+      ) 
+    )[
+      ,
+      .(
+        `mean.voltage` = mean(current),
+        `sd.voltage` = sd(current),
+        dataset = paste(probe, ifelse(resistor, 'R', ''), date, notes)
+      ),
+      keyby = .(probe, resistor, date, sample, 
+                ffn, rig, schedule, protocol, notes)
+    ]
+  )
+)
+```
+
+
+
+
+
+```{r fig2, fig.width = 8}
+plot_data <- V %>% 
+  as_tibble() %>% 
+  mutate(
+    ffn = case_when(
+      ffn == 'wetlab_FSCV_uncorrelated_100k_97Hz_2ch.pro' ~ 'RBE 100%',
+      ffn == 'wetlab_FSCV_RBE025_97Hz_2ch.pro'            ~ 'RBE 25%',
+      TRUE                                                ~ ffn
+    ),
+    resistor = ifelse(resistor, '+ 500k', '')
+  )
+
+colorCount <- plot_data %>% distinct(probe) %>% nrow()
+getPalette <- colorRampPalette(brewer.pal(8, 'Dark2'))
+
+fig2 <- plot_data %>% 
+  group_by_at(vars(-sample, -mean.voltage, -sd.voltage)) %>% 
+  summarise(rms.voltage = sqrt(mean(mean.voltage ^ 2)), .groups = 'drop') %>% 
+  ggplot(aes(
+    x = dataset, 
+    y = rms.voltage, 
+    color = probe,
+    shape = resistor,
+    group = paste(probe, resistor))) + 
+  geom_line() +
+  geom_point(size = 3) +
+  facet_grid(rows = vars(ffn, resistor)) +
+  labs(
+    x = 'dataset',
+    y = 'RMS command voltage (mV)',
+    color = 'probe',
+    title = 'RMS command voltage',
+    subtitle = 'first acquisition (0000.abf, 0001.abf)'
+  ) +
+  scale_color_manual(values = getPalette(colorCount)) +
+  coord_cartesian(ylim = c(0, 2000)) +
+  # theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+
+ggsave('fig2.pdf', plot = fig2, 
+       device = 'pdf', width = 11, height = 8.5, units = 'in')
+
+fig2
+```
+
+
+
+
+
+------------------------------------------------------------------------
+
+###### Notebook produced with the these R libraries
+
+::: {style="width:33%; height:auto; margin-left:0%; margin-right:auto"}
+```{r versions, echo=FALSE, rows.print=50}
+ver <- paste0(version$major, '.', version$minor)
+
+rbind(
+  tribble(
+    ~library, ~version, 
+    'R',       str_remove(version$version.string, 'R version '),
+    'RStudio', toString(RStudio.Version()$version)
+  ),
+  tibble(library = .packages()) %>% 
+    mutate(version = map_chr(library, ~ toString(packageVersion(.x)))) %>% 
+    arrange(library) %>% 
+    filter(library %in% c(
+      'data.table',
+      'tidyverse',
+      'readABF',
+      'tictoc',
+      'checkmate',
+      'matrixStats'
+    )) 
+) %>% 
+  knitr::kable()
+```
+:::
