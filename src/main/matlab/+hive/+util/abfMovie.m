@@ -18,7 +18,8 @@ function abfMovie(abfFile, movieFile, varargin)
     addParameter(p, 'format', 'MPEG-4');
     addParameter(p, 'quality', 90, @(x) assertPosNum(x) && (x <= 100));
     addParameter(p, 'zoompct', 100, @(x) assertPosNum(x) && (x <= 100));
-    
+    addParameter(p, 'products', 'all', @(x) any(validatestring(x, {'all', 'movie', 'fft-movie', 'freq-response'})));
+    % addParameter(p, 'vgram-win', [NaN, NaN], @(v) validateattributes(v, {'numeric'}, 'numel', 2));
     
     parse(p, abfFile, movieFile, varargin{:});
     
@@ -31,7 +32,7 @@ function abfMovie(abfFile, movieFile, varargin)
     if exist(movieFile, 'file') && ~cfg.overwrite
         doMovie = false;
     else
-        doMovie = true;
+        doMovie = any(ismember(cfg.products, {'all', 'movie'}));
     end
     
     [d, f, x] = fileparts(movieFile);
@@ -41,13 +42,13 @@ function abfMovie(abfFile, movieFile, varargin)
     if exist(spectrumFile, 'file') && ~cfg.overwrite
         doSpectrum = false;
     else
-        doSpectrum = true;
+        doSpectrum = any(ismember(cfg.products, {'all', 'fft-movie'}));
     end
     
     if exist(pgramFile, 'file') && ~cfg.overwrite
         doPgram = false;
     else
-        doPgram = true;
+        doPgram = any(ismember(cfg.products, {'all', 'freq-response'}));
     end
     
     if ~(doPgram || doSpectrum || doMovie)
@@ -55,7 +56,7 @@ function abfMovie(abfFile, movieFile, varargin)
     end
     
     [~, abfFileName, ~] = fileparts(abfFile);
-    abfFileName = strrep(abfFileName, '_', '-');
+    % abfFileName = strrep(abfFileName, '_', '-');
     
     fprintf('*** converting %s...', abfFileName);
     [d, si, ~] = hive.convert.AbfToMat.abfload(cfg.abfFile, 'channels', {cfg.channel});
@@ -71,7 +72,7 @@ function abfMovie(abfFile, movieFile, varargin)
     abf = squeeze(d);
     
     %
-    % truncate if requested
+    % truncate y axis if requested
     %
     if cfg.truncate > 0
         fprintf('*** truncating at ±%.1f...', cfg.truncate);
@@ -83,6 +84,11 @@ function abfMovie(abfFile, movieFile, varargin)
         ymax = 2100;
         ymin = -2100;
     end
+    
+    %
+    % set x axis extents if requested
+    %
+    
     
     %
     % process if requested
@@ -154,7 +160,12 @@ function abfMovie(abfFile, movieFile, varargin)
     if doMovie
         video = VideoWriter(cfg.movieFile, cfg.format);
         video.FrameRate = cfg.fps;
-        video.Quality = cfg.quality;
+        
+        if ismember(lower(cfg.format), {'archival'})
+            % no quality measure allowed
+        else
+            video.Quality = cfg.quality;
+        end
         
         alpha = fliplr(exp(0.1 * (1:(sps + 1)))/exp(0.1 * (sps + 1)));
         thickness = 2 * alpha;
@@ -181,7 +192,8 @@ function abfMovie(abfFile, movieFile, varargin)
             xlabel('sample');
             ylabel('current (nA)');
             
-            title({abfFileName; sprintf('time: %04.1fs  |  frame %04d  |  sweep %04d', t, f, max(ss))});
+            title({abfFileName; sprintf('time: %04.1fs  |  frame %04d  |  sweep %04d', t, f, max(ss))},...
+                'Interpreter', 'none');
             set(gcf, ...
                 'Position', [-120 1274 1280 720],...
                 'Color', [1, 1, 1]...
@@ -217,7 +229,12 @@ function abfMovie(abfFile, movieFile, varargin)
         
         video = VideoWriter(spectrumFile, cfg.format);
         video.FrameRate = cfg.fps;
-        video.Quality = cfg.quality;
+                
+        if ismember(lower(cfg.format), {'archival'})
+            % no quality measure allowed
+        else
+            video.Quality = cfg.quality;
+        end
         
         F(nFrames) = struct('cdata',[],'colormap',[]);
         
@@ -238,7 +255,7 @@ function abfMovie(abfFile, movieFile, varargin)
             
             spectrogram(x, NFFT, NOVERLAP, freqs, fs, 'yaxis');
             
-            title({abfFileName; sprintf('time: %04.1fs  |  frame %04d', t, f)});
+            title({abfFileName; sprintf('time: %04.1fs  |  frame %04d', t, f)}, 'Interpreter', 'none');
             set(gcf, ...
                 'Position', [-120 1274 1280 720],...
                 'Color', [1, 1, 1]...
@@ -266,7 +283,7 @@ function abfMovie(abfFile, movieFile, varargin)
         freqs = 0:dF:200;
         close all;
         periodogram(abf(:), rectwin(N), freqs, fs);
-        title({abfFileName; 'Periodogram Power Spectral Density Estimate'});
+        title({abfFileName; 'Periodogram Power Spectral Density Estimate'}, 'Interpreter', 'none');
         s = hgexport('readstyle', 'PNG-4MP');
         s.Format = 'png';
         s.Width = 8;
