@@ -174,7 +174,7 @@ classdef (Abstract) ConverterBase < hive.util.Logging
             end
             
             % find the channel index
-            vgramChannelIx = ~isempty(regexpi(header.recChNames, this.vgramChannel));
+            vgramChannelIx = ~isempty(regexpi(header.recChNames, this.vgramChannel, 'once'));
             
             if numel(vgramChannelIx) > 1
                 otherChannels = header.recChNames{~vgramChannelIx};

@@ -42,6 +42,20 @@ classdef AbfToMat < hive.convert.ConverterBase
         
         function [raw, sampInterval, header] = loadRaw(this, rawFile)
             [raw, sampInterval, header] = this.abfload(rawFile);
+            
+            % format creation date from values found in the header
+            startDate = num2str(header.uFileStartDate);
+            startTime = header.uFileStartTimeMS / 1000;
+            
+            try
+                startDate = datetime(startDate, 'InputFormat', 'yyyyMMdd');
+            catch
+                log.warning('ABF file contains invalid date');
+                startDate = today('datetime');
+            end
+            
+            timeStamp = startDate + seconds(startTime);
+            header.abfTimestamp = posixtime(timeStamp);
         end
         
     end

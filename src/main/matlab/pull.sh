@@ -7,6 +7,7 @@ rsync \
     --safe-links \
     --exclude="*.m~" \
     --exclude="*.swp" \
+    --exclude="*.asv" \
     --exclude=log/ \
     --exclude=.DS_Store \
     --exclude=push.sh \

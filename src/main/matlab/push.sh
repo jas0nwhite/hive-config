@@ -7,6 +7,7 @@ rsync \
     --safe-links \
     --exclude="*.m~" \
     --exclude=".*.swp" \
+    --exclude=".asv" \
     --exclude=log/ \
     --exclude=.DS_Store \
     --exclude=push.sh \
@@ -16,6 +17,7 @@ rsync \
     --exclude=TargetCatalog.m \
     --exclude=TestingCatalog.m \
     --exclude=TrainingCatalog.m \
+    --exclude="*.*.json" \
     --no-o \
     --no-p \
     --no-g \
