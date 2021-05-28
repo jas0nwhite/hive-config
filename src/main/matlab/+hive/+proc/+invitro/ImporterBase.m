@@ -108,6 +108,8 @@ classdef (Abstract) ImporterBase < hive.proc.ProcessorBase
                     .withUnderflowCorrection(this.doUnderflowCorrection)...
                     .inParallel(this.doParfor)...
                     .convert;
+            else
+                status = Skipped;
             end
             
             fprintf('%s (%.3fs)\n', char(status), toc(t));

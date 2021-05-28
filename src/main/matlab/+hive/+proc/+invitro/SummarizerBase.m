@@ -47,8 +47,8 @@ classdef (Abstract) SummarizerBase < hive.proc.ProcessorBase
                     return
                 end
                 
+                % for jobIx = 1:nSources
                 parfor (jobIx = 1:nSources, this.getNumWorkers())
-                    % for jobIx = 1:nSources
                     sourceIx = sourceIxsToProcess(jobIx);
                     
                     [id, name, ~] = this.cfg.getSourceInfo(setIx, sourceIx); %#ok<PFBNS>
@@ -90,7 +90,7 @@ classdef (Abstract) SummarizerBase < hive.proc.ProcessorBase
                     
                     % find the neutral ("zero") status of each label
                     nChem = size(labels, 2);
-                    neutrals = cellfun(@(s) Chem.get(s).neutral, labs.chemicals);
+                    neutrals = cellfun(@(s) round(Chem.get(s).neutral, 1), labs.chemicals);
                     
                     for chemIx = 1:nChem
                         % find column index of other chemicals
@@ -101,11 +101,17 @@ classdef (Abstract) SummarizerBase < hive.proc.ProcessorBase
                         stepMu = cell2mat(arrayfun(@(ix) labs.labels{ix}(1, :)', 1:nSteps, 'UniformOutput', false))';
                         
                         % find the steps for which the other chemicals are at a neutral concentration
-                        stepIx = find(not(any(bsxfun(@minus, stepMu(:, otherIx), neutrals(otherIx))')'));
+                        neutralTF = cell2mat( ...
+                            arrayfun( ...
+                            @(chem) round(stepMu(:, chem), 1) == neutrals(chem),...
+                            otherIx, 'UniformOutput', false));
+                        neutralTF = prod(neutralTF, 2); % aka AND
+                        
+                        stepIx = find(neutralTF);
                         nSteps = length(stepIx);
                         mu = arrayfun(@(ix) labs.labels{stepIx(ix)}(1, chemIx), 1:nSteps);
                         
-                        if all(mu == neutrals(chemIx))
+                        if all(round(mu, 1) == neutrals(chemIx))
                             continue;
                         end
                         
@@ -277,14 +283,23 @@ classdef (Abstract) SummarizerBase < hive.proc.ProcessorBase
             groupList = sort(unique(groups));
             nGroups = numel(groupList);
             
-            ticks = linspace(min(groupList), max(groupList), 5);
+            ticks = linspace(min(groupList), max(groupList), min(nGroups, 5));
             tickLabels = arrayfun(@(n) num2str(n), ticks, 'uniformOutput', false);
+            
+            if nGroups > 1
+                % RAINBOW!
+                ticksNorm = (ticks - min(ticks)) / (max(ticks) - min(ticks));
+                colors = jet(nGroups);
+            else
+                % BLACK!
+                ticksNorm = 0.5;
+                colors = [0, 0 0];
+            end
             
             figure;
             hold all;
-            colors = jet(nGroups);
-            colormap(colors);
             
+            colormap(colors);
             
             for ix = nSteps:-1:1
                 colorIx = groupList == groups(ix);
@@ -303,7 +318,7 @@ classdef (Abstract) SummarizerBase < hive.proc.ProcessorBase
             axis tight;
             ylim([-2100 2100]);
             c = colorbar(...
-                'Ticks', (ticks - min(ticks)) / (max(ticks) - min(ticks)),...
+                'Ticks', ticksNorm,...
                 'TickLabels', tickLabels);
             c.Label.String = colorbarLabel;
         end

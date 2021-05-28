@@ -108,9 +108,9 @@ classdef TrainingDataAssembler < hive.proc.ProcessorBase
             
             if (this.overwrite || ~exist(outFile, 'file'))
                 
-                [trainingDatasetIx, neighbors, distances] = this.findNeighbors(path, name); %#ok<ASGLU>
+                [trainingDatasetIx, neighbors, distances] = this.findNeighbors(path, name);
                 
-                [voltammograms, labels, chemicals] = this.gatherTrainingData(trainingDatasetIx); %#ok<ASGLU>
+                [voltammograms, labels, chemicals] = this.gatherTrainingData(trainingDatasetIx);
                 
                 save(outFile,...
                     'neighbors', 'distances', 'trainingDatasetIx',...
