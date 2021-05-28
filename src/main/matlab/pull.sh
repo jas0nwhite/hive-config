@@ -23,4 +23,4 @@ rsync \
     --no-p \
     --no-o \
     --no-g \
-    $@ gootch:/mnt/nfs/proj/in-vitro/iterate/src/ ./
+    $@ hnl02:/mnt/nfs/proj/in-vitro/iterate/src/ ./

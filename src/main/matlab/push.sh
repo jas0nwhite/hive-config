@@ -7,7 +7,7 @@ rsync \
     --safe-links \
     --exclude="*.m~" \
     --exclude=".*.swp" \
-    --exclude=".asv" \
+    --exclude="*.asv" \
     --exclude=log/ \
     --exclude=.DS_Store \
     --exclude=push.sh \
@@ -21,4 +21,4 @@ rsync \
     --no-o \
     --no-p \
     --no-g \
-    $@ ./ gootch:/mnt/nfs/proj/in-vitro/iterate/src/
+    $@ ./ hnl02:/mnt/nfs/proj/in-vitro/iterate/src/

@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+JVM_ARGS="-Dlog-level=${2:-WARN}"
+
+JAR="/data/git/hive-config.git/target/scala-2.12/hiveConfig.jar"
+
+java $JVM_ARGS -jar $JAR "$1"
+
+java_status=$?
+
+if [ $java_status == 3 ]
+then
+	echo
+	echo "Usage: $0 config-file"
+	echo
+	exit $java_status
+fi
+
+if [ $java_status != 0 ]
+then
+	echo
+	echo "*** CONFIGURATION FAILED ***"
+	echo
+	exit $java_status
+fi

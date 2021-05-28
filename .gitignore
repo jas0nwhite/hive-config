@@ -1,5 +1,6 @@
 target
 .*.swp
+*.asv
 bin
 project/target
 src/main/matlab/*.conf
