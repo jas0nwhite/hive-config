@@ -4,7 +4,7 @@ classdef (Abstract) ImporterBase < hive.proc.ProcessorBase
     
     properties (Access = protected)
         labels
-        vgramChannel = 'FSCV'
+        vgramChPattern = 'FSCV'
         jitterCorrector = []
         doUnderflowCorrection = false
     end
@@ -13,8 +13,8 @@ classdef (Abstract) ImporterBase < hive.proc.ProcessorBase
     % API
     %
     methods
-        function this = withVgramChannel(this, channel)
-            this.vgramChannel = channel;
+        function this = withVgramChPattern(this, pattern)
+            this.vgramChPattern = pattern;
         end
         
         function this = withJitterCorrector(this, object)
@@ -89,10 +89,10 @@ classdef (Abstract) ImporterBase < hive.proc.ProcessorBase
             if ~isempty(rawFiles)
                 if all(endsWith(rawFiles, '.abf', 'IgnoreCase', true))
                     converter = hive.convert.AbfToMat(...
-                        rawFiles, this.vgramChannel, vgramFile, metaFile, otherFile, vgramWin, timeWin);
+                        rawFiles, this.vgramChPattern, vgramFile, metaFile, otherFile, vgramWin, timeWin);
                 elseif all(endsWith(rawFiles, '.h5', 'IgnoreCase', true))
                     converter = hive.convert.H5ToMat(...
-                        rawFiles, this.vgramChannel, vgramFile, metaFile, otherFile, vgramWin, timeWin);
+                        rawFiles, this.vgramChPattern, vgramFile, metaFile, otherFile, vgramWin, timeWin);
                 else
                     this.error( ...
                         'UnsupportedFileMix', ...

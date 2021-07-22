@@ -4,7 +4,7 @@ classdef (Abstract) ConverterBase < hive.util.Logging
     
     properties (Access = protected)
         inputFiles
-        vgramChannel
+        vgramChPattern
         outputFile
         metadataFile
         otherFile
@@ -41,14 +41,14 @@ classdef (Abstract) ConverterBase < hive.util.Logging
         
         function this = ConverterBase(...
                 inputFiles, ...
-                vgramChannel, ...
+                vgramChPattern, ...
                 outputFile, ...
                 metadataFile, ...
                 otherFile, ...
                 sampleWindow, ...
                 timeWindow)
             this.inputFiles = inputFiles;
-            this.vgramChannel = vgramChannel;
+            this.vgramChPattern = vgramChPattern;
             this.outputFile = outputFile;
             this.metadataFile = metadataFile;
             this.otherFile = otherFile;
@@ -174,7 +174,7 @@ classdef (Abstract) ConverterBase < hive.util.Logging
             end
             
             % find the channel index
-            vgramChannelIx = ~isempty(regexpi(header.recChNames, this.vgramChannel, 'once'));
+            vgramChannelIx = cellfun(@(x) ~isempty(x), regexpi(header.recChNames, this.vgramChPattern, 'once'));
             
             if numel(vgramChannelIx) > 1
                 otherChannels = header.recChNames{~vgramChannelIx};
