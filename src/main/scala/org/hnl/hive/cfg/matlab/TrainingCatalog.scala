@@ -41,6 +41,7 @@ case class TrainingCatalog(name: String, treatmentCfg: TreatmentConfig) extends 
       )
       .+(
         'vgramFile %=% cfg.vgramFile,
+        'otherFile %=% cfg.otherFile,
         'metaFile %=% cfg.metaFile,
         'labelFile %=% cfg.labelFile,
         'summaryFile %=% cfg.summaryFile,

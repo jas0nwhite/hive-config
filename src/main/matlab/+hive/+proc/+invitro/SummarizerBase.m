@@ -64,11 +64,15 @@ classdef (Abstract) SummarizerBase < hive.proc.ProcessorBase
                     metadata = load(metadataFile, 'sampleIx');
                     labs = load(labelFile);
                     
-                    x = median(cell2mat(metadata.sampleIx));
-                    y = cell2mat(summary.steps.median');
+                    %
+                    % PLOT VGRAM STEPS
+                    %
+                    
+                    vx = median(cell2mat(metadata.sampleIx));
+                    vy = cell2mat(summary.steps.median');
                     labels = cell2mat(labs.labels);
                     
-                    nSteps = size(y, 2);
+                    nSteps = size(vy, 2);
                     
                     % plot all steps
                     plotFile = fullfile(outPath, name, 'all-steps.pdf');
@@ -81,12 +85,50 @@ classdef (Abstract) SummarizerBase < hive.proc.ProcessorBase
                         
                         colorbarLabel = 'step';
                         
-                        this.plotSteps(x, y, 1:nSteps, 1:nSteps, plotTitle, colorbarLabel);
+                        this.plotSteps(vx, vy, 1:nSteps, 1:nSteps, plotTitle, colorbarLabel);
                         
                         savefig(gcf, figFile);
                         hgexport(gcf, plotFile, s);
                         close;
                     end
+                    
+                    %
+                    % PLOT OTHER WAVEFORM STEPS
+                    %
+                    otherFile = fullfile(outPath, name, this.cfg.otherFile);
+                    plotFile = fullfile(outPath, name, 'other-steps.pdf');
+                    figFile = fullfile(outPath, name, 'other-steps.fig');
+                    
+                    if (~this.overwrite && exist(plotFile, 'file'))
+                        fprintf(' SKIP (other)');
+                    else
+                        [otherSummary, otherStatus] = this.analyzeOtherFile(otherFile);
+                        
+                        if (otherStatus == hive.Status.Success) 
+                            plotTitle = sprintf('%03d  |  %s  |  otherwaveforms', id, name);
+                            
+                            colorbarLabel = 'file';
+                            
+                            vgramWin = this.cfg.getSetValue(this.cfg.vgramWindowList, setIx);
+                            vgramWin = min(vgramWin):max(vgramWin);
+                            
+                            ox = median(cell2mat(metadata.sampleIx));
+                            oy = subsref(...
+                                cell2mat(otherSummary.steps.median'), ...
+                                substruct('()', {vgramWin, 1:nSteps}));
+                            
+                            this.plotSteps(ox, oy, 1:nSteps, 1:nSteps, plotTitle, colorbarLabel);
+                            
+                            savefig(gcf, figFile);
+                            hgexport(gcf, plotFile, s);
+                            close;
+                        end
+                    end
+                    
+                    
+                    %
+                    % PLOT VGRAM MONO STEPS
+                    %
                     
                     % find the neutral ("zero") status of each label
                     nChem = size(labels, 2);
@@ -97,7 +139,7 @@ classdef (Abstract) SummarizerBase < hive.proc.ProcessorBase
                         otherIx = setdiff(1:nChem, chemIx);
                         
                         % find concentrations for each step
-                        nSteps = size(y, 2);
+                        nSteps = size(vy, 2);
                         stepMu = cell2mat(arrayfun(@(ix) labs.labels{ix}(1, :)', 1:nSteps, 'UniformOutput', false))';
                         
                         % find the steps for which the other chemicals are at a neutral concentration
@@ -170,7 +212,7 @@ classdef (Abstract) SummarizerBase < hive.proc.ProcessorBase
                         % c.Label.String = colorbarLabel;
                         % % set(gca, 'Color', [0.9, 0.9, 0.9]);
                         
-                        this.plotSteps(x, y, stepIx, mu, plotTitle, colorbarLabel);
+                        this.plotSteps(vx, vy, stepIx, mu, plotTitle, colorbarLabel);
                         
                         savefig(gcf, figFile);
                         hgexport(gcf, plotFile, s);
@@ -245,35 +287,46 @@ classdef (Abstract) SummarizerBase < hive.proc.ProcessorBase
     %
     methods (Access = protected)
         
-        function [summary, status] = analyzeVgramFile(this, vgramFile)
-            if ~ this.checkFile(vgramFile, true)
+        function [summary, status] = analyzeSweepFile(this, sweepFile, sweepVar)
+            if ~ this.checkFile(sweepFile, true)
                 status = hive.Status.Failure;
                 summary = struct;
                 return;
             end
             
-            vgrams = load(vgramFile);
+            sweeps = load(sweepFile, sweepVar);
+            sweeps = sweeps.(sweepVar);
             
-            summary.steps.mean = cellfun(@(a) mean(a, 2), vgrams.voltammograms, 'uniformOutput', false);
-            summary.steps.median = cellfun(@(a) median(a, 2), vgrams.voltammograms, 'uniformOutput', false);
-            summary.steps.mode = cellfun(@(a) mode(a, 2), vgrams.voltammograms, 'uniformOutput', false);
-            summary.steps.min = cellfun(@(a) min(a, [], 2), vgrams.voltammograms, 'uniformOutput', false);
-            summary.steps.max = cellfun(@(a) max(a, [], 2), vgrams.voltammograms, 'uniformOutput', false);
-            summary.steps.std = cellfun(@(a) std(a, 0, 2), vgrams.voltammograms, 'uniformOutput', false);
-            summary.steps.var = cellfun(@(a) var(a, 0, 2), vgrams.voltammograms, 'uniformOutput', false);
-            summary.steps.n = cellfun(@(a) size(a, 2), vgrams.voltammograms);
+            summary.steps.mean   = cellfun(@(a) mean(a, 2),    sweeps, 'uniformOutput', false);
+            summary.steps.median = cellfun(@(a) median(a, 2),  sweeps, 'uniformOutput', false);
+            summary.steps.mode   = cellfun(@(a) mode(a, 2),    sweeps, 'uniformOutput', false);
+            summary.steps.min    = cellfun(@(a) min(a, [], 2), sweeps, 'uniformOutput', false);
+            summary.steps.max    = cellfun(@(a) max(a, [], 2), sweeps, 'uniformOutput', false);
+            summary.steps.std    = cellfun(@(a) std(a, 0, 2),  sweeps, 'uniformOutput', false);
+            summary.steps.var    = cellfun(@(a) var(a, 0, 2),  sweeps, 'uniformOutput', false);
+            summary.steps.n      = cellfun(@(a) size(a, 2),    sweeps, 'uniformOutput', true);
             
-            grand = horzcat(vgrams.voltammograms{:});
-            summary.grand.mean = mean(grand, 2);
+            grand = horzcat(sweeps{:});
+            summary.grand.mean   = mean(grand, 2);
             summary.grand.median = median(grand, 2);
-            summary.grand.mode = mode(grand, 2);
-            summary.grand.min = min(grand, [], 2);
-            summary.grand.max = max(grand, [], 2);
-            summary.grand.std = std(grand, 0, 2);
-            summary.grand.var = var(grand, 0, 2);
-            summary.grand.n = size(grand, 2);
+            summary.grand.mode   = mode(grand, 2);
+            summary.grand.min    = min(grand, [], 2);
+            summary.grand.max    = max(grand, [], 2);
+            summary.grand.std    = std(grand, 0, 2);
+            summary.grand.var    = var(grand, 0, 2);
+            summary.grand.n      = size(grand, 2);
             
             status = hive.Status.Success;
+        end
+        
+        
+        function [summary, status] = analyzeVgramFile(this, vgramFile)
+            [summary, status] = this.analyzeSweepFile(vgramFile, 'voltammograms');
+        end
+        
+        
+        function [summary, status] = analyzeOtherFile(this, otherFile)
+            [summary, status] = this.analyzeSweepFile(otherFile, 'otherData');
         end
         
         

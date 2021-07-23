@@ -87,6 +87,7 @@ classdef (Abstract) ProcessorBase < hive.util.Logging
             
             args = this.getArgsForProcessSource(setIx);
             
+            % for (ix = 1:numel(sourceIxsToProcess))
             parfor (ix = 1:numel(sourceIxsToProcess), this.getNumWorkers())
                 sourceIx = sourceIxsToProcess(ix);
                 this.processSource(setIx, sourceIx, args{:}) %#ok<PFBNS>

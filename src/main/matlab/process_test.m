@@ -1,11 +1,12 @@
 %% config hive
-%!./make-config /data/hnl/iterate/results_103/100-full.conf
-%!./make-config treatment-burst.conf
-%!./make-config treatment-burst-008.conf
-%!./make-config treatment-rodent-008.conf
-%!./make-config treatment-rodent-009.conf
-%!./make-config treatment-010-008.conf
-!./make-config treatment-011-008.conf
+%!local/make-config /data/hnl/iterate/results_103/100-full.conf
+%!local/make-config local/treatment-burst.conf
+%!local/make-config local/treatment-burst-008.conf
+%!local/make-config local/treatment-rodent-008.conf
+%!local/make-config local/treatment-rodent-009.conf
+%!local/make-config local/treatment-010-008.conf
+%!local/make-config local/treatment-011-008.conf
+!local/make-config local/treatment-014-008.conf
 
 %% init
 restoredefaultpath;

@@ -28,6 +28,7 @@ class InvitroConfig protected(config: WrappedConfig) extends Logging {
   //
   val labelCatalogFile: String = config.getString("label-catalog-file")
   val vgramFile: String = config.getString("vgram-file")
+  val otherFile: String = config.getString("other-file")
   val metaFile: String = config.getString("metadata-file")
   val labelFile: String = config.getString("label-file")
   val summaryFile: String = config.getString("summary-file")

@@ -41,6 +41,7 @@ case class TestingCatalog(name: String, treatmentCfg: TreatmentConfig) extends M
       )
       .+(
         'vgramFile %=% cfg.vgramFile,
+        'otherFile %=% cfg.otherFile,
         'metaFile %=% cfg.metaFile,
         'labelFile %=% cfg.labelFile,
         'summaryFile %=% cfg.summaryFile,
